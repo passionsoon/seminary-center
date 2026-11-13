@@ -34,7 +34,7 @@ a{color:var(--pri);text-decoration:none}
 #side nav a.on{background:var(--pri-l);color:var(--pri);font-weight:700}
 #side nav a .ic{width:20px;text-align:center}
 .sidefoot{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--line);font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px}
-main{flex:1;min-width:0;padding:28px 32px 120px;max-width:1280px}
+main{display:block;flex:1;min-width:0;padding:28px 32px 120px;max-width:1280px}
 #topbar,#bottombar{display:none}
 @media (max-width:760px){
   #side{display:none}
@@ -231,6 +231,50 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
 .org .node span{font-size:12px;color:var(--sub)}
 .org .node.top{background:var(--pri);border-color:var(--pri);color:#fff}.org .node.top span{color:#d6e7ff}
 .orgwrap{overflow:auto;padding:4px 0 8px}
+/* v3 */
+svg.i{display:block;flex-shrink:0}
+#side nav a .ic{display:grid;place-items:center}
+#bottombar a .ic svg{width:22px;height:22px}
+.sk{background:linear-gradient(90deg,#eceff2 25%,#f6f7f9 50%,#eceff2 75%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:14px}
+@keyframes sk{to{background-position:-200% 0}}
+a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-shadow:0 6px 20px rgba(0,27,55,.1)}
+.qbar{display:flex;align-items:center;gap:10px;background:var(--warn-l);color:var(--warn-d);border-radius:12px;padding:10px 14px;font-weight:600;font-size:14px;margin-bottom:14px}
+.qbar .btn{margin-left:auto}
+.fu{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.fu:last-child{border-bottom:0}
+.fu .who{flex:1;min-width:0}.fu .who b{font-size:15px}
+.fu .meta{font-size:13px;color:var(--sub);margin-top:2px}
+.fu .memo{font-size:13px;margin-top:6px;background:var(--line2);border-radius:8px;padding:6px 10px;white-space:pre-wrap}
+.fu .acts{display:flex;gap:6px;flex-shrink:0}
+@media (max-width:520px){.fu{flex-wrap:wrap}.fu .acts{width:100%}.fu .acts .btn{flex:1}}
+.funnel .st{display:grid;grid-template-columns:84px 1fr 64px;gap:10px;align-items:center;margin:6px 0;font-size:14px}
+.funnel .st .bx{height:26px;background:var(--line2);border-radius:6px;overflow:hidden}
+.funnel .st .bx i{display:block;height:100%;background:var(--pri);border-radius:0 6px 6px 0;opacity:.85}
+.funnel .cv{font-size:12px;color:var(--sub);margin:-2px 0 -2px 94px}
+.funnel .cv b{font-weight:700}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.mbar{display:grid;grid-template-columns:70px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+.mbar .bx{height:14px;background:var(--line2);border-radius:4px;overflow:hidden}.mbar .bx i{display:block;height:100%;background:var(--pri);border-radius:0 4px 4px 0}
+.mbar b{text-align:right;font-weight:700}
+.strip{display:flex;flex-wrap:wrap;gap:3px}
+.strip span{width:14px;height:14px;border-radius:3px;background:var(--line2)}
+.strip span.실시간{background:var(--ok)}.strip span.보강{background:var(--warn)}.strip span.결석{background:var(--bad)}
+.mlist{display:none}
+.mcard{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--sh)}
+.mcard .who{flex:1;min-width:0}.mcard .who b{font-size:15px}.mcard .who div{font-size:12px;color:var(--sub)}
+@media (max-width:760px){.tw.stu{display:none}.mlist{display:block}}
+.setgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:520px){.setgrid{grid-template-columns:1fr 1fr}}
+.prev{font-size:12px;background:var(--line2);border-radius:10px;padding:10px;max-height:180px;overflow:auto;white-space:pre}
+#qr img{width:180px;height:180px;image-rendering:pixelated;border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff}
+.rp-h{display:flex;align-items:flex-end;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px}
+@media print{
+  #side,#topbar,#bottombar,.noprint,#toast,#loading,.qbar{display:none!important}
+  body,html{background:#fff}main{padding:0!important;max-width:none}
+  .card,.tw{box-shadow:none!important;border:1px solid #e5e8eb;break-inside:avoid}
+  .grid{gap:8px}.tw{overflow:visible}th{position:static}
+  .g-kpi{grid-template-columns:repeat(6,1fr)}.g-2{grid-template-columns:1fr 1fr}
+}
 /* 로그인 */
 #login{min-height:100vh;display:grid;place-items:center;padding:20px}
 #login .card{width:min(400px,100%);padding:32px}
@@ -259,11 +303,11 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
     <div class="brand"><i>신</i><b>논산 신학부<small>운영센터</small></b></div>
     <div class="cohortPick"><label>현재 기수</label><select id="cohortSel" onchange="pickCohort(this.value)"></select></div>
     <nav id="nav"></nav>
-    <div class="sidefoot"><span id="syncAt"></span><span class="sp"></span><button class="btn ghost sm" onclick="manualSync()" title="시트에서 새로 불러오기">↻</button><button class="btn ghost sm" onclick="logout()">로그아웃</button></div>
+    <div class="sidefoot"><span id="syncAt"></span><span class="sp"></span><button class="btn ghost sm" onclick="manualSync()" title="시트에서 새로 불러오기"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 3v4h4M4 13a8 8 0 0 0 14.6 4.5M20 21v-4h-4"/></svg></button><button class="btn ghost sm" onclick="logout()">로그아웃</button></div>
   </aside>
   <div style="flex:1;min-width:0">
     <div id="topbar"><b id="topTitle"></b><select id="cohortSelM" onchange="pickCohort(this.value)"></select></div>
-    <main id="view"></main>
+    <main><div id="qbar"></div><div id="view"></div></main>
   </div>
   <nav id="bottombar"></nav>
 </div>
@@ -274,17 +318,37 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
 <script>
 /* ═════════ 설정 ═════════ */
 const DEFAULT_API = 'https://script.google.com/macros/s/AKfycbwqvK_bKcaVfHq5AkIBIro7u3l-a7nDrdZqF1h8dXUg8ezL0UNXPCxDEJD-arbsv_Qu/exec';
+const IC = {
+  home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+  check: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="m8 12 3 3 5-6"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  book: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 23H20"/>',
+  badge: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.2A5 5 0 0 1 21.5 19"/>',
+  layers: '<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/>',
+  org: '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M5 16v-4h14v4"/>',
+  chart: '<path d="M3 21h18"/><path d="M6 17v-6M11 17V5M16 17v-9M21 17v-3"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  sync: '<path d="M20 11a8 8 0 0 0-14.6-4.5M4 3v4h4M4 13a8 8 0 0 0 14.6 4.5M20 21v-4h-4"/>',
+  print: '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'
+};
+const icon = (k, sz) => `<svg class="i" width="${sz || 18}" height="${sz || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ''}</svg>`;
 const NAV = [
-  ['운영', [['home', '🏠', '대시보드'], ['attend', '✅', '출석 체크'], ['book', '🗓️', '출석부'], ['progress', '📖', '진도'], ['register', '🎫', '등록 판정']]],
-  ['사람', [['students', '👥', '수강생'], ['cohorts', '📚', '기수 관리'], ['staff', '🧭', '사명자·조직도']]],
-  ['분석', [['analysis', '📊', '분석']]]
+  ['운영', [['home', 'home', '대시보드'], ['attend', 'check', '출석 체크'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '진도'], ['register', 'badge', '등록 판정']]],
+  ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
+  ['분석', [['analysis', 'chart', '분석'], ['settings', 'gear', '설정']]]
 ];
-const CO_NAV = [['담당 기수', [['attend', '✅', '출석 체크'], ['book', '🗓️', '출석부'], ['progress', '📖', '진도']]]];
-const MOBILE_NAV = [['home', '🏠', '홈'], ['attend', '✅', '출석'], ['book', '🗓️', '출석부'], ['students', '👥', '수강생'], ['more', '☰', '더보기']];
+const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '진도']]]];
+const MOBILE_NAV = [['home', 'home', '홈'], ['attend', 'check', '출석'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
 const KEYS = { staff: ['고유번호'], cohort: ['기수명'], student: ['수강생ID'], session: ['기수명', '회차'], attend: ['기록ID'], summary: ['기수명', '회차'] };
-let DB = null, ROUTE = { page: 'home' }, DIRTY = false;
+let DB = null, ROUTE = { page: 'home' }, DIRTY = false, MEMO = {};
 const LINK_C = new URLSearchParams(location.search).get('c') || '';   // 기수 담당자 링크(?c=기수명)
 let ROLE = { type: LINK_C ? 'cohort' : 'admin', cohort: LINK_C };
 const isCo = () => ROLE.type === 'cohort';
@@ -314,15 +378,29 @@ const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, pw: ses
 async function api(action, payload) {
   const c = cfg(); loading(true);
   try {
-    const res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: c.pw, action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) });
+    let res;
+    try { res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: c.pw, action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) }); }
+    catch (e) { const er = new Error('인터넷 연결이 불안정합니다. 잠시 후 다시 시도하세요.'); er.net = true; throw er; }
     const j = await res.json();
     if (!j.ok) { if (j.auth === false) logout(true); throw new Error(j.error || '오류가 났습니다'); }
     return j;
   } finally { loading(false); }
 }
-async function reload() { const j = await api('all'); DB = j.data; $('#syncAt').textContent = '동기화 ' + j.at.slice(11, 16); fillCohortSel(); }
-let bgTimer = null;
-function bgSync() { clearTimeout(bgTimer); bgTimer = setTimeout(async () => { try { await reload(); if (!drawerOpen() && !DIRTY && !$('#pop')) render(); } catch (e) { } }, 600); }
+async function reload() { const j = await api('all'); DB = j.data; lastFull = Date.now(); MEMO = {}; $('#syncAt').textContent = '동기화 ' + j.at.slice(11, 16); fillCohortSel(); }
+let bgTimer = null, lastFull = Date.now();
+/** 저장 후에는 계산 시트(분석)만 가볍게 다시 받음. 전체 동기화는 5분마다 */
+function bgSync() {
+  clearTimeout(bgTimer);
+  bgTimer = setTimeout(async () => {
+    if (isCo()) return;
+    try { const j = await api('stats'); Object.assign(DB, j.data); if (idle()) render(); } catch (e) { }
+  }, 800);
+}
+const idle = () => !drawerOpen() && !DIRTY && !$('#pop') && !$('#dialog');
+setInterval(async () => {
+  if (!DB || document.hidden || !idle() || Date.now() - lastFull < 5 * 60e3) return;
+  try { await reload(); if (idle()) render(); } catch (e) { }
+}, 30e3);
 async function manualSync() { try { await reload(); render(); toast('시트에서 새로 불러왔습니다'); } catch (e) { toast(e.message, true); } }
 function keyOf(t, o) { return KEYS[t].map(k => String(o[k] === undefined ? '' : o[k])).join('|'); }
 function applyRows(t, rows) {
@@ -344,18 +422,66 @@ async function removeRec(table, keyValues, msg) {
     toast((msg || '삭제했습니다') + (r.cascade ? ` · 출석기록 ${r.cascade}건 포함` : '')); bgSync(); return true;
   } catch (e) { toast(e.message, true); return false; }
 }
-/** 출석 저장 + 화면 즉시 반영 */
-async function saveAttendance(payload, btn) {
+/** 출석 저장 + 화면 즉시 반영. 인터넷이 끊기면 기기에 보관했다가 자동 재전송 */
+function applyAttendLocal(p) {
+  const c = p.cohort, s = num(p.session), now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  applyRows('attend', p.records.map(x => {
+    const o = { '기록ID': c + '|' + s + '|' + x.studentId, '기수명': c, '회차': s, '날짜': p.date, '수강생ID': x.studentId, '이름': x.name, '출석': x.status, '기록일시': now, '수정자': isCo() ? '담당자(' + c + ')' : '관리자' };
+    if (x.makeupDate !== undefined) o['보강일'] = x.makeupDate; else if (x.status !== '보강') o['보강일'] = '';
+    if (x.note !== undefined) o['비고'] = x.note;
+    if (x.reason !== undefined) o['결석사유'] = x.reason;
+    if (x.contact !== undefined) o['연락메모'] = x.contact;
+    if (x.contactDone !== undefined) o['연락완료'] = x.contactDone;
+    return o;
+  }));
+  const th = DB.attend.filter(a => String(a['기수명']) === String(c) && num(a['회차']) === s);
+  const real = th.filter(a => a['출석'] === '실시간').length, mk = th.filter(a => a['출석'] === '보강').length;
+  const old = DB.summary.find(x => String(x['기수명']) === String(c) && num(x['회차']) === s) || {};
+  applyRows('summary', [{ '기수명': c, '회차': s, '날짜': p.date, '과정': p.course || old['과정'] || '', '재적인원': th.length, '실시간출석': real, '보강출석': mk }]);
+  const ses = DB.session.find(x => String(x['기수명']) === String(c) && num(x['회차']) === s);
+  applyRows('session', [ses ? { '기수명': c, '회차': s, '상태': '완료' } : { '기수명': c, '회차': s, '날짜': p.date, '과정': p.course || '', '진도내용': p.content || '', '상태': '완료' }]);
+  const per = {}; DB.attend.forEach(a => { if (String(a['기수명']) !== String(c)) return; const id = a['수강생ID']; per[id] = per[id] || [0, 0]; per[id][0]++; if (a['출석'] !== '결석') per[id][1]++; });
+  DB.student.forEach(st => { if (per[st['수강생ID']]) st['출석률'] = Math.round(per[st['수강생ID']][1] / per[st['수강생ID']][0] * 1000) / 1000; });
+  MEMO = {};
+  return { roster: th.length, real, makeup: mk, absent: th.length - real - mk };
+}
+const QKEY = 'dc_queue';
+const queue = () => { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch (e) { return []; } };
+const setQueue = q => { try { localStorage.setItem(QKEY, JSON.stringify(q)); } catch (e) { } paintQueue(); };
+function paintQueue() {
+  const q = queue().filter(x => !isCo() || x.p.cohort === ROLE.cohort), el = $('#qbar');
+  if (el) el.innerHTML = q.length ? `<div class="qbar">⏳ 아직 보내지 못한 출석 ${q.length}건 · 인터넷이 연결되면 자동으로 보냅니다<button class="btn sm" onclick="flushQueue(true)">지금 보내기</button></div>` : '';
+}
+let flushing = false;
+async function flushQueue(manual) {
+  if (flushing) return; let q = queue(); if (!q.length) return;
+  flushing = true;
+  try {
+    while (q.length) {
+      try { await api('saveAttendance', q[0].p); q.shift(); setQueue(q); }
+      catch (e) { if (e.net) { if (manual) toast('아직 인터넷이 연결되지 않았어요', true); break; } toast('보관된 출석을 보내지 못했어요: ' + e.message, true); q.shift(); setQueue(q); }
+    }
+    if (!queue().length) { toast('보관해 둔 출석을 모두 보냈어요'); bgSync(); }
+  } finally { flushing = false; }
+}
+window.addEventListener('online', () => flushQueue());
+setInterval(() => { if (navigator.onLine) flushQueue(); }, 30e3);
+async function saveAttendance(payload, btn, opt) {
   busy(btn, true);
   try {
     const r = await api('saveAttendance', payload);
-    const c = payload.cohort, s = num(payload.session), now = todayStr();
-    applyRows('attend', payload.records.map(x => ({ '기록ID': c + '|' + s + '|' + x.studentId, '기수명': c, '회차': s, '날짜': payload.date, '수강생ID': x.studentId, '이름': x.name, '출석': x.status, '보강일': x.makeupDate || '', '비고': x.note || '', '기록일시': now })));
-    applyRows('summary', [{ '기수명': c, '회차': s, '날짜': payload.date, '과정': payload.course || '', '재적인원': r.summary.roster, '실시간출석': r.summary.real, '보강출석': r.summary.makeup }]);
-    const ses = DB.session.find(x => String(x['기수명']) === String(c) && num(x['회차']) === s);
-    applyRows('session', [ses ? { '기수명': c, '회차': s, '상태': '완료' } : { '기수명': c, '회차': s, '날짜': payload.date, '과정': payload.course || '', '진도내용': payload.content || '', '상태': '완료' }]);
+    applyAttendLocal(payload);
+    if (r.rates) DB.student.forEach(st => { if (r.rates[st['수강생ID']] !== undefined) st['출석률'] = r.rates[st['수강생ID']]; });
     bgSync(); return r;
-  } catch (e) { toast(e.message, true); return null; }
+  } catch (e) {
+    if (e.net && opt && opt.queue) {
+      const q = queue(); q.push({ at: Date.now(), p: payload }); setQueue(q);
+      const sm = applyAttendLocal(payload);
+      toast('인터넷이 끊겨 기기에 보관했어요. 연결되면 자동으로 보내요.', true);
+      return { queued: true, summary: sm };
+    }
+    toast(e.message, true); return null;
+  }
   finally { busy(btn, false); }
 }
 
@@ -378,25 +504,27 @@ async function start() {
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   const nav = isCo() ? CO_NAV : NAV, mnav = isCo() ? CO_NAV[0][1].map(n => [n[0], n[1], n[2].replace(' 체크', '')]) : MOBILE_NAV;
   if (isCo()) { document.querySelector('.cohortPick').innerHTML = `<label>담당 기수</label><b style="display:block;font-size:15px;padding:2px 0">${esc(ROLE.cohort)}</b>`; $('#cohortSelM').style.display = 'none'; S.cohort = ROLE.cohort; }
-  $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${n[1]}</span>${n[2]}</a>`).join('')).join('');
-  $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${n[1]}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${n[1]}</span>${n[2]}</a>`).join('');
+  $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1])}</span>${n[2]}</a>`).join('')).join('');
+  $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>`).join('');
+  $('#view').innerHTML = `<div class="sk" style="height:34px;width:220px;margin-bottom:22px"></div><div class="grid g-kpi">${'<div class="sk" style="height:92px"></div>'.repeat(6)}</div><div class="sk mt" style="height:120px"></div><div class="grid g-2 mt"><div class="sk" style="height:200px"></div><div class="sk" style="height:200px"></div></div>`;
   try { await reload(); } catch (e) { showLogin(e.message); return; }
-  route();
+  route(); flushQueue();
 }
 window.addEventListener('hashchange', () => { if (DIRTY && !confirm('저장하지 않은 출석 체크가 있습니다. 이동할까요?')) return; DIRTY = false; route(); });
 window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); e.returnValue = ''; } });
 function route() {
   const h = decodeURIComponent(location.hash.slice(1) || 'home').split('/');
   ROUTE = { page: h[0], arg: h[1], tab: h[2] };
-  if (isCo() && !['attend', 'book', 'progress'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
-  if (['attend', 'book', 'progress', 'register'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
+  if (isCo() && !['attend', 'book', 'progress', 'followup'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
+  if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   closeAll();
   render(); window.scrollTo(0, 0);
 }
-const TITLES = { home: '대시보드', attend: '출석 체크', book: '출석부', progress: '진도', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석' };
+const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '진도', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석' };
 function render() {
   if (!DB) return;
+  MEMO = {}; paintQueue();
   const p = ROUTE.page;
   document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && !isCo() && !MOBILE_NAV.some(m => m[0] === p))));
   $('#topTitle').textContent = (isCo() ? ROLE.cohort + ' · ' : '') + (TITLES[p] || '');
@@ -425,7 +553,7 @@ function fillCohortSel() {
 function pickCohort(n) {
   if (DIRTY && !confirm('저장하지 않은 출석 체크가 있습니다. 기수를 바꿀까요?')) { fillCohortSel(); return; }
   DIRTY = false; setCohort(n);
-  if (['attend', 'book', 'progress', 'register'].includes(ROUTE.page)) { if (ROUTE.arg) { location.hash = ROUTE.page; return; } }
+  if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page)) { if (ROUTE.arg) { location.hash = ROUTE.page; return; } }
   if (ROUTE.page === 'cohort') { location.hash = 'cohort/' + encodeURIComponent(n); return; }
   render();
 }
@@ -434,7 +562,27 @@ function needCohort() { return `<div class="card empty"><b>기수가 없습니�
 /* ═════════ 데이터 도우미 ═════════ */
 const L = k => (DB.lists && DB.lists[k]) || [];
 function statOf(n) { return (DB.cohortStats || []).find(c => String(c['기수명']) === String(n)) || {}; }
-function studentsOf(c) { return DB.student.filter(s => String(s['기수명']) === String(c)); }
+function studentsOf(c) { return DB.student.filter(s => String(s['기수명']) === String(c) && !s['보관일']); }
+const live = () => DB.student.filter(s => !s['보관일']);
+const SET = () => Object.assign({ reg: { n: 6, minReal: 5, maxMakeup: 1 }, risk: { streak: 2, recent: 4, rate: 0.5 } }, DB.settings || {});
+/** 탈락 위험: 연속 결석 또는 최근 출석률 저조 → 위험, 최근 3회 안에 결석 → 주의 */
+function riskMap(c) {
+  const k = 'risk|' + c; if (MEMO[k]) return MEMO[k];
+  const R = SET().risk, nos = summaryOf(c).map(s => num(s['회차'])), am = attendMap(c), out = {};
+  studentsOf(c).forEach(s => {
+    if (s['탈락일'] || s['입교일']) return;
+    const rec = am[s['수강생ID']] || {}, seq = nos.filter(n => rec[n]).map(n => rec[n]['출석']);
+    if (!seq.length) return;
+    let st = 0; for (let i = seq.length - 1; i >= 0 && seq[i] === '결석'; i--) st++;
+    const rc = seq.slice(-num(R.recent)), rate = rc.filter(x => x !== '결석').length / rc.length;
+    if (st >= num(R.streak)) out[s['수강생ID']] = { lv: 'bad', why: `연속 결석 ${st}회` };
+    else if (rc.length >= Math.min(3, num(R.recent)) && rate < num(R.rate)) out[s['수강생ID']] = { lv: 'bad', why: `최근 ${rc.length}회 출석률 ${pct(rate)}` };
+    else if (seq.slice(-3).includes('결석')) out[s['수강생ID']] = { lv: 'warn', why: '최근 3회 안에 결석' };
+  });
+  return (MEMO[k] = out);
+}
+const riskOf = s => (riskMap(s['기수명'])[s['수강생ID']]);
+const riskBadge = r => r ? ` <span class="b ${r.lv}" title="${esc(r.why)}">${r.lv === 'bad' ? '위험' : '주의'}</span>` : '';
 function sessionsOf(c) { return DB.session.filter(s => String(s['기수명']) === String(c)).sort((a, b) => num(a['회차']) - num(b['회차'])); }
 function summaryOf(c) { return DB.summary.filter(s => String(s['기수명']) === String(c)).sort((a, b) => num(a['회차']) - num(b['회차'])); }
 function attendMap(c) { const m = {}; DB.attend.forEach(a => { if (String(a['기수명']) !== String(c)) return; (m[a['수강생ID']] = m[a['수강생ID']] || {})[num(a['회차'])] = a; }); return m; }
@@ -453,15 +601,16 @@ function absentees(c) {
   return out;
 }
 function registerCandidates(n) {
-  const sess = summaryOf(n).map(s => num(s['회차'])).slice(0, 6), am = attendMap(n);
+  const R = SET().reg, N = num(R.n), sess = summaryOf(n).map(s => num(s['회차'])).slice(0, N), am = attendMap(n);
   return studentsOf(n).filter(s => !s['탈락일']).map(s => {
     const rec = am[s['수강생ID']] || {}; let real = 0, mk = 0, ab = 0, none = 0;
     sess.forEach(no => { const r = rec[no]; if (!r) none++; else if (r['출석'] === '실시간') real++; else if (r['출석'] === '보강') mk++; else ab++; });
-    let state = 'wait', why = `첫 6회 중 ${sess.length}회 진행`;
+    let state = 'wait', why = `첫 ${N}회 중 ${sess.length}회 진행`;
     if (s['센터등록일']) { state = 'done'; why = '등록 ' + md(s['센터등록일']); }
-    else if (ab > 0 || mk > 1) { state = 'no'; why = [ab ? `결석 ${ab}회` : '', mk > 1 ? `보강 ${mk}회(1회까지)` : ''].filter(Boolean).join(', '); }
-    else if (sess.length === 6 && none === 0 && real >= 5) { state = 'ok'; why = `실시간 ${real} · 보강 ${mk}`; }
-    else if (sess.length === 6 && none > 0) { state = 'no'; why = `기록 없는 회차 ${none}개`; }
+    else if (ab > 0 || mk > num(R.maxMakeup)) { state = 'no'; why = [ab ? `결석 ${ab}회` : '', mk > num(R.maxMakeup) ? `보강 ${mk}회(${R.maxMakeup}회까지)` : ''].filter(Boolean).join(', '); }
+    else if (sess.length === N && none === 0 && real >= num(R.minReal)) { state = 'ok'; why = `실시간 ${real} · 보강 ${mk}`; }
+    else if (sess.length === N && none === 0) { state = 'no'; why = `실시간 ${real}회(${R.minReal}회 이상 필요)`; }
+    else if (sess.length === N && none > 0) { state = 'no'; why = `기록 없는 회차 ${none}개`; }
     return { s, real, mk, ab, none, state, why };
   });
 }
@@ -476,6 +625,19 @@ function lineChart(points) {
   const step = Math.ceil(points.length / 12);
   const dots = points.map((p, i) => `<circle cx="${xs(i)}" cy="${ys(p.v)}" r="4" fill="#fff" stroke="#3182f6" stroke-width="2.5"><title>${esc(p.label)} · ${pct(p.v)}</title></circle>` + (i % step === 0 ? `<text x="${xs(i)}" y="${H - 8}" font-size="11" text-anchor="middle" fill="#8b95a1">${esc(p.x)}</text>` : '')).join('');
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3182f6" stop-opacity=".18"/><stop offset="1" stop-color="#3182f6" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${area}" fill="url(#ga)"/><path d="${path}" fill="none" stroke="#3182f6" stroke-width="2.5" stroke-linejoin="round"/>${dots}</svg>`;
+}
+/** 단계별 흐름(깔때기): 입고 → 센터 등록 → 중등 → 고등 → 입교 */
+function funnelSteps(n) {
+  const stu = studentsOf(n), s = statOf(n), has = k => stu.filter(x => x[k]).length;
+  const use = stu.length > 0;
+  return [['수카 입고', use ? stu.length : num(s['수카 입고'])], ['센터 등록', use ? has('센터등록일') : num(s['센터 등록(초등)'])], ['중등 진급', use ? has('중등진급일') : num(s['중등 진급'])], ['고등 진급', use ? has('고등진급일') : num(s['고등 진급'])], ['입교', use ? has('입교일') : num(s['입교(종강)'])]];
+}
+function funnelHTML(n) {
+  const st = funnelSteps(n), top = Math.max(1, st[0][1]);
+  if (!st[0][1]) return '<div class="muted">수강생이 등록되면 그려져요</div>';
+  let worst = -1, wv = 2;
+  st.forEach((x, i) => { if (i && st[i - 1][1] && x[1] / st[i - 1][1] < wv && (x[1] || i < 2)) { wv = x[1] / st[i - 1][1]; worst = i; } });
+  return `<div class="funnel">${st.map((x, i) => (i ? `<div class="cv">↓ ${st[i - 1][1] ? `<b style="color:${i === worst ? 'var(--bad)' : 'var(--ink2)'}">${pct(x[1] / st[i - 1][1])}</b>${i === worst ? ' · 가장 많이 빠지는 구간' : ''}` : '-'}</div>` : '') + `<div class="st"><span>${x[0]}</span><div class="bx" title="${x[0]} ${x[1]}명"><i style="width:${x[1] / top * 100}%"></i></div><b>${x[1]}명</b></div>`).join('')}</div>`;
 }
 function empty(title, sub, btn) { return `<div class="card empty"><b>${title}</b>${sub || ''}${btn ? `<div class="mt">${btn}</div>` : ''}</div>`; }
 
@@ -508,7 +670,7 @@ function F(k, label, v, type, list, opt) {
 function staffList() { return `<datalist id="dlStaff">${staffNames().map(x => `<option value="${esc(x)}">`).join('')}</datalist>`; }
 function openMore() {
   const items = NAV.flatMap(g => g[1]).filter(n => !MOBILE_NAV.some(m => m[0] === n[0]));
-  $('#sheet').innerHTML = '<div class="grab"></div>' + items.map(n => `<a href="#${n[0]}"><span style="font-size:20px">${n[1]}</span>${n[2]}</a>`).join('') + `<a href="javascript:manualSync()">↻ 시트에서 새로 불러오기</a><a href="javascript:logout()">로그아웃</a>`;
+  $('#sheet').innerHTML = '<div class="grab"></div>' + items.map(n => `<a href="#${n[0]}">${icon(n[1], 20)}${n[2]}</a>`).join('') + `<a href="javascript:manualSync()">${icon('sync', 20)}시트에서 새로 불러오기</a><a href="javascript:logout()">로그아웃</a>`;
   $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 /* 작은 팝오버 (출석부 칸) */
@@ -527,11 +689,12 @@ PAGES.home = () => {
     const ses = sessionsOf(n).find(s => s['날짜'] === today && s['상태'] !== '휴강');
     if (ses && !summaryOf(n).some(s => num(s['회차']) === num(ses['회차']))) alerts.push(['blue', `${esc(n)} · 오늘 ${ses['회차']}회차 출석을 아직 체크하지 않았어요`, `attend/${e}/${ses['회차']}`]);
     const reg = registerCandidates(n).filter(x => x.state === 'ok'); if (reg.length) alerts.push(['', `${esc(n)} · 센터 등록 가능 ${reg.length}명`, `register/${e}`]);
-    const ab = absentees(n); if (ab.length) alerts.push(['bad', `${esc(n)} · 연속 결석 ${ab.length}명 (${ab.slice(0, 3).map(x => esc(x.s['이름'])).join(', ')}${ab.length > 3 ? ' 외' : ''})`, `book/${e}`]);
+    const rk = studentsOf(n).filter(s => (riskOf(s) || {}).lv === 'bad'); if (rk.length) alerts.push(['bad', `${esc(n)} · 탈락 위험 ${rk.length}명 (${rk.slice(0, 3).map(x => esc(x['이름'])).join(', ')}${rk.length > 3 ? ' 외' : ''})`, `followup/${e}`]);
+    const todo = absList(n).filter(x => !doneC(x.a)).length; if (todo) alerts.push(['warn', `${esc(n)} · 연락하지 않은 결석 ${todo}건`, `followup/${e}`]);
   });
   return `<div class="ph"><div><h1>안녕하세요 👋</h1><p>${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}</p></div></div>
-  <div class="grid g-kpi">${[['진행중 기수', active.length, '개'], ['재적 수강생', active.reduce((a, c) => a + rosterAt(c['기수명'], today).length, 0), '명'], ['누적 입고', sum(x => true, '수카 입고'), '명'], ['누적 센터등록', sum(x => x['센터등록일'], '센터 등록(초등)'), '명'], ['누적 입교', sum(x => x['입교일'], '입교(종강)'), '명'], ['전체 기수', cs.length, '개']]
-    .map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}<small>${k[2]}</small></div></div>`).join('')}</div>
+  <div class="grid g-kpi">${[['진행중 기수', active.length, '개', 'cohorts'], ['재적 수강생', active.reduce((a, c) => a + rosterAt(c['기수명'], today).length, 0), '명', 'students'], ['누적 입고', sum(x => true, '수카 입고'), '명', 'analysis/cohort'], ['누적 센터등록', sum(x => x['센터등록일'], '센터 등록(초등)'), '명', 'analysis/cohort'], ['누적 입교', sum(x => x['입교일'], '입교(종강)'), '명', 'analysis/cohort'], ['전체 기수', cs.length, '개', 'cohorts']]
+    .map(k => `<a class="card kpi" href="#${k[3]}"><div class="l">${k[0]}</div><div class="v">${k[1]}<small>${k[2]}</small></div></a>`).join('')}</div>
   ${alerts.length ? `<div class="card mt"><h3>오늘 확인할 일</h3>${alerts.map(a => `<a class="alert ${a[0]}" href="#${a[2]}">${a[1]}<span class="go">›</span></a>`).join('')}</div>` : ''}
   <div class="row mt2" style="margin-bottom:12px"><h3 style="margin:0;font-size:17px">진행중 기수</h3><span class="sp"></span><a class="btn ghost sm" href="#cohorts">전체 보기 ›</a></div>
   <div class="grid g-2">${active.length ? active.map(cohortCard).join('') : empty('진행중인 기수가 없습니다', '', `<button class="btn p" onclick="go('cohorts');setTimeout(()=>editCohort(),50)">+ 새 기수</button>`)}</div>`;
@@ -583,7 +746,7 @@ PAGES.cohort = () => {
     const rates = [['입고→등록', s['입고→등록률']], ['등록→중등', s['등록→중등 진급률']], ['중등→고등', s['중등→고등 진급률']], ['고등→입교', s['고등→입교율']], ['종강률', s['종강률(등록→입교)']]];
     body = `<div class="grid g-kpi">${[['입고', stu.length || num(s['수카 입고'])], ['재적', rosterAt(n, todayStr()).length], ['센터 등록', stu.filter(x => x['센터등록일']).length || num(s['센터 등록(초등)'])], ['입교', cnt('입교') || num(s['입교(종강)'])], ['탈락', cnt('탈락') || num(s['탈락'])], ['출석률', pct(attRate(n))]].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div></div>`).join('')}</div>
     <div class="grid g-2 mt">
-      <div class="card"><h3>단계별 전환율</h3>${rates.map(r => `<div class="hbar"><span class="t">${r[0]}</span><div class="bar"><i style="width:${num(r[1]) * 100}%;background:${r[1] === '' || r[1] === undefined ? '#e5e8eb' : num(r[1]) < .5 ? 'var(--bad)' : num(r[1]) < .7 ? 'var(--warn)' : 'var(--ok)'}"></i></div><b>${pct(r[1])}</b></div>`).join('')}
+      <div class="card"><h3>단계별 흐름 <small>어디서 빠지는지</small></h3>${funnelHTML(n)}
         <div class="muted mt">병목 구간 <b style="color:var(--bad)">${esc(s['병목 구간'] || '-')}</b> · 주요 탈락 ${esc(s['주요 탈락사유'] || '-')}</div></div>
       <div class="card"><h3>일정·담당 <small><a href="javascript:editCohort(${attr(n)})">수정</a></small></h3>${[['개강', '개강일'], ['센터 등록', '센터등록일'], ['중등 진급', '중등진급일'], ['고등 진급', '고등진급일'], ['종강(입교)', '종강일(입교)']].map(k => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line2)"><span class="muted" style="width:90px">${k[0]}</span><b style="font-weight:600">${esc(c[k[1]] || '-')}</b></div>`).join('')}
         <div class="row" style="padding:6px 0"><span class="muted" style="width:90px">강사</span>${esc(c['강사'] || '-')}</div><div class="row" style="padding:6px 0"><span class="muted" style="width:90px">전도사</span>${esc([c['전도사1'], c['전도사2']].filter(Boolean).join(', ') || '-')}</div></div></div>`;
@@ -593,12 +756,13 @@ PAGES.cohort = () => {
   if (tab === 'attstat') body = attStatBody(n);
   if (tab === 'book') body = bookBody(n);
   return `<div class="ph"><div><p style="margin:0 0 2px"><a href="#cohorts">기수 관리</a> ›</p><h1>${esc(n)} <span class="b ${c['상태'] === '진행중' ? 'blue' : ''}" style="vertical-align:middle">${esc(c['상태'] || '')}</span></h1></div>
-    <div class="acts"><button class="btn" onclick="linkDrawer(${attr(n)})">🔗 담당자 링크</button><button class="btn" onclick="editCohort(${attr(n)})">정보 수정</button><a class="btn p" href="#attend/${e}">✅ 출석 체크</a></div></div>
+    <div class="acts"><button class="btn" onclick="linkDrawer(${attr(n)})">${icon('link', 16)}담당자 링크</button><a class="btn" href="#report/${e}">${icon('print', 16)}보고서</a><button class="btn" onclick="importDrawer(${attr(n)})">${icon('upload', 16)}가져오기</button><button class="btn" onclick="editCohort(${attr(n)})">정보 수정</button><a class="btn p" href="#attend/${e}">출석 체크</a></div></div>
     <div class="tabs">${tabs.map(t => `<a href="#cohort/${e}/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${body}`;
 };
 AFTER.cohort = () => { if (ROUTE.tab === 'progress') AFTER.progress(); };
 
 /* ═════════ 기수 담당자 링크 ═════════ */
+const loadScript = src => new Promise((ok, no) => { if (document.querySelector(`script[src="${src}"]`)) return ok(); const t = document.createElement('script'); t.src = src; t.onload = ok; t.onerror = no; document.head.appendChild(t); });
 function coLink(n) { return location.origin + location.pathname + '?c=' + String(n).replace(/[&#?%+\s]/g, encodeURIComponent); }
 async function linkDrawer(n) {
   let keys = {};
@@ -606,6 +770,7 @@ async function linkDrawer(n) {
   const k = keys[n] || '';
   openDrawer(`담당자 링크<small>${esc(n)}</small>`, `<p class="muted" style="margin-top:0">담당 전도사님께 링크와 비밀번호를 보내 주세요. 이 링크로는 <b>${esc(n)}</b>의 출석 체크·출석부·진도만 보이고, 저장하면 중앙 시트에 바로 들어갑니다. 수강생 연락처 등 다른 정보는 보이지 않아요.</p>
     <label class="fld"><span>링크</span><input id="lkUrl" value="${esc(coLink(n))}" readonly onclick="this.select()"></label>
+    <div class="row mt" id="qr" style="align-items:flex-end"><span class="muted">QR 만드는 중…</span></div>
     <label class="fld mt"><span>담당자 비밀번호<em>${k ? '설정됨' : '아직 없음 · 4자 이상'}</em></span><input id="lkKey" value="${esc(k)}" placeholder="예: 262출석"></label>
     <div class="row mt"><button class="btn soft sm" onclick="lkRand()">무작위로 만들기</button><span class="sp"></span>${k ? `<button class="btn d sm" onclick="saveLink(${attr(n)},true,this)">링크 끄기</button>` : ''}</div>
     <div class="sec">보낼 문구</div><textarea id="lkMsg" readonly style="min-height:110px"></textarea>
@@ -613,6 +778,11 @@ async function linkDrawer(n) {
     `<span class="sp"></span><button class="btn" onclick="closeDrawer()">닫기</button><button class="btn p" onclick="saveLink(${attr(n)},false,this)">비밀번호 저장</button>`);
   const upd = () => $('#lkMsg').value = `[${n} 출석 체크]\n링크: ${coLink(n)}\n비밀번호: ${$('#lkKey').value || '(설정 필요)'}\n\n수업 후 링크에서 출석을 체크하고 「출석 저장」을 눌러 주세요.`;
   $('#lkKey').addEventListener('input', upd); upd();
+  loadScript('https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js').then(() => {
+    const q = qrcode(0, 'M'); q.addData(encodeURI(coLink(n))); q.make();
+    const src = q.createDataURL(8, 2), el = $('#qr'); if (!el) return;
+    el.innerHTML = `<img src="${src}" alt="담당자 링크 QR"><div><div class="muted" style="margin-bottom:8px">교실에 붙여 두면<br>휴대폰으로 찍어 바로 들어와요</div><a class="btn sm" download="${esc(n)}_출석QR.gif" href="${src}">QR 이미지 저장</a></div>`;
+  }).catch(() => { const el = $('#qr'); if (el) el.innerHTML = '<span class="muted">QR을 불러오지 못했어요</span>'; });
 }
 function lkRand() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let k = ''; for (let i = 0; i < 6; i++) k += a[Math.floor(Math.random() * a.length)]; $('#lkKey').value = k; $('#lkKey').dispatchEvent(new Event('input')); }
 async function saveLink(n, off, btn) {
@@ -654,20 +824,28 @@ PAGES.attend = () => {
   let so = '';
   for (let i = 1; i <= maxNo + 1; i++) { const s = ss.find(x => num(x['회차']) === i); so += `<option value="${i}" ${i === sel ? 'selected' : ''}>${i}회차${s && s['날짜'] ? ' · ' + md(s['날짜']) + '(' + DOW[dow(s['날짜'])] + ')' : ''}${doneNos.has(i) ? ' ✓' : ''}${s && s['상태'] === '휴강' ? ' 휴강' : ''}${!s && !doneNos.has(i) ? ' · 새 회차' : ''}</option>`; }
   const roster = rosterAt(n, date), am = attendMap(n);
-  AT = { n, sel, list: {} };
-  roster.forEach(s => { const r = (am[s['수강생ID']] || {})[sel]; AT.list[s['수강생ID']] = { status: r ? r['출석'] : '', makeupDate: r ? r['보강일'] || '' : '', note: r ? r['비고'] || '' : '', name: s['이름'] }; });
+  AT = { n, sel, list: {}, date: '' };
+  roster.forEach(s => { const r = (am[s['수강생ID']] || {})[sel]; AT.list[s['수강생ID']] = { status: r ? r['출석'] : '', makeupDate: r ? r['보강일'] || '' : '', note: r ? r['비고'] || '' : '', reason: r ? r['결석사유'] || '' : '', name: s['이름'] }; });
   DIRTY = false;
-  return `<div class="ph"><div><h1>출석 체크</h1><p>${esc(n)} · ${doneNos.has(sel) ? '이미 체크한 회차예요. 고치고 다시 저장하면 덮어써요.' : '「모두 실시간」을 누른 뒤 결석·보강만 바꾸세요.'}</p></div></div>
+  // 저장하지 못한 체크(임시 저장)가 있으면 불러오기
+  const dr = loadDraft(n, sel); let drNote = '';
+  if (dr && dr.list) {
+    const diff = Object.keys(AT.list).some(id => dr.list[id] && (dr.list[id].status !== AT.list[id].status || (dr.list[id].reason || '') !== AT.list[id].reason || (dr.list[id].note || '') !== AT.list[id].note));
+    if (diff) { Object.keys(AT.list).forEach(id => { if (dr.list[id]) Object.assign(AT.list[id], dr.list[id], { name: AT.list[id].name }); }); AT.date = dr.date; DIRTY = true;
+      drNote = `<div class="alert warn" style="margin-bottom:12px">저장하지 않은 체크를 불러왔어요 (${new Date(dr.at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })})<span class="sp"></span><button class="btn sm" onclick="clearDraft(${attr(n)},${sel});DIRTY=false;render()">버리기</button></div>`; }
+    else clearDraft(n, sel);
+  }
+  return drNote + `<div class="ph"><div><h1>출석 체크</h1><p>${esc(n)} · ${doneNos.has(sel) ? '이미 체크한 회차예요. 고치고 다시 저장하면 덮어써요.' : '「모두 실시간」을 누른 뒤 결석·보강만 바꾸세요.'}</p></div></div>
   <div class="card"><div class="form" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
     <label class="fld"><span>회차</span><select id="atS" onchange="go('attend/'+encodeURIComponent(${attr(n)})+'/'+this.value)">${so}</select></label>
-    <label class="fld"><span>날짜</span><input type="date" id="atD" value="${esc(date)}" onchange="$('#atCo').value=courseAt(${attr(n)},this.value)"></label>
+    <label class="fld"><span>날짜</span><input type="date" id="atD" value="${esc(AT.date || date)}" onchange="$('#atCo').value=courseAt(${attr(n)},this.value);saveDraft()"></label>
     <label class="fld"><span>과정</span><select id="atCo">${opts(L('과정').length ? L('과정') : ['센터', '초등', '중등', '고등'], ses['과정'] || courseAt(n, date))}</select></label>
     <label class="fld" style="grid-column:span 2"><span>진도 내용<em>선택</em></span><input id="atCt" value="${esc(ses['진도내용'] || '')}" placeholder="예: 초등 3강 비유풀이"></label>
   </div></div>
   <div class="row mt2" style="margin-bottom:10px"><b style="font-size:16px">재적 ${roster.length}명</b><span class="sp"></span><button class="btn soft sm" onclick="atAll('실시간')">모두 실시간</button><button class="btn ghost sm" onclick="atAll('')">초기화</button></div>
   ${roster.length ? `<div class="card" style="padding:0"><div class="alist">${roster.map(s => { const id = s['수강생ID']; return `<div class="aitem" data-id="${esc(id)}">
-    <div class="who"><b>${esc(s['이름'])}</b><span>${esc(s['담당전도사'] || '담당 없음')} · ${esc(stageOf(s))}</span>
-      <div class="extra"><input type="date" class="mk" title="보강한 날짜" onchange="AT.list[${attr(id)}].makeupDate=this.value"><input class="nt" placeholder="메모" onchange="AT.list[${attr(id)}].note=this.value;DIRTY=true"></div></div>
+    <div class="who"><b>${esc(s['이름'])}${riskBadge(riskOf(s))}</b><span>${esc(s['담당전도사'] || '담당 없음')} · ${esc(stageOf(s))}</span>
+      <div class="extra"><select class="rs" onchange="AT.list[${attr(id)}].reason=this.value;saveDraft()">${opts(absReasons(), '', '결석 사유')}</select><input type="date" class="mk" title="보강한 날짜" onchange="AT.list[${attr(id)}].makeupDate=this.value;saveDraft()"><input class="nt" placeholder="메모" onchange="AT.list[${attr(id)}].note=this.value;DIRTY=true;saveDraft()"></div></div>
     <div class="seg">${ATT.map(a => `<button class="${a}" onclick="atSet(${attr(id)},'${a}')">${a}</button>`).join('')}</div></div>`; }).join('')}</div></div>
   <div class="dock"><div class="cnt" id="atCount"></div><button class="btn p" id="atSave" onclick="saveAtt(this)">출석 저장</button></div>`
     : empty('이 날짜에 재적 수강생이 없어요', '「수강생」에서 명단을 먼저 등록하세요.', `<a class="btn p" href="#students">수강생 등록하러 가기</a>`)}`;
@@ -677,18 +855,75 @@ function paintAtt(id) {
   const st = AT.list[id], box = document.querySelector(`.aitem[data-id="${CSS.escape(id)}"]`); if (!box) return;
   box.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.textContent === st.status));
   const mk = box.querySelector('.mk'); mk.value = st.makeupDate; mk.style.display = st.status === '보강' ? '' : 'none';
+  const rs = box.querySelector('.rs'); rs.value = st.reason || ''; rs.style.display = st.status === '결석' ? '' : 'none';
   const nt = box.querySelector('.nt'); nt.value = st.note; nt.style.display = st.status && st.status !== '실시간' || st.note ? '' : 'none';
   box.querySelector('.extra').style.display = (st.status === '보강' || st.status === '결석' || st.note) ? '' : 'none';
 }
-function atSet(id, s) { const st = AT.list[id]; st.status = st.status === s ? '' : s; if (st.status === '보강' && !st.makeupDate) st.makeupDate = todayStr(); DIRTY = true; paintAtt(id); atCount(); }
-function atAll(s) { Object.keys(AT.list).forEach(id => { AT.list[id].status = s; paintAtt(id); }); DIRTY = !!s; atCount(); }
+function atSet(id, s) { const st = AT.list[id]; st.status = st.status === s ? '' : s; if (st.status === '보강' && !st.makeupDate) st.makeupDate = todayStr(); DIRTY = true; paintAtt(id); atCount(); saveDraft(); }
+function atAll(s) { Object.keys(AT.list).forEach(id => { AT.list[id].status = s; paintAtt(id); }); DIRTY = !!s; atCount(); if (s) saveDraft(); else clearDraft(AT.n, AT.sel); }
+const absReasons = () => L('결석사유').length ? L('결석사유') : ['병가', '직장·일', '가정사', '개인 사정', '연락 두절', '기타'];
+const DKEY = (n, s) => 'dc_draft|' + n + '|' + s;
+function saveDraft() { if (!AT.n) return; try { const d = $('#atD'); localStorage.setItem(DKEY(AT.n, AT.sel), JSON.stringify({ at: Date.now(), date: d ? d.value : '', list: AT.list })); } catch (e) { } }
+function clearDraft(n, s) { try { localStorage.removeItem(DKEY(n, s)); } catch (e) { } }
+function loadDraft(n, s) { try { return JSON.parse(localStorage.getItem(DKEY(n, s)) || 'null'); } catch (e) { return null; } }
 function atCount() { const v = Object.values(AT.list || {}), c = a => v.filter(x => x.status === a).length, el = $('#atCount'); if (el) el.innerHTML = `<span>실시간 <b>${c('실시간')}</b></span><span>보강 <b>${c('보강')}</b></span><span>결석 <b>${c('결석')}</b></span>${c('') ? `<span style="color:#ffd43b">미체크 <b>${c('')}</b></span>` : ''}`; }
 async function saveAtt(btn) {
   const ids = Object.keys(AT.list), miss = ids.filter(id => !AT.list[id].status), date = $('#atD').value;
   if (!date) return toast('날짜를 입력하세요', true);
   if (miss.length) return toast(`아직 체크 안 한 사람 ${miss.length}명: ${miss.slice(0, 3).map(id => AT.list[id].name).join(', ')}${miss.length > 3 ? ' 외' : ''}`, true);
-  const r = await saveAttendance({ cohort: AT.n, session: AT.sel, date, course: $('#atCo').value, content: $('#atCt').value.trim(), records: ids.map(id => ({ studentId: id, name: AT.list[id].name, status: AT.list[id].status, makeupDate: AT.list[id].status === '보강' ? AT.list[id].makeupDate : '', note: AT.list[id].note })) }, btn);
-  if (r) { DIRTY = false; toast(`${AT.sel}회차 저장 · 실시간 ${r.summary.real} · 보강 ${r.summary.makeup} · 결석 ${r.summary.absent}`); const h = 'attend/' + encodeURIComponent(AT.n) + '/' + AT.sel; if (location.hash.slice(1) !== h) location.hash = h; else render(); }
+  const r = await saveAttendance({ cohort: AT.n, session: AT.sel, date, course: $('#atCo').value, content: $('#atCt').value.trim(), records: ids.map(id => ({ studentId: id, name: AT.list[id].name, status: AT.list[id].status, makeupDate: AT.list[id].status === '보강' ? AT.list[id].makeupDate : '', note: AT.list[id].note, reason: AT.list[id].status === '결석' ? (AT.list[id].reason || '') : '' })) }, btn, { queue: true });
+  if (r) { DIRTY = false; clearDraft(AT.n, AT.sel); AT.date = ''; if (!r.queued) toast(`${AT.sel}회차 저장 · 실시간 ${r.summary.real} · 보강 ${r.summary.makeup} · 결석 ${r.summary.absent}`); const h = 'attend/' + encodeURIComponent(AT.n) + '/' + AT.sel; if (location.hash.slice(1) !== h) location.hash = h; else render(); }
+}
+
+/* ═════════ 결석·보강 관리 ═════════ */
+let FU = { f: 'todo' };
+const doneC = x => x['연락완료'] === true || x['연락완료'] === 'TRUE';
+function absList(n) {
+  const ids = {}; studentsOf(n).forEach(s => { if (!s['탈락일']) ids[s['수강생ID']] = s; });
+  return DB.attend.filter(a => String(a['기수명']) === String(n) && a['출석'] === '결석' && ids[a['수강생ID']]).map(a => ({ a, s: ids[a['수강생ID']] }))
+    .sort((x, y) => num(y.a['회차']) - num(x.a['회차']));
+}
+PAGES.followup = () => {
+  const n = curCohort(); if (!n) return needCohort();
+  const all = absList(n), todo = all.filter(x => !doneC(x.a)), list = FU.f === 'todo' ? todo : FU.f === 'done' ? all.filter(x => doneC(x.a)) : all;
+  const risky = studentsOf(n).filter(s => (riskOf(s) || {}).lv === 'bad');
+  const recent = DB.attend.filter(a => String(a['기수명']) === String(n) && a['출석'] === '보강').sort((x, y) => String(y['보강일']).localeCompare(String(x['보강일']))).slice(0, 8);
+  return `<div class="ph"><div><h1>결석 · 보강 관리</h1><p>${esc(n)} · 결석한 사람에게 연락하고, 보강하면 「보강 완료」를 누르세요</p></div></div>
+  <div class="grid g-kpi">${[['보강 필요(결석)', all.length, 'var(--bad)'], ['연락 안 함', todo.length, 'var(--warn-d)'], ['탈락 위험', risky.length, 'var(--bad)'], ['보강 완료', DB.attend.filter(a => String(a['기수명']) === String(n) && a['출석'] === '보강').length, 'var(--ok)']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="color:${k[2]}">${k[1]}<small>건</small></div></div>`).join('')}</div>
+  ${risky.length ? `<div class="card mt"><h3>탈락 위험 <small>먼저 챙겨 주세요</small></h3><div class="chips">${risky.map(s => `<span class="b bad" title="${esc(riskOf(s).why)}">${esc(s['이름'])} · ${esc(riskOf(s).why)}</span>`).join('')}</div></div>` : ''}
+  <div class="row mt2" style="margin-bottom:10px"><div class="chips">${[['todo', '연락 안 함 ' + todo.length], ['done', '연락함 ' + (all.length - todo.length)], ['all', '전체 ' + all.length]].map(c => `<button class="chip ${FU.f === c[0] ? 'on' : ''}" onclick="FU.f='${c[0]}';render()">${c[1]}</button>`).join('')}</div></div>
+  ${list.length ? `<div class="card" style="padding:0">${list.map(x => { const a = x.a, rid = attr(a['기록ID']); return `<div class="fu">
+    <div class="who"><b>${esc(x.s['이름'])}</b>${riskBadge(riskOf(x.s))} <span class="b ${doneC(a) ? 'ok' : ''}">${doneC(a) ? '연락함' : '연락 전'}</span>
+      <div class="meta">${a['회차']}회차 · ${md(a['날짜'])} 결석${a['결석사유'] ? ' · ' + esc(a['결석사유']) : ''} · 담당 ${esc(x.s['담당전도사'] || '-')}</div>
+      ${a['연락메모'] ? `<div class="memo">${esc(a['연락메모'])}</div>` : ''}</div>
+    <div class="acts"><button class="btn sm" onclick="fuContact(${rid})">${icon('phone', 15)}연락 기록</button><button class="btn soft sm" onclick="fuMakeup(${rid})">보강 완료</button></div></div>`; }).join('')}</div>`
+    : empty(FU.f === 'todo' ? '연락할 결석이 없어요 👍' : '해당하는 기록이 없어요')}
+  ${recent.length ? `<div class="card mt"><h3>최근 보강</h3>${recent.map(a => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line2)"><b>${esc(a['이름'])}</b><span class="muted">${a['회차']}회차 결석 → ${md(a['보강일']) || '-'} 보강</span></div>`).join('')}</div>` : ''}`;
+};
+const recOf = id => DB.attend.find(a => a['기록ID'] === id);
+function fuContact(id) {
+  const a = recOf(id); if (!a) return;
+  openDrawer(`연락 기록<small>${esc(a['이름'])} · ${a['회차']}회차 결석</small>`, `<div class="form">
+    ${F('결석사유', '결석 사유', a['결석사유'], 'select', absReasons())}<div></div>
+    <label class="fld full"><span>연락 내용<em>누가 · 언제 · 어떻게</em></span><textarea data-k="연락메모" placeholder="예: 11/14 한지우 전도사 통화. 다음 주 화요일 보강 약속">${esc(a['연락메모'] || '')}</textarea></label>
+    <label class="row full" style="font-weight:600"><input type="checkbox" data-k="연락완료" ${doneC(a) ? 'checked' : ''}> 연락 완료</label></div>`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="fuSave(${attr(id)},false,this)">저장</button>`);
+  setTimeout(() => { const c = $('#dBody [data-k="연락완료"]'); const t = $('#dBody [data-k="연락메모"]'); if (t && c) t.addEventListener('input', () => { if (t.value.trim()) c.checked = true; }); }, 50);
+}
+function fuMakeup(id) {
+  const a = recOf(id); if (!a) return;
+  openDrawer(`보강 완료<small>${esc(a['이름'])} · ${a['회차']}회차</small>`, `<p class="muted" style="margin-top:0">${a['회차']}회차(${md(a['날짜'])}) 결석을 보강으로 바꿉니다. 출석률에 반영돼요.</p>
+    <div class="form">${F('보강일', '보강한 날짜', todayStr(), 'date')}<div></div>${F('비고', '메모', a['비고'], 'text', null, { full: true })}</div>`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="fuSave(${attr(id)},true,this)">보강 완료</button>`);
+}
+async function fuSave(id, makeup, btn) {
+  const a = recOf(id), v = vals();
+  const rec = { studentId: a['수강생ID'], name: a['이름'] };
+  if (makeup) { if (!v['보강일']) return toast('보강일을 입력하세요', true); Object.assign(rec, { status: '보강', makeupDate: v['보강일'], note: v['비고'], contactDone: true }); }
+  else Object.assign(rec, { status: a['출석'], reason: v['결석사유'], contact: v['연락메모'], contactDone: v['연락완료'] });
+  const sm = summaryOf(a['기수명']).find(x => num(x['회차']) === num(a['회차'])) || {};
+  const r = await saveAttendance({ cohort: a['기수명'], session: num(a['회차']), date: a['날짜'], course: sm['과정'] || '', records: [rec] }, btn, { queue: true });
+  if (r) { closeDrawer(); render(); if (!r.queued) toast(makeup ? a['이름'] + ' 보강 완료' : '연락 기록을 저장했어요'); }
 }
 
 /* ═════════ 출석부 ═════════ */
@@ -703,23 +938,30 @@ function bookData(n) {
   return { sess, dates, am, studs };
 }
 const SYM = { '실시간': '●', '보강': '보', '결석': '✕' };
+let BK = {};
 function bookBody(n) {
-  const { sess, dates, am, studs } = bookData(n);
-  if (!sess.length) return empty('아직 출석 기록이 없어요', '', `<a class="btn p" href="#attend/${encodeURIComponent(n)}">출석 체크 시작</a>`);
+  const { sess: allSess, dates, am, studs } = bookData(n);
+  const crsMap = {}; summaryOf(n).forEach(x => crsMap[num(x['회차'])] = x['과정'] || courseAt(n, x['날짜']));
+  const crsList = [...new Set(allSess.map(x => crsMap[x] || courseAt(n, dates[x])))];
+  if (BK[n] === undefined) BK[n] = allSess.length > 20 && crsList.length > 1 ? crsList[crsList.length - 1] : '';
+  const sess = BK[n] ? allSess.filter(x => (crsMap[x] || courseAt(n, dates[x])) === BK[n]) : allSess;
+  const chips = crsList.length > 1 ? `<div class="chips noprint" style="margin-bottom:10px"><button class="chip ${BK[n] ? '' : 'on'}" onclick="BK[${attr(n)}]='';render()">전체 ${allSess.length}회</button>${crsList.map(c => `<button class="chip ${BK[n] === c ? 'on' : ''}" onclick="BK[${attr(n)}]=${attr(c)};render()">${esc(c)} ${allSess.filter(x => (crsMap[x] || courseAt(n, dates[x])) === c).length}회</button>`).join('')}</div>` : '';
+  if (!allSess.length) return empty('아직 출석 기록이 없어요', '', `<a class="btn p" href="#attend/${encodeURIComponent(n)}">출석 체크 시작</a>`);
   const col = sess.map(s => { let ok = 0, t = 0; studs.forEach(st => { const r = (am[st['수강생ID']] || {})[s]; if (r) { t++; if (r['출석'] !== '결석') ok++; } }); return t ? ok / t : ''; });
-  return `<div class="legend" style="margin-bottom:10px"><span class="cell 실시간">●</span>실시간<span class="cell 보강">보</span>보강<span class="cell 결석">✕</span>결석<span class="cell none">·</span>기록 없음</div>
+  return chips + `<div class="legend" style="margin-bottom:10px"><span class="cell 실시간">●</span>실시간<span class="cell 보강">보</span>보강<span class="cell 결석">✕</span>결석<span class="cell none">·</span>기록 없음</div>
   <div class="tw" style="max-height:72vh"><table><tr><th class="stick">이름</th>${sess.map(s => `<th class="c">${s}<div style="font-weight:500;font-size:10px">${md(dates[s])}</div></th>`).join('')}<th class="c">출석률</th><th class="c hm">실시간</th><th class="c hm">보강</th><th class="c hm">결석</th></tr>
   ${studs.map(st => { const id = st['수강생ID'], rec = am[id] || {}, c = { '실시간': 0, '보강': 0, '결석': 0 };
-    const cells = sess.map(s => { const r = rec[s]; if (r) c[r['출석']]++; return `<td class="c" style="padding:6px"><span class="cell ${r ? r['출석'] : 'none'}" title="${r ? esc(r['출석'] + (r['보강일'] ? ' ' + r['보강일'] : '') + (r['비고'] ? ' · ' + r['비고'] : '')) : '기록 없음'}" onclick="cellPop(event,${attr(n)},${s},${attr(id)})">${r ? SYM[r['출석']] : '·'}</span></td>`; }).join('');
+    allSess.forEach(s => { const r = rec[s]; if (r) c[r['출석']]++; });
+    const cells = sess.map(s => { const r = rec[s]; return `<td class="c" style="padding:6px"><span class="cell ${r ? r['출석'] : 'none'}" title="${r ? esc(r['출석'] + (r['보강일'] ? ' ' + r['보강일'] : '') + (r['결석사유'] ? ' · ' + r['결석사유'] : '') + (r['비고'] ? ' · ' + r['비고'] : '')) : '기록 없음'}" onclick="cellPop(event,${attr(n)},${s},${attr(id)})">${r ? SYM[r['출석']] : '·'}</span></td>`; }).join('');
     const tot = c['실시간'] + c['보강'] + c['결석'], rate = tot ? (c['실시간'] + c['보강']) / tot : '';
-    return `<tr><td class="stick"><b>${esc(st['이름'])}</b><div class="muted" style="font-size:12px">${esc(st['담당전도사'] || '')}${st['탈락일'] ? ' · <span style="color:var(--bad)">탈락</span>' : ''}</div></td>${cells}<td class="c"><b style="color:${rate !== '' && rate < .7 ? 'var(--bad)' : 'inherit'}">${pct(rate)}</b></td><td class="c hm">${c['실시간']}</td><td class="c hm">${c['보강']}</td><td class="c hm">${c['결석']}</td></tr>`; }).join('')}
+    return `<tr><td class="stick"><b>${esc(st['이름'])}</b>${riskBadge(riskOf(st))}<div class="muted" style="font-size:12px">${esc(st['담당전도사'] || '')}${st['탈락일'] ? ' · <span style="color:var(--bad)">탈락</span>' : ''}</div></td>${cells}<td class="c"><b style="color:${rate !== '' && rate < .7 ? 'var(--bad)' : 'inherit'}">${pct(rate)}</b></td><td class="c hm">${c['실시간']}</td><td class="c hm">${c['보강']}</td><td class="c hm">${c['결석']}</td></tr>`; }).join('')}
   <tr><td class="stick muted">회차 출석률</td>${col.map(v => `<td class="c muted" style="font-size:12px">${pct(v)}</td>`).join('')}<td></td><td class="hm"></td><td class="hm"></td><td class="hm"></td></tr></table></div>`;
 }
 function cellPop(ev, n, s, id) {
   ev.stopPropagation(); closePop();
   const st = DB.student.find(x => x['수강생ID'] === id) || {}, r = (attendMap(n)[id] || {})[s] || {}, sm = summaryOf(n).find(x => num(x['회차']) === s) || {};
   const p = document.createElement('div'); p.id = 'pop';
-  p.innerHTML = `<div class="t">${esc(st['이름'] || id)} · ${s}회차 ${md(sm['날짜'])}</div><div class="seg">${ATT.map(a => `<button class="${a} ${r['출석'] === a ? 'on' : ''}" data-a="${a}">${a}</button>`).join('')}</div><input id="popNote" placeholder="메모 (선택)" value="${esc(r['비고'] || '')}">`;
+  p.innerHTML = `<div class="t">${esc(st['이름'] || id)} · ${s}회차 ${md(sm['날짜'])}</div><div class="seg">${ATT.map(a => `<button class="${a} ${r['출석'] === a ? 'on' : ''}" data-a="${a}">${a}</button>`).join('')}</div><input id="popNote" placeholder="메모 (선택)" value="${esc(r['비고'] || '')}">${r['기록일시'] ? `<div class="muted" style="font-size:11px;margin:8px 4px 0">최근 수정 ${esc(r['수정자'] || '')} · ${esc(String(r['기록일시']).slice(5, 16))}</div>` : ''}`;
   document.body.appendChild(p);
   const rc = ev.target.getBoundingClientRect(); let x = rc.left + window.scrollX - 105, y = rc.bottom + window.scrollY + 6;
   x = Math.max(8, Math.min(x, window.scrollX + document.documentElement.clientWidth - 250)); p.style.left = x + 'px'; p.style.top = y + 'px';
@@ -800,28 +1042,30 @@ async function doGen(n, btn) {
 let SF = { scope: 'cur', st: '', ev: '', q: '' }, SEL = new Set();
 PAGES.students = () => {
   const n = curCohort();
-  let list = DB.student.slice();
+  let list = live();
   if (SF.scope === 'cur' && n) list = list.filter(s => String(s['기수명']) === n);
   if (SF.st) list = list.filter(s => stageOf(s) === SF.st);
   if (SF.ev) list = list.filter(s => s['담당전도사'] === SF.ev);
+  if (SF.risk) list = list.filter(s => (riskOf(s) || {}).lv === 'bad');
   if (SF.q) list = list.filter(s => [s['이름'], s['연락처'], s['인도자'], s['수강생ID']].join(' ').includes(SF.q));
-  const evs = Array.from(new Set(DB.student.map(s => s['담당전도사']).filter(Boolean))).sort();
-  const base = SF.scope === 'cur' && n ? studentsOf(n) : DB.student;
+  const evs = Array.from(new Set(live().map(s => s['담당전도사']).filter(Boolean))).sort();
+  const base = SF.scope === 'cur' && n ? studentsOf(n) : live(), nRisk = base.filter(s => (riskOf(s) || {}).lv === 'bad').length;
   return `<div class="ph"><div><h1>수강생</h1><p>${SF.scope === 'cur' && n ? esc(n) : '전체 기수'} · ${list.length}명</p></div><div class="acts"><button class="btn" onclick="bulkAdd()">명단 붙여넣기</button><button class="btn p" onclick="editStudent()">+ 새 수강생</button></div></div>
   <div class="card" style="padding:14px">
     <div class="row"><div class="search" style="flex:1;min-width:200px"><input placeholder="이름, 연락처, 인도자 검색" value="${esc(SF.q)}" oninput="SF.q=this.value.trim();clearTimeout(window._q);window._q=setTimeout(()=>{render();const i=$('.search input');i.focus();i.setSelectionRange(i.value.length,i.value.length)},250)"></div>
       <select onchange="SF.scope=this.value;render()"><option value="cur" ${SF.scope === 'cur' ? 'selected' : ''}>현재 기수만</option><option value="all" ${SF.scope === 'all' ? 'selected' : ''}>전체 기수</option></select>
       <select onchange="SF.ev=this.value;render()">${opts(evs, SF.ev, '모든 전도사')}</select></div>
-    <div class="chips mt"><button class="chip ${SF.st === '' ? 'on' : ''}" onclick="SF.st='';render()">전체 ${base.length}</button>${STAGES.map(s => { const c = base.filter(x => stageOf(x) === s).length; return c ? `<button class="chip ${SF.st === s ? 'on' : ''}" onclick="SF.st='${s}';render()">${s} ${c}</button>` : ''; }).join('')}</div>
+    <div class="chips mt"><button class="chip ${SF.st === '' && !SF.risk ? 'on' : ''}" onclick="SF.st='';SF.risk=false;render()">전체 ${base.length}</button>${nRisk ? `<button class="chip ${SF.risk ? 'on' : ''}" style="${SF.risk ? '' : 'color:var(--bad)'}" onclick="SF.risk=!SF.risk;render()">⚠ 탈락 위험 ${nRisk}</button>` : ''}${STAGES.map(s => { const c = base.filter(x => stageOf(x) === s).length; return c ? `<button class="chip ${SF.st === s ? 'on' : ''}" onclick="SF.st='${s}';render()">${s} ${c}</button>` : ''; }).join('')}</div>
   </div><div class="mt">${studentTable(list, SF.scope === 'cur')}</div>`;
 };
 function studentTable(list, inCohort) {
   if (!list.length) return empty('수강생이 없어요', '「명단 붙여넣기」로 한 번에 등록할 수 있어요.');
   list = list.slice().sort((a, b) => String(b['기수명']).localeCompare(String(a['기수명'])) || byEvName(a, b));
   SEL = new Set([...SEL].filter(id => list.some(s => s['수강생ID'] === id)));
-  return `<div class="tw"><table><tr><th style="width:40px"><input type="checkbox" onclick="selAll(this.checked)"></th><th>이름</th>${inCohort ? '' : '<th>기수</th>'}<th>단계</th><th>담당전도사</th><th class="hm">연락처</th><th class="c">출석률</th><th class="hm">소속</th><th class="hm">메모</th></tr>
+  const cards = `<div class="mlist">${list.map(s => `<div class="mcard" onclick="editStudent(${attr(s['수강생ID'])})"><div class="who"><b>${esc(s['이름'])}</b>${riskBadge(riskOf(s))}<div>${inCohort ? '' : esc(s['기수명']) + ' · '}${esc(s['담당전도사'] || '담당 없음')} · 출석 ${pct(s['출석률'])}</div></div>${stageBadge(stageOf(s))}${s['연락처'] ? `<a class="btn sm" href="tel:${esc(s['연락처'])}" onclick="event.stopPropagation()">${icon('phone', 15)}</a>` : ''}</div>`).join('')}</div>`;
+  return cards + `<div class="tw stu"><table><tr><th style="width:40px"><input type="checkbox" onclick="selAll(this.checked)"></th><th>이름</th>${inCohort ? '' : '<th>기수</th>'}<th>단계</th><th>담당전도사</th><th class="hm">연락처</th><th class="c">출석률</th><th class="hm">소속</th><th class="hm">메모</th></tr>
   ${list.map(s => { const id = s['수강생ID']; return `<tr class="click" onclick="if(!event.target.closest('input,a'))editStudent(${attr(id)})"><td><input type="checkbox" class="pick" value="${esc(id)}" ${SEL.has(id) ? 'checked' : ''} onchange="selOne(this)"></td>
-    <td><b>${esc(s['이름'])}</b></td>${inCohort ? '' : `<td>${esc(s['기수명'])}</td>`}<td>${stageBadge(stageOf(s))}</td><td>${esc(s['담당전도사'] || '-')}</td>
+    <td><b>${esc(s['이름'])}</b>${riskBadge(riskOf(s))}</td>${inCohort ? '' : `<td>${esc(s['기수명'])}</td>`}<td>${stageBadge(stageOf(s))}</td><td>${esc(s['담당전도사'] || '-')}</td>
     <td class="hm">${s['연락처'] ? `<a href="tel:${esc(s['연락처'])}">${esc(s['연락처'])}</a>` : '<span class="muted">-</span>'}</td><td class="c">${pct(s['출석률'])}</td><td class="hm">${esc(s['소속부서'] || '')}</td><td class="hm muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(s['탈락사유'] || s['비고'] || '')}</td></tr>`; }).join('')}</table></div>
   <div id="selbar"></div>`;
 }
@@ -845,7 +1089,7 @@ function editStudent(id) {
     <div class="sec">진행 단계 <span class="muted" style="font-weight:500">날짜를 넣으면 단계가 올라가요</span></div>
     ${stageRow('입고일', '수카 입고', s['입고일'])}${stageRow('센터등록일', '센터 등록', s['센터등록일'])}${stageRow('중등진급일', '중등 진급', s['중등진급일'])}${stageRow('고등진급일', '고등 진급', s['고등진급일'])}${stageRow('입교일', '입교(종강)', s['입교일'])}
     <label class="row" style="margin-top:10px;font-weight:600"><input type="checkbox" data-k="수료" ${s['수료'] === true || s['수료'] === 'TRUE' ? 'checked' : ''}> 수료</label>
-    ${id && s['출석률'] !== '' && s['출석률'] !== undefined ? `<div class="muted mt">누적 출석률 <b style="color:var(--ink)">${pct(s['출석률'])}</b></div>` : ''}
+    ${id ? studentInsight(s) : ''}
     <div class="sec">탈락</div>
     <details ${dropped ? 'open' : ''}><summary class="btn ${dropped ? 'd' : ''} sm" style="list-style:none">${dropped ? '탈락 정보' : '탈락 처리하기'}</summary><div class="mt">
       <div class="form">${F('탈락일', '탈락일', s['탈락일'], 'date')}<div></div></div>
@@ -865,7 +1109,18 @@ async function saveStudent(btn) {
   if (!v['수강생ID'] && DB.student.some(s => s['이름'] === v['이름'] && String(s['기수명']) === v['기수명']) && !await ask('같은 이름이 있어요', '같은 기수에 ' + v['이름'] + '님이 이미 있습니다. 동명이인으로 추가할까요?', '추가')) return;
   if (await save('student', [v], v['수강생ID'] ? '저장했어요' : v['이름'] + '님을 등록했어요', btn)) { closeDrawer(); render(); }
 }
-async function delStudent(id) { if (await ask('수강생 삭제', '출석 기록도 함께 지워집니다.\n탈락한 분은 삭제 대신 「탈락 처리」로 기록을 남기는 것을 권해요.', '삭제', true)) { if (await removeRec('student', { '수강생ID': id })) { closeDrawer(); render(); } } }
+async function delStudent(id) {
+  if (!await ask('수강생 삭제', '목록에서 빼고 「설정 › 휴지통」으로 옮깁니다. 출석 기록은 그대로 남고, 언제든 되살릴 수 있어요.\n탈락한 분은 삭제 대신 「탈락 처리」를 권해요.', '휴지통으로', true)) return;
+  if (await save('student', [{ '수강생ID': id, '보관일': todayStr() }], '휴지통으로 옮겼어요')) { closeDrawer(); render(); }
+}
+function studentInsight(s) {
+  const nos = summaryOf(s['기수명']).map(x => num(x['회차'])), rec = attendMap(s['기수명'])[s['수강생ID']] || {}, rk = riskOf(s);
+  const strip = nos.length ? `<div class="strip">${nos.map(n => { const r = rec[n]; return `<span class="${r ? r['출석'] : ''}" title="${n}회차 ${r ? r['출석'] + (r['결석사유'] ? ' · ' + r['결석사유'] : '') : '기록 없음'}"></span>`; }).join('')}</div>` : '<span class="muted">출석 기록 없음</span>';
+  const hist = s['사람ID'] ? DB.student.filter(x => x['사람ID'] === s['사람ID'] && x['수강생ID'] !== s['수강생ID']) : [];
+  return `<div class="sec">출석 <span class="muted" style="font-weight:500">누적 ${pct(s['출석률'])}${rk ? ' · ' + esc(rk.why) : ''}</span></div>${strip}
+    <div class="legend" style="margin-top:6px;font-size:12px"><span class="strip"><span class="실시간"></span></span>실시간<span class="strip"><span class="보강"></span></span>보강<span class="strip"><span class="결석"></span></span>결석</div>
+    ${hist.length ? `<div class="sec">다른 기수 이력</div>${hist.map(h => `<a class="alert" href="javascript:editStudent(${attr(h['수강생ID'])})" style="margin-bottom:6px">${esc(h['기수명'])} · ${stageBadge(stageOf(h))}${h['탈락사유'] ? ' <span class="muted">' + esc(h['탈락사유']) + '</span>' : ''}${h['보관일'] ? ' <span class="muted">(휴지통)</span>' : ''}<span class="go">›</span></a>`).join('')}` : ''}`;
+}
 function bulkAdd() {
   openDrawer('명단 붙여넣기', staffList() + `<p class="muted" style="margin-top:0">한 줄에 한 명씩 「이름」 또는 「이름, 연락처」. 엑셀에서 두 칸을 복사해 붙여도 돼요.</p>
     <div class="form">${F('기수명', '기수', curCohort(), 'select', cohorts().map(c => c['기수명']))}${F('입고일', '입고일', todayStr(), 'date')}${F('담당전도사', '담당전도사', '', 'text', 'dlStaff', { full: true, hint: '모두 같을 때만' })}</div>
@@ -876,7 +1131,7 @@ function parseNames(t) { return t.split('\n').map(l => l.trim()).filter(Boolean)
 async function doBulkAdd(btn) {
   const v = vals(), list = parseNames($('#baTxt').value);
   if (!list.length) return toast('명단을 입력하세요', true);
-  const dup = list.filter(x => DB.student.some(s => s['이름'] === x['이름'] && String(s['기수명']) === v['기수명']));
+  const dup = list.filter(x => live().some(s => s['이름'] === x['이름'] && String(s['기수명']) === v['기수명']));
   if (dup.length && !await ask('이미 있는 이름', dup.map(x => x['이름']).join(', ') + '\n그래도 모두 추가할까요?', '추가')) return;
   if (await save('student', list.map(x => Object.assign({ '기수명': v['기수명'], '입고일': v['입고일'], '담당전도사': v['담당전도사'] }, x)), list.length + '명을 등록했어요', btn)) { closeDrawer(); render(); }
 }
@@ -900,7 +1155,7 @@ PAGES.register = () => {
   const list = registerCandidates(n), c = cohortOf(n) || {}, ok = list.filter(x => x.state === 'ok');
   const lab = { ok: ['ok', '등록 가능'], no: ['bad', '요건 미달'], wait: ['warn', '진행중'], done: ['blue', '등록됨'] }, ord = ['ok', 'wait', 'no', 'done'];
   const cnt = st => list.filter(x => x.state === st).length;
-  return `<div class="ph"><div><h1>센터 등록 판정</h1><p>${esc(n)} · 첫 6회 모두 출석 + 실시간 5회 이상(보강 1회까지)</p></div><div class="acts"><button class="btn p" ${ok.length ? '' : 'disabled'} onclick="regDrawer(${attr(n)})">등록 가능 ${ok.length}명 등록 처리</button></div></div>
+  return `<div class="ph"><div><h1>센터 등록 판정</h1><p>${esc(n)} · 첫 ${SET().reg.n}회 모두 출석 + 실시간 ${SET().reg.minReal}회 이상(보강 ${SET().reg.maxMakeup}회까지) <a href="#settings">기준 바꾸기</a></p></div><div class="acts"><button class="btn p" ${ok.length ? '' : 'disabled'} onclick="regDrawer(${attr(n)})">등록 가능 ${ok.length}명 등록 처리</button></div></div>
   <div class="grid g-kpi">${[['등록 가능', cnt('ok'), 'var(--ok)'], ['진행중', cnt('wait'), 'var(--warn-d)'], ['요건 미달', cnt('no'), 'var(--bad)'], ['등록 완료', cnt('done'), 'var(--pri)']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="color:${k[2]}">${k[1]}<small>명</small></div></div>`).join('')}</div>
   <div class="tw mt"><table><tr><th>이름</th><th class="hm">담당</th><th class="c">실시간</th><th class="c">보강</th><th class="c">결석</th><th>판정</th><th class="hm">사유</th></tr>
   ${list.sort((a, b) => ord.indexOf(a.state) - ord.indexOf(b.state)).map(x => `<tr class="click" onclick="editStudent(${attr(x.s['수강생ID'])})"><td><b>${esc(x.s['이름'])}</b></td><td class="hm">${esc(x.s['담당전도사'] || '')}</td><td class="c">${x.real}</td><td class="c">${x.mk}</td><td class="c">${x.ab}</td><td><span class="b ${lab[x.state][0]}">${lab[x.state][1]}</span></td><td class="hm muted">${esc(x.why)}</td></tr>`).join('') || `<tr><td colspan="7">${empty('수강생이 없어요')}</td></tr>`}</table></div>
@@ -946,20 +1201,37 @@ async function delStaff(id) { if (DB.staff.some(s => s['상위자(고유번호)'
 
 /* ═════════ 분석 ═════════ */
 PAGES.analysis = () => {
-  const tab = ROUTE.arg || 'cohort', tabs = [['cohort', '기수 비교'], ['ins', '강사'], ['eva', '전도사'], ['drop', '탈락']];
+  const tab = ROUTE.arg || 'cohort', tabs = [['cohort', '기수 비교'], ['ins', '강사'], ['eva', '전도사'], ['lead', '인도자·부서'], ['drop', '탈락']];
+  const scope = `<div class="row" style="margin-bottom:12px"><span class="muted">분석 범위</span><div class="chips">${['종강 기수만', '전체 기수'].map(x => `<button class="chip ${(DB.statScope || '종강 기수만') === x ? 'on' : ''}" onclick="setScope(${attr(x)},this)">${x}</button>`).join('')}</div></div>`;
   let body = '';
-  if (tab === 'cohort') body = statTable((DB.cohortStats || []).slice().sort((a, b) => String(b['개강일']).localeCompare(String(a['개강일']))), [['기수명', 't'], ['상태', 't'], ['수카 입고', 'n'], ['센터 등록(초등)', 'n'], ['입교(종강)', 'n'], ['입고→등록률', 'p'], ['등록→중등 진급률', 'p'], ['중등→고등 진급률', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['진도율', 'p'], ['병목 구간', 't']], r => `go('cohort/'+encodeURIComponent(${attr(String(r['기수명']))}))`);
-  if (tab === 'ins') body = `<p class="muted">종강한 기수 기준이에요 (시트 「강사분석」 B1에서 범위 변경)</p>` + statTable(DB.instructorStats || [], [['강사', 't'], ['담당 기수 수', 'n'], ['입고', 'n'], ['등록', 'n'], ['입교', 'n'], ['입고→등록', 'p'], ['등록→중등', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['종강률 전체대비', 'd'], ['가장 약한 구간', 't']]);
-  if (tab === 'eva') body = `<p class="muted">수강생별 담당전도사 기준 · 종강한 기수</p>` + statTable(DB.evangelistStats || [], [['전도사', 't'], ['담당 학생(입고)', 'n'], ['등록', 'n'], ['입교', 'n'], ['탈락', 'n'], ['입고→등록', 'p'], ['종강률(등록→입교)', 'p'], ['학생 평균 출석률', 'p'], ['종강률 전체대비', 'd'], ['주요 탈락사유', 't'], ['가장 약한 구간', 't']]);
+  if (tab === 'cohort') body = cohortMinis() + statTable((DB.cohortStats || []).slice().sort((a, b) => String(b['개강일']).localeCompare(String(a['개강일']))), [['기수명', 't'], ['상태', 't'], ['수카 입고', 'n'], ['센터 등록(초등)', 'n'], ['입교(종강)', 'n'], ['입고→등록률', 'p'], ['등록→중등 진급률', 'p'], ['중등→고등 진급률', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['진도율', 'p'], ['병목 구간', 't']], r => `go('cohort/'+encodeURIComponent(${attr(String(r['기수명']))}))`);
+  if (tab === 'ins') body = scope + statTable(DB.instructorStats || [], [['강사', 't'], ['담당 기수 수', 'n'], ['입고', 'n'], ['등록', 'n'], ['입교', 'n'], ['입고→등록', 'p'], ['등록→중등', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['종강률 전체대비', 'd'], ['가장 약한 구간', 't']]);
+  if (tab === 'eva') body = scope + `<p class="muted" style="margin-top:0">수강생별 담당전도사 기준</p>` + statTable(DB.evangelistStats || [], [['전도사', 't'], ['담당 학생(입고)', 'n'], ['등록', 'n'], ['입교', 'n'], ['탈락', 'n'], ['입고→등록', 'p'], ['종강률(등록→입교)', 'p'], ['학생 평균 출석률', 'p'], ['종강률 전체대비', 'd'], ['주요 탈락사유', 't'], ['가장 약한 구간', 't']]);
   if (tab === 'drop') {
-    const d = DB.student.filter(s => s['탈락일']);
+    const d = live().filter(s => s['탈락일']);
     const cnt = f => { const m = {}; d.forEach(s => { const k = f(s) || '(미입력)'; m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
     const stg = s => s['고등진급일'] ? '고등' : s['중등진급일'] ? '중등' : s['센터등록일'] ? '초등' : '센터(등록전)';
     const bars = arr => { const mx = Math.max(1, ...arr.map(x => x[1])); return arr.map(x => `<div class="hbar"><span class="t">${esc(x[0])}</span><div class="bar"><i style="width:${x[1] / mx * 100}%;background:var(--bad)"></i></div><b>${x[1]}</b></div>`).join('') || '<div class="muted">탈락 기록이 없어요</div>'; };
     body = `<div class="grid g-2"><div class="card"><h3>사유별 <small>${d.length}명</small></h3>${bars(cnt(s => s['탈락사유']))}</div><div class="card"><h3>탈락 단계별</h3>${bars(cnt(stg))}</div><div class="card"><h3>담당전도사별</h3>${bars(cnt(s => s['담당전도사']))}</div><div class="card"><h3>기수별</h3>${bars(cnt(s => String(s['기수명'])))}</div></div>`;
   }
+  if (tab === 'lead') {
+    const g = key => { const m = {}; live().forEach(s => { const k = s[key] || '(미입력)', x = m[k] = m[k] || { k, a: 0, r: 0, f: 0, d: 0 }; x.a++; if (s['센터등록일']) x.r++; if (s['입교일']) x.f++; if (s['탈락일']) x.d++; }); return Object.values(m).sort((a, b) => b.a - a.a).map(x => ({ [key === '인도자' ? '인도자' : '소속부서']: x.k, '입고': x.a, '등록': x.r, '입교': x.f, '탈락': x.d, '입고→등록': x.a ? x.r / x.a : '', '등록→입교': x.r ? x.f / x.r : '' })); };
+    const cols = k => [[k, 't'], ['입고', 'n'], ['등록', 'n'], ['입교', 'n'], ['탈락', 'n'], ['입고→등록', 'p'], ['등록→입교', 'p']];
+    body = `<p class="muted" style="margin-top:0">전도 파이프라인과 이어서 보는 인도자·부서별 결과예요. 진행 중인 기수도 포함돼요.</p><div class="card" style="padding:0"><h3 style="padding:16px 20px 0">부서별</h3>${statTable(g('소속부서'), cols('소속부서'))}</div><div class="card mt" style="padding:0"><h3 style="padding:16px 20px 0">인도자별</h3>${statTable(g('인도자'), cols('인도자'))}</div>`;
+  }
   return `<div class="ph"><div><h1>분석</h1><p>구글 시트에서 자동 계산된 결과예요</p></div></div><div class="tabs">${tabs.map(t => `<a href="#analysis/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${body}`;
 };
+async function setScope(v, btn) {
+  busy(btn, true);
+  try { const j = await api('setStatScope', { scope: v }); Object.assign(DB, j.data); render(); toast('분석 범위: ' + v); } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+/** 기수 비교: 같은 기준으로 그린 작은 막대 그래프 3개 */
+function cohortMinis() {
+  const rows = (DB.cohortStats || []).slice().sort((a, b) => String(a['개강일']).localeCompare(String(b['개강일']))).slice(-10);
+  if (rows.length < 2) return '';
+  const chart = (title, key) => `<div class="card"><h3>${title}</h3>${rows.map(r => { const v = r[key]; return `<div class="mbar" title="${esc(r['기수명'])} · ${title} ${pct(v)}"><span>${esc(r['기수명'])}</span><div class="bx"><i style="width:${v === '' || v === undefined ? 0 : num(v) * 100}%"></i></div><b>${pct(v)}</b></div>`; }).join('')}</div>`;
+  return `<div class="minis" style="margin-bottom:12px">${chart('입고 → 센터 등록', '입고→등록률')}${chart('종강률 (등록 → 입교)', '종강률(등록→입교)')}${chart('평균 출석률', '평균 출석률')}</div>`;
+}
 function statTable(rows, cols, onclick) {
   if (!rows.length) return empty('데이터가 아직 없어요');
   const cell = (v, t) => t === 'p' ? `<td class="c"><span class="b ${v === '' || v === undefined ? '' : num(v) < .5 ? 'bad' : num(v) < .7 ? 'warn' : 'ok'}">${pct(v)}</span></td>`
@@ -967,6 +1239,161 @@ function statTable(rows, cols, onclick) {
     : t === 'n' ? `<td class="c">${v === '' || v === undefined ? '-' : v}</td>` : `<td>${esc(v)}</td>`;
   return `<div class="tw"><table><tr>${cols.map(c => `<th class="${c[1] === 't' ? '' : 'c'}">${esc(c[0])}</th>`).join('')}</tr>${rows.map(r => `<tr class="${onclick ? 'click' : ''}" ${onclick ? `onclick="${esc(onclick(r))}"` : ''}>${cols.map(c => cell(r[c[0]], c[1])).join('')}</tr>`).join('')}</table></div>`;
 }
+
+/* ═════════ 보고서 (인쇄 · PDF) ═════════ */
+PAGES.report = () => {
+  const n = curCohort(), c = cohortOf(n); if (!c) return needCohort();
+  const stu = studentsOf(n), sm = summaryOf(n), p = progressOf(n), rk = riskMap(n);
+  const pts = sm.map(x => ({ x: x['회차'], label: x['회차'] + '회차', v: num(x['재적인원']) ? (num(x['실시간출석']) + num(x['보강출석'])) / num(x['재적인원']) : 0 }));
+  const drops = stu.filter(x => x['탈락일']), abs = absList(n), todo = abs.filter(x => !doneC(x.a));
+  const rkList = stu.filter(x => rk[x['수강생ID']]);
+  return `<div class="row noprint" style="margin-bottom:14px"><a class="btn ghost sm" href="#cohort/${encodeURIComponent(n)}">‹ ${esc(n)}</a><span class="sp"></span><button class="btn p" onclick="window.print()">${icon('print', 16)}인쇄 · PDF 저장</button></div>
+  <div class="rp-h"><div><div class="muted">논산교회 신학부 기수 현황 보고</div><h1 style="margin:2px 0 0;font-size:26px">${esc(n)}</h1></div><span class="sp"></span><div class="muted" style="text-align:right">작성 ${todayStr()}<br>강사 ${esc(c['강사'] || '-')} · 전도사 ${esc([c['전도사1'], c['전도사2']].filter(Boolean).join(', ') || '-')}</div></div>
+  <div class="grid g-kpi">${[['개강', md(c['개강일']) || '-'], ['진도', p.done + '/' + p.plan + '회'], ['재적', rosterAt(n, todayStr()).length + '명'], ['평균 출석률', pct(attRate(n))], ['탈락', drops.length + '명'], ['탈락 위험', Object.values(rk).filter(x => x.lv === 'bad').length + '명']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="font-size:22px">${k[1]}</div></div>`).join('')}</div>
+  <div class="grid g-2 mt"><div class="card"><h3>단계별 흐름</h3>${funnelHTML(n)}</div><div class="card"><h3>회차별 출석률</h3>${lineChart(pts)}</div></div>
+  <div class="grid g-2 mt"><div class="card"><h3>챙겨야 할 사람 <small>${rkList.length}명</small></h3>${rkList.length ? rkList.map(x => `<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line2)"><b>${esc(x['이름'])}</b><span class="muted">${esc(x['담당전도사'] || '')}</span><span class="sp"></span>${riskBadge(rk[x['수강생ID']])}<span class="muted">${esc(rk[x['수강생ID']].why)}</span></div>`).join('') : '<div class="muted">없음</div>'}
+    <div class="muted mt">보강 필요 결석 ${abs.length}건 · 연락 안 함 ${todo.length}건</div></div>
+    <div class="card"><h3>탈락 <small>${drops.length}명</small></h3>${drops.length ? drops.map(x => `<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line2)"><b>${esc(x['이름'])}</b><span class="muted">${md(x['탈락일'])}</span><span class="sp"></span><span>${esc(x['탈락사유'] || '-')}</span></div>`).join('') : '<div class="muted">없음</div>'}</div></div>
+  <div class="tw mt"><table><tr><th>이름</th><th>담당전도사</th><th>단계</th><th class="c">출석률</th><th>비고</th></tr>${stu.slice().sort(byEvName).map(x => `<tr><td><b>${esc(x['이름'])}</b></td><td>${esc(x['담당전도사'] || '')}</td><td>${esc(stageOf(x))}</td><td class="c">${pct(x['출석률'])}</td><td class="muted">${esc((rk[x['수강생ID']] || {}).why || x['탈락사유'] || '')}</td></tr>`).join('')}</table></div>`;
+};
+
+/* ═════════ 과거 자료 가져오기 ═════════ */
+const HMAP = { '이름': ['이름', '성명'], '연락처': ['연락처', '전화', '전화번호', '휴대폰', '핸드폰'], '성별': ['성별'], '생년월일': ['생년월일', '생일'], '담당전도사': ['담당전도사', '전도사', '담당'], '인도자': ['인도자', '전도자'], '소속부서': ['소속부서', '부서', '소속'],
+  '입고일': ['입고일', '수카입고', '입고'], '센터등록일': ['센터등록일', '등록일', '센터등록', '등록'], '중등진급일': ['중등진급일', '중등'], '고등진급일': ['고등진급일', '고등'], '입교일': ['입교일', '종강일', '입교', '종강'], '탈락일': ['탈락일', '탈락'], '탈락사유': ['탈락사유', '사유'] };
+const DATE_COLS = ['생년월일', '입고일', '센터등록일', '중등진급일', '고등진급일', '입교일', '탈락일'];
+function normDate(v) {
+  v = String(v || '').trim(); if (!v) return '';
+  if (/^\d{5}$/.test(v)) { const d = new Date(Date.UTC(1899, 11, 30) + Number(v) * 864e5); return d.toISOString().slice(0, 10); }
+  const m = v.match(/(\d{2,4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/); if (!m) return '';
+  const y = m[1].length === 2 ? '20' + m[1] : m[1]; return y + '-' + pad(m[2]) + '-' + pad(m[3]);
+}
+const splitRows = t => t.replace(/\r/g, '').split('\n').filter(l => l.trim()).map(l => (l.includes('\t') ? l.split('\t') : l.split(',')).map(x => x.trim()));
+const ATT_IN = v => { v = String(v || '').trim(); if (!v) return ''; if (/^(실|실시간|o|O|○|●|1|출|출석|v|V)$/.test(v)) return '실시간'; if (/^(보|보강|△|▲)$/.test(v)) return '보강'; if (/^(결|결석|x|X|✕|×|0)$/.test(v)) return '결석'; return '?'; };
+let IMP = { tab: 'roster' };
+function importDrawer(n) {
+  IMP = { tab: IMP.tab, n };
+  const body = IMP.tab === 'roster'
+    ? `<p class="muted" style="margin-top:0">엑셀에서 <b>머리글(첫 줄) 포함</b>해서 표를 복사해 붙여넣으세요. 알아듣는 열: 이름, 연락처, 성별, 담당전도사, 인도자, 소속부서, 입고일, 센터등록일, 중등진급일, 고등진급일, 입교일, 탈락일, 탈락사유. 날짜는 2025.3.5 / 2025-03-05 모두 됩니다.</p>`
+    : `<p class="muted" style="margin-top:0">출석표를 머리글 포함해서 붙여넣으세요. <b>첫 열은 이름</b>, 나머지 열 머리글은 날짜(예: 3/5, 2025.3.5)나 회차(예: 1회차). 칸에는 <b>실·보·결</b> (또는 O·△·X, 출석·보강·결석). 빈칸은 건너뜁니다.</p>
+       <label class="row" style="font-weight:600;margin-bottom:10px"><input type="checkbox" id="impAdd" checked> 명단에 없는 이름은 수강생으로 새로 추가</label>`;
+  openDrawer(`과거 자료 가져오기<small>${esc(n)}</small>`, `<div class="chips" style="margin-bottom:14px">${[['roster', '명단 · 진행 단계'], ['att', '출석표']].map(t => `<button class="chip ${IMP.tab === t[0] ? 'on' : ''}" onclick="IMP.tab='${t[0]}';importDrawer(${attr(n)})">${t[1]}</button>`).join('')}</div>${body}
+    <textarea id="impTxt" style="min-height:200px;font-family:ui-monospace,monospace;font-size:12px" placeholder="여기에 붙여넣기" oninput="impPreview()"></textarea><div id="impPrev" class="mt"></div>`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" id="impGo" disabled onclick="impRun(this)">가져오기</button>`);
+}
+function impParse() {
+  const rows = splitRows($('#impTxt').value); if (rows.length < 2) return null;
+  const head = rows[0], n = IMP.n;
+  if (IMP.tab === 'roster') {
+    const map = head.map(h => { const k = h.replace(/\s/g, ''); return Object.keys(HMAP).find(f => HMAP[f].includes(k)) || ''; });
+    if (!map.includes('이름')) return { err: '머리글에 「이름」 열이 없어요' };
+    const out = rows.slice(1).map(r => { const o = { '기수명': n }; map.forEach((f, j) => { if (f && r[j] !== undefined && r[j] !== '') o[f] = DATE_COLS.includes(f) ? normDate(r[j]) : r[j]; }); return o; }).filter(o => o['이름']);
+    const exist = new Set(studentsOf(n).map(s => s['이름']));
+    return { rows: out, cols: [...new Set(map.filter(Boolean))], dup: out.filter(o => exist.has(o['이름'])).map(o => o['이름']) };
+  }
+  const yr = (cohortOf(n) || {})['개강일'] ? String(cohortOf(n)['개강일']).slice(0, 4) : String(new Date().getFullYear());
+  const exist = sessionsOf(n), maxNo = Math.max(0, ...exist.map(x => num(x['회차'])));
+  const cols = head.slice(1).map((h, i) => {
+    let no = 0, date = '';
+    const m = h.match(/(\d+)\s*회/); if (m) no = num(m[1]);
+    date = normDate(h) || (/^\d{1,2}[\/.]\d{1,2}$/.test(h) ? normDate(yr + '.' + h.replace('/', '.')) : '');
+    if (!no && /^\d{1,3}$/.test(h)) no = num(h);
+    if (!no && date) { const hit = exist.find(x => x['날짜'] === date); if (hit) no = num(hit['회차']); }
+    if (!date && no) { const hit = exist.find(x => num(x['회차']) === no); if (hit) date = hit['날짜']; }
+    return { no, date, j: i + 1 };
+  });
+  let next = maxNo; cols.forEach(c => { if (!c.no) c.no = ++next; });
+  const byName = {}; studentsOf(n).forEach(s => byName[s['이름']] = s);
+  const people = rows.slice(1).filter(r => r[0]), unknown = people.filter(r => !byName[r[0]]).map(r => r[0]);
+  let cells = 0, bad = 0; people.forEach(r => cols.forEach(c => { const v = ATT_IN(r[c.j]); if (v === '?') bad++; else if (v) cells++; }));
+  return { cols, people, byName, unknown, cells, bad };
+}
+function impPreview() {
+  const r = impParse(), el = $('#impPrev'), go = $('#impGo');
+  if (!r) { el.innerHTML = ''; go.disabled = true; return; }
+  if (r.err) { el.innerHTML = `<div class="alert bad">${esc(r.err)}</div>`; go.disabled = true; return; }
+  if (IMP.tab === 'roster') {
+    el.innerHTML = `<div class="alert blue">${r.rows.length}명 · 알아들은 열: ${r.cols.map(esc).join(', ')}</div>${r.dup.length ? `<div class="alert warn mt">이미 있는 이름 ${r.dup.length}명(${r.dup.slice(0, 5).map(esc).join(', ')}) — 진행 단계만 덮어써요</div>` : ''}<div class="prev mt">${esc(r.rows.slice(0, 5).map(o => Object.entries(o).filter(x => x[0] !== '기수명').map(x => x[0] + ':' + x[1]).join('  ')).join('\n'))}</div>`;
+    go.disabled = !r.rows.length;
+  } else {
+    el.innerHTML = `<div class="alert blue">${r.people.length}명 × ${r.cols.length}회차 · 기록 ${r.cells}칸</div>
+      <div class="prev mt">${esc(r.cols.slice(0, 12).map(c => c.no + '회차 ' + (c.date || '(날짜 없음)')).join('\n'))}${r.cols.length > 12 ? '\n…' : ''}</div>
+      ${r.unknown.length ? `<div class="alert warn mt">명단에 없는 이름 ${r.unknown.length}명: ${r.unknown.slice(0, 6).map(esc).join(', ')}</div>` : ''}${r.bad ? `<div class="alert bad mt">알 수 없는 표기 ${r.bad}칸은 건너뜁니다</div>` : ''}`;
+    go.disabled = !r.cells;
+  }
+}
+async function impRun(btn) {
+  const r = impParse(), n = IMP.n; if (!r || r.err) return;
+  busy(btn, true);
+  try {
+    if (IMP.tab === 'roster') {
+      const ex = {}; studentsOf(n).forEach(s => ex[s['이름']] = s['수강생ID']);
+      const rows = r.rows.map(o => ex[o['이름']] ? Object.assign({}, o, { '수강생ID': ex[o['이름']] }) : o);
+      await api('upsert', { table: 'student', rows }); await reload(); closeDrawer(); render(); toast(rows.length + '명을 가져왔어요');
+      return;
+    }
+    if (r.unknown.length && $('#impAdd').checked) { await api('upsert', { table: 'student', rows: r.unknown.map(nm => ({ '기수명': n, '이름': nm })) }); await reload(); r.byName = {}; studentsOf(n).forEach(s => r.byName[s['이름']] = s); }
+    const sessions = r.cols.map(c => ({ session: c.no, date: c.date, course: courseAt(n, c.date), records: r.people.filter(p => r.byName[p[0]]).map(p => ({ st: r.byName[p[0]], v: ATT_IN(p[c.j]) })).filter(x => x.v && x.v !== '?').map(x => ({ studentId: x.st['수강생ID'], name: x.st['이름'], status: x.v })) })).filter(x => x.records.length);
+    for (let i = 0; i < sessions.length; i += 15) { btn.textContent = `보내는 중 ${Math.min(i + 15, sessions.length)}/${sessions.length}`; await api('importAttendance', { cohort: n, sessions: sessions.slice(i, i + 15) }); }
+    await reload(); closeDrawer(); render(); toast(sessions.length + '개 회차 출석을 가져왔어요');
+  } catch (e) { toast(e.message, true); } finally { busy(btn, false); if (btn.isConnected) btn.textContent = '가져오기'; }
+}
+
+/* ═════════ 설정 ═════════ */
+let SETS = null, JOB = null;
+PAGES.settings = () => `<div class="ph"><div><h1>설정</h1><p>판정 기준 · 알림 · 자동 작업 · 휴지통</p></div></div><div id="setBody">${SETS ? settingsBody() : '<div class="sk" style="height:300px"></div>'}</div>`;
+AFTER.settings = async () => {
+  if (SETS) return;
+  try { const [a, b] = await Promise.all([api('getSettings'), api('jobStatus')]); SETS = a.settings; JOB = b; if (ROUTE.page === 'settings') render(); }
+  catch (e) { toast(e.message, true); }
+};
+function settingsBody() {
+  const S2 = SETS, T = S2.tg, act = cohorts().filter(c => c['상태'] !== '종강'), trash = DB.student.filter(s => s['보관일']);
+  const num3 = (k, label, v, unit) => `<label class="fld"><span>${label}</span><div class="row" style="flex-wrap:nowrap"><input type="number" data-s="${k}" value="${esc(v)}" style="width:100%"><span class="muted">${unit}</span></div></label>`;
+  const chk = (k, label) => `<label class="row" style="font-weight:500"><input type="checkbox" data-s="tg.${k}" ${T[k] ? 'checked' : ''}> ${label}</label>`;
+  return `<div class="card"><h3>센터 등록 판정 기준</h3><div class="setgrid">${num3('reg.n', '판정할 첫 회차 수', S2.reg.n, '회')}${num3('reg.minReal', '실시간 최소', S2.reg.minReal, '회')}${num3('reg.maxMakeup', '보강 최대', S2.reg.maxMakeup, '회')}</div></div>
+  <div class="card"><h3>탈락 위험 기준</h3><div class="setgrid">${num3('risk.streak', '연속 결석(이상)', S2.risk.streak, '회')}${num3('risk.recent', '최근 몇 회', S2.risk.recent, '회')}${num3('risk.rate', '최근 출석률 미만', Math.round(S2.risk.rate * 100), '%')}</div><p class="muted" style="margin-bottom:0">둘 중 하나라도 해당하면 「위험」, 최근 3회 안에 결석이 있으면 「주의」로 표시해요.</p></div>
+  <div class="card"><h3>텔레그램 알림 <small>매일 정해진 시각에 보냅니다</small></h3>
+    <div class="form"><label class="fld full"><span>봇 토큰<em>@BotFather에서 받은 값</em></span><input type="password" data-s="tg.token" value="${esc(T.token)}" placeholder="123456:ABC..." autocomplete="off"></label>
+      <label class="fld"><span>관리자 채팅 ID</span><input data-s="tg.adminChat" value="${esc(T.adminChat)}" placeholder="예: 123456789"></label>
+      <label class="fld"><span>알림 시각</span><select data-s="tg.hour">${Array.from({ length: 17 }, (_, i) => i + 7).map(h => `<option value="${h}" ${num(T.hour) === h ? 'selected' : ''}>${h}시</option>`).join('')}</select></label></div>
+    ${act.length ? `<div class="sec">기수 담당자 채팅 ID <span class="muted" style="font-weight:500">비워 두면 관리자에게만</span></div><div class="form">${act.map(c => `<label class="fld"><span>${esc(c['기수명'])}</span><input data-cc="${esc(c['기수명'])}" value="${esc((T.cohortChats || {})[c['기수명']] || '')}"></label>`).join('')}</div>` : ''}
+    <div class="sec">보낼 내용</div><div style="display:grid;gap:6px">${chk('unchecked', '수업한 날 출석이 체크되지 않았을 때')}${chk('absent', '연속 결석자')}${chk('register', '센터 등록 가능 인원')}${chk('makeup', '연락하지 않은 결석')}${chk('weekly', '월요일 주간 요약')}</div>
+    <div class="row mt"><button class="btn sm" onclick="tgChats(this)">채팅 ID 찾기</button><button class="btn sm" onclick="tgTest(this)">테스트 보내기</button></div><div id="tgList"></div>
+    <p class="muted" style="margin-bottom:0">채팅 ID 찾는 법: 봇에게(또는 봇을 넣은 단체방에) 아무 말이나 보낸 뒤 「채팅 ID 찾기」를 누르세요.</p></div>
+  <div class="card"><h3>자동 작업 <small>매일 출석률 다시 계산 · 백업 · 알림</small></h3>
+    <div class="row"><span class="b ${JOB && JOB.installed ? 'ok' : 'warn'}">${JOB && JOB.installed ? '켜져 있음' : JOB && JOB.installed === null ? '권한 승인 필요' : '꺼져 있음'}</span><span class="muted">${esc((JOB && JOB.last) || '아직 실행한 적 없음')}</span></div>
+    <div class="form mt"><label class="row" style="font-weight:500"><input type="checkbox" data-s="backup.on" ${S2.backup.on ? 'checked' : ''}> 매일 구글 드라이브에 시트 백업</label>${num3('backup.keep', '백업 보관 개수', S2.backup.keep, '개')}</div>
+    <div class="row mt"><button class="btn sm" onclick="jobInstall(this)">${JOB && JOB.installed ? '다시 설치' : '자동 작업 켜기'}</button><button class="btn sm" onclick="jobRun(this)">지금 한 번 실행</button></div></div>
+  <div class="row mt" style="justify-content:flex-end"><button class="btn p" onclick="saveSets(this)">설정 저장</button></div>
+  <div class="card mt"><h3>휴지통 <small>${trash.length}명</small></h3>${trash.length ? trash.map(t => `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line2)"><b>${esc(t['이름'])}</b><span class="muted">${esc(t['기수명'])} · ${md(t['보관일'])} 삭제</span><span class="sp"></span><button class="btn sm" onclick="restoreStu(${attr(t['수강생ID'])},this)">되살리기</button><button class="btn d sm" onclick="purgeStu(${attr(t['수강생ID'])})">영구 삭제</button></div>`).join('') : '<div class="muted">비어 있어요</div>'}</div>`;
+}
+function readSets() {
+  const o = JSON.parse(JSON.stringify(SETS));
+  document.querySelectorAll('[data-s]').forEach(el => { const [a, b] = el.dataset.s.split('.'); let v = el.type === 'checkbox' ? el.checked : el.value.trim(); if (el.type === 'number') v = num(v); if (a === 'risk' && b === 'rate') v = v / 100; if (b === 'hour') v = num(v); o[a][b] = v; });
+  o.tg.cohortChats = Object.assign({}, o.tg.cohortChats); document.querySelectorAll('[data-cc]').forEach(el => { if (el.value.trim()) o.tg.cohortChats[el.dataset.cc] = el.value.trim(); else delete o.tg.cohortChats[el.dataset.cc]; });
+  return o;
+}
+async function saveSets(btn) {
+  const o = readSets();
+  if (o.reg.n < 1 || o.reg.minReal > o.reg.n) return toast('판정 기준을 확인하세요 (실시간 최소는 회차 수 이하)', true);
+  busy(btn, true);
+  try {
+    const hourChanged = num(o.tg.hour) !== num(SETS.tg.hour);
+    SETS = (await api('saveSettings', { settings: o })).settings; DB.settings = { reg: SETS.reg, risk: SETS.risk };
+    if (hourChanged && JOB && JOB.installed) JOB = await api('installJobs');
+    toast('설정을 저장했어요'); render();
+  } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+async function tgChats(btn) {
+  busy(btn, true);
+  try { await api('saveSettings', { settings: readSets() }); const r = await api('tgChats'); $('#tgList').innerHTML = r.chats.length ? `<div class="mt">${r.chats.map(c => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line2)"><b>${esc(c.name || '(이름 없음)')}</b><span class="muted">${esc(c.id)}</span><span class="sp"></span><button class="btn sm" onclick="$('[data-s=&quot;tg.adminChat&quot;]').value='${esc(c.id)}'">관리자로</button></div>`).join('')}</div>` : '<div class="alert warn mt">아직 받은 메시지가 없어요. 봇에게 먼저 말을 걸어 주세요.</div>'; }
+  catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+async function tgTest(btn) { busy(btn, true); try { SETS = (await api('saveSettings', { settings: readSets() })).settings; await api('tgTest'); toast('테스트 메시지를 보냈어요'); } catch (e) { toast(e.message, true); } finally { busy(btn, false); } }
+async function jobInstall(btn) { busy(btn, true); try { SETS = (await api('saveSettings', { settings: readSets() })).settings; JOB = await api('installJobs'); toast('자동 작업을 켰어요 (매일 ' + SETS.tg.hour + '시)'); render(); } catch (e) { toast(e.message.includes('권한') || e.message.includes('ermission') ? '처음 한 번은 Apps Script에서 권한 승인이 필요해요' : e.message, true); } finally { busy(btn, false); } }
+async function jobRun(btn) { busy(btn, true); try { const r = await api('runDaily', { notify: true, backup: true }); JOB = await api('jobStatus'); toast(`완료 · 출석률 ${r.report.rates}명 · 알림 ${r.report.sent}건${r.report.backup ? ' · 백업 ' + r.report.backup : ''}`); render(); } catch (e) { toast(e.message, true); } finally { busy(btn, false); } }
+async function restoreStu(id, btn) { if (await save('student', [{ '수강생ID': id, '보관일': '' }], '되살렸어요', btn)) render(); }
+async function purgeStu(id) { if (await ask('영구 삭제', '이 수강생과 출석 기록이 시트에서 완전히 지워지고 되돌릴 수 없어요.', '영구 삭제', true)) { if (await removeRec('student', { '수강생ID': id })) render(); } }
 
 /* ═════════ 시작 ═════════ */
 (function init() { const c = cfg(); if (c.pw) start(); else showLogin(); })();
