@@ -279,11 +279,16 @@ const NAV = [
   ['사람', [['students', '👥', '수강생'], ['cohorts', '📚', '기수 관리'], ['staff', '🧭', '사명자·조직도']]],
   ['분석', [['analysis', '📊', '분석']]]
 ];
+const CO_NAV = [['담당 기수', [['attend', '✅', '출석 체크'], ['book', '🗓️', '출석부'], ['progress', '📖', '진도']]]];
 const MOBILE_NAV = [['home', '🏠', '홈'], ['attend', '✅', '출석'], ['book', '🗓️', '출석부'], ['students', '👥', '수강생'], ['more', '☰', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
 const KEYS = { staff: ['고유번호'], cohort: ['기수명'], student: ['수강생ID'], session: ['기수명', '회차'], attend: ['기록ID'], summary: ['기수명', '회차'] };
 let DB = null, ROUTE = { page: 'home' }, DIRTY = false;
+const LINK_C = new URLSearchParams(location.search).get('c') || '';   // 기수 담당자 링크(?c=기수명)
+let ROLE = { type: LINK_C ? 'cohort' : 'admin', cohort: LINK_C };
+const isCo = () => ROLE.type === 'cohort';
+const PWK = LINK_C ? 'dc_pw_c_' + LINK_C : 'dc_pw';
 const S = { cohort: localStorage.getItem('dc_cohort') || '' };
 
 /* ═════════ 도우미 ═════════ */
@@ -305,11 +310,11 @@ function loading(on) { loadingN += on ? 1 : -1; let l = $('#loading'); if (loadi
 function busy(btn, on) { if (btn) btn.classList.toggle('busy', on); }
 
 /* ═════════ API ═════════ */
-const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, pw: sessionStorage.getItem('dc_pw') || localStorage.getItem('dc_pw') || '' });
+const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, pw: sessionStorage.getItem(PWK) || localStorage.getItem(PWK) || '' });
 async function api(action, payload) {
   const c = cfg(); loading(true);
   try {
-    const res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: c.pw, action }, payload || {})) });
+    const res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: c.pw, action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) });
     const j = await res.json();
     if (!j.ok) { if (j.auth === false) logout(true); throw new Error(j.error || '오류가 났습니다'); }
     return j;
@@ -355,13 +360,13 @@ async function saveAttendance(payload, btn) {
 }
 
 /* ═════════ 로그인·라우팅 ═════════ */
-function showLogin(msg) { $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#lgUrl').value = cfg().url; $('#lgErr').textContent = msg || ''; setTimeout(() => $('#lgPw').focus(), 50); }
-function logout(expired) { sessionStorage.removeItem('dc_pw'); localStorage.removeItem('dc_pw'); showLogin(expired ? '비밀번호를 다시 입력해 주세요.' : ''); }
+function showLogin(msg) { if (LINK_C) { $('#login h1').textContent = LINK_C + ' 출석 체크'; $('#login p.muted').textContent = '담당자용 화면입니다. 이 기수의 출석과 진도를 기록하면 중앙 데이터센터에 바로 저장됩니다.'; $('#lgPw').placeholder = '담당자 비밀번호'; } $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#lgUrl').value = cfg().url; $('#lgErr').textContent = msg || ''; setTimeout(() => $('#lgPw').focus(), 50); }
+function logout(expired) { sessionStorage.removeItem(PWK); localStorage.removeItem(PWK); showLogin(expired ? '비밀번호를 다시 입력해 주세요.' : ''); }
 $('#lgBtn').onclick = async () => {
   const url = $('#lgUrl').value.trim() || DEFAULT_API, pw = $('#lgPw').value;
   if (!pw) { $('#lgErr').textContent = '비밀번호를 입력하세요.'; return; }
-  localStorage.setItem('dc_url', url); sessionStorage.setItem('dc_pw', pw);
-  if ($('#lgKeep').checked) localStorage.setItem('dc_pw', pw); else localStorage.removeItem('dc_pw');
+  localStorage.setItem('dc_url', url); sessionStorage.setItem(PWK, pw);
+  if ($('#lgKeep').checked) localStorage.setItem(PWK, pw); else localStorage.removeItem(PWK);
   busy($('#lgBtn'), true);
   try { await api('login'); await start(); }
   catch (e) { $('#lgErr').textContent = e.message === 'Failed to fetch' ? '서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.' : e.message; }
@@ -371,8 +376,10 @@ $('#lgPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('#lgBtn')
 
 async function start() {
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  $('#nav').innerHTML = NAV.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${n[1]}</span>${n[2]}</a>`).join('')).join('');
-  $('#bottombar').innerHTML = MOBILE_NAV.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${n[1]}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${n[1]}</span>${n[2]}</a>`).join('');
+  const nav = isCo() ? CO_NAV : NAV, mnav = isCo() ? CO_NAV[0][1].map(n => [n[0], n[1], n[2].replace(' 체크', '')]) : MOBILE_NAV;
+  if (isCo()) { document.querySelector('.cohortPick').innerHTML = `<label>담당 기수</label><b style="display:block;font-size:15px;padding:2px 0">${esc(ROLE.cohort)}</b>`; $('#cohortSelM').style.display = 'none'; S.cohort = ROLE.cohort; }
+  $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${n[1]}</span>${n[2]}</a>`).join('')).join('');
+  $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${n[1]}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${n[1]}</span>${n[2]}</a>`).join('');
   try { await reload(); } catch (e) { showLogin(e.message); return; }
   route();
 }
@@ -381,6 +388,7 @@ window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); 
 function route() {
   const h = decodeURIComponent(location.hash.slice(1) || 'home').split('/');
   ROUTE = { page: h[0], arg: h[1], tab: h[2] };
+  if (isCo() && !['attend', 'book', 'progress'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
   if (['attend', 'book', 'progress', 'register'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   closeAll();
@@ -390,8 +398,8 @@ const TITLES = { home: '대시보드', attend: '출석 체크', book: '출석부
 function render() {
   if (!DB) return;
   const p = ROUTE.page;
-  document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && !MOBILE_NAV.some(m => m[0] === p))));
-  $('#topTitle').textContent = TITLES[p] || '';
+  document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && !isCo() && !MOBILE_NAV.some(m => m[0] === p))));
+  $('#topTitle').textContent = (isCo() ? ROLE.cohort + ' · ' : '') + (TITLES[p] || '');
   const f = PAGES[p] || PAGES.home;
   try { $('#view').innerHTML = f(); (AFTER[p] || (() => { }))(); }
   catch (e) { console.error(e); $('#view').innerHTML = `<div class="card">화면 오류: ${esc(e.message)}</div>`; }
@@ -404,6 +412,7 @@ function cohorts() { return DB.cohort.slice().sort((a, b) => String(b['개강일
 function cohortOf(n) { return DB && DB.cohort.find(c => String(c['기수명']) === String(n)); }
 function setCohort(n) { S.cohort = String(n); localStorage.setItem('dc_cohort', S.cohort); fillCohortSel(); }
 function curCohort() {
+  if (isCo()) return ROLE.cohort;
   if (S.cohort && cohortOf(S.cohort)) return S.cohort;
   const cs = cohorts(), on = cs.find(c => c['상태'] === '진행중');
   return on ? String(on['기수명']) : (cs[0] ? String(cs[0]['기수명']) : '');
@@ -411,7 +420,7 @@ function curCohort() {
 function fillCohortSel() {
   if (!DB) return; const cur = curCohort();
   const h = cohorts().map(c => `<option value="${esc(c['기수명'])}" ${String(c['기수명']) === cur ? 'selected' : ''}>${esc(c['기수명'])}${c['상태'] === '진행중' ? ' · 진행중' : c['상태'] === '종강' ? ' · 종강' : ''}</option>`).join('') || '<option value="">기수 없음</option>';
-  $('#cohortSel').innerHTML = h; $('#cohortSelM').innerHTML = h;
+  if ($('#cohortSel')) $('#cohortSel').innerHTML = h; $('#cohortSelM').innerHTML = h;
 }
 function pickCohort(n) {
   if (DIRTY && !confirm('저장하지 않은 출석 체크가 있습니다. 기수를 바꿀까요?')) { fillCohortSel(); return; }
@@ -584,10 +593,37 @@ PAGES.cohort = () => {
   if (tab === 'attstat') body = attStatBody(n);
   if (tab === 'book') body = bookBody(n);
   return `<div class="ph"><div><p style="margin:0 0 2px"><a href="#cohorts">기수 관리</a> ›</p><h1>${esc(n)} <span class="b ${c['상태'] === '진행중' ? 'blue' : ''}" style="vertical-align:middle">${esc(c['상태'] || '')}</span></h1></div>
-    <div class="acts"><button class="btn" onclick="editCohort(${attr(n)})">정보 수정</button><a class="btn p" href="#attend/${e}">✅ 출석 체크</a></div></div>
+    <div class="acts"><button class="btn" onclick="linkDrawer(${attr(n)})">🔗 담당자 링크</button><button class="btn" onclick="editCohort(${attr(n)})">정보 수정</button><a class="btn p" href="#attend/${e}">✅ 출석 체크</a></div></div>
     <div class="tabs">${tabs.map(t => `<a href="#cohort/${e}/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${body}`;
 };
 AFTER.cohort = () => { if (ROUTE.tab === 'progress') AFTER.progress(); };
+
+/* ═════════ 기수 담당자 링크 ═════════ */
+function coLink(n) { return location.origin + location.pathname + '?c=' + String(n).replace(/[&#?%+\s]/g, encodeURIComponent); }
+async function linkDrawer(n) {
+  let keys = {};
+  try { keys = (await api('cohortKeys')).keys || {}; } catch (e) { return toast(e.message, true); }
+  const k = keys[n] || '';
+  openDrawer(`담당자 링크<small>${esc(n)}</small>`, `<p class="muted" style="margin-top:0">담당 전도사님께 링크와 비밀번호를 보내 주세요. 이 링크로는 <b>${esc(n)}</b>의 출석 체크·출석부·진도만 보이고, 저장하면 중앙 시트에 바로 들어갑니다. 수강생 연락처 등 다른 정보는 보이지 않아요.</p>
+    <label class="fld"><span>링크</span><input id="lkUrl" value="${esc(coLink(n))}" readonly onclick="this.select()"></label>
+    <label class="fld mt"><span>담당자 비밀번호<em>${k ? '설정됨' : '아직 없음 · 4자 이상'}</em></span><input id="lkKey" value="${esc(k)}" placeholder="예: 262출석"></label>
+    <div class="row mt"><button class="btn soft sm" onclick="lkRand()">무작위로 만들기</button><span class="sp"></span>${k ? `<button class="btn d sm" onclick="saveLink(${attr(n)},true,this)">링크 끄기</button>` : ''}</div>
+    <div class="sec">보낼 문구</div><textarea id="lkMsg" readonly style="min-height:110px"></textarea>
+    <button class="btn mt" onclick="copyLink()">📋 문구 복사</button>`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">닫기</button><button class="btn p" onclick="saveLink(${attr(n)},false,this)">비밀번호 저장</button>`);
+  const upd = () => $('#lkMsg').value = `[${n} 출석 체크]\n링크: ${coLink(n)}\n비밀번호: ${$('#lkKey').value || '(설정 필요)'}\n\n수업 후 링크에서 출석을 체크하고 「출석 저장」을 눌러 주세요.`;
+  $('#lkKey').addEventListener('input', upd); upd();
+}
+function lkRand() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let k = ''; for (let i = 0; i < 6; i++) k += a[Math.floor(Math.random() * a.length)]; $('#lkKey').value = k; $('#lkKey').dispatchEvent(new Event('input')); }
+async function saveLink(n, off, btn) {
+  const k = off ? '' : $('#lkKey').value.trim();
+  if (!off && k.length < 4) return toast('비밀번호를 4자 이상으로 정해 주세요', true);
+  if (off && !await ask('담당자 링크 끄기', n + ' 담당자 링크로 더 이상 들어올 수 없게 됩니다.', '끄기', true)) return;
+  busy(btn, true);
+  try { await api('setCohortKey', { cohort2: n, cohortKey: k }); toast(off ? '링크를 껐어요' : '비밀번호를 저장했어요. 문구를 복사해 보내 주세요'); if (off) closeDrawer(); }
+  catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+async function copyLink() { const t = $('#lkMsg'); try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); } toast('복사했어요'); }
 
 /* ═════════ 출석 현황 ═════════ */
 function attStatBody(n) {
@@ -733,7 +769,7 @@ function editSession(n, no) {
     ${s ? `<input type="hidden" data-k="회차" value="${no}">` : F('회차', '회차', v['회차'], 'number')}${F('날짜', '날짜', v['날짜'], 'date')}
     ${F('과정', '과정', v['과정'] || courseAt(n, v['날짜']), 'select', L('과정'))}${F('상태', '상태', v['상태'] || '예정', 'select', ['예정', '완료', '휴강'])}
     ${F('진도내용', '진도 내용', v['진도내용'], 'text', null, { full: true })}${F('강사', '강사', v['강사'])}<div></div>${F('비고', '메모', v['비고'], 'area')}</div>`,
-    `${s ? `<button class="btn d" onclick="delSession(${attr(n)},${no})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveSession(${attr(n)},${no || 0},this)">저장</button>`);
+    `${s && !isCo() ? `<button class="btn d" onclick="delSession(${attr(n)},${no})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveSession(${attr(n)},${no || 0},this)">저장</button>`);
 }
 async function saveSession(n, old, btn) {
   const v = vals(); v['기수명'] = n; v['회차'] = num(v['회차']);
