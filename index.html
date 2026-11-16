@@ -230,7 +230,22 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
 .org .node b{display:block;font-size:14px}
 .org .node span{font-size:12px;color:var(--sub)}
 .org .node.top{background:var(--pri);border-color:var(--pri);color:#fff}.org .node.top span{color:#d6e7ff}
+.org .node.gold{background:#fff8e6;border-color:#f0c869}.org .node.gold span{color:#8a6410}
+.org .node.aide{background:var(--pri-l);border-color:#b8d4ff}
 .orgwrap{overflow:auto;padding:4px 0 8px}
+.orgroots{display:flex;justify-content:center;align-items:flex-start;gap:28px;min-width:max-content;padding:0 8px}
+.orgroots>ul{padding-top:0}.orgroots>ul>li{padding-top:0}.orgroots>ul>li::before,.orgroots>ul>li::after{display:none}
+.org .node{touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
+.org .node.dragging{opacity:.35}
+.org .node.drop-in{outline:3px solid var(--pri);outline-offset:3px}
+.org .node.drop-l::before,.org .node.drop-r::after{content:'';position:absolute;top:-4px;bottom:-4px;width:4px;border-radius:2px;background:var(--pri)}
+.org .node.drop-l::before{left:-11px}.org .node.drop-r::after{right:-11px}
+.orgghost{position:fixed;z-index:999;pointer-events:none;transform:translate(-50%,-60%) rotate(-2deg);border:1px solid var(--pri);background:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 12px 30px rgba(0,27,55,.22);text-align:center;font-size:14px}
+.orgghost span{display:block;font-size:12px;color:var(--sub)}
+#orgTop{display:none;margin:0 auto 14px;max-width:420px;border:2px dashed var(--line);border-radius:12px;padding:12px;text-align:center;color:var(--sub);font-weight:600}
+body.orgdrag #orgTop{display:block}#orgTop.on{border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
+.orghelp{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-bottom:12px}
+.orghelp b{color:var(--ink);font-weight:600}
 /* v3 */
 svg.i{display:block;flex-shrink:0}
 #side nav a .ic{display:grid;place-items:center}
@@ -1202,31 +1217,116 @@ async function doRegister(n, btn) {
 }
 
 /* ═════════ 사명자·조직도 ═════════ */
+const sid = s => String(s['고유번호'] === undefined ? '' : s['고유번호']).replace(/^'/, '');
+const supOf = s => String(s['상위자(고유번호)'] || '').replace(/^'/, '');
+function rankOf(s) { const i = L('직책').indexOf(s['직책']); return i < 0 ? 99 : i; }
+function bySibling(a, b) { const oa = num(a['순서']) || 9999, ob = num(b['순서']) || 9999; return (oa - ob) || (rankOf(a) - rankOf(b)) || String(a['이름']).localeCompare(String(b['이름'])); }
 PAGES.staff = () => {
-  const list = DB.staff.slice().sort((a, b) => String(a['고유번호']).localeCompare(String(b['고유번호'])));
-  return `<div class="ph"><div><h1>사명자 · 조직도</h1><p>상자나 이름을 누르면 바로 고칠 수 있어요</p></div><div class="acts"><button class="btn p" onclick="editStaff()">+ 새 사명자</button></div></div>
-  <div class="card"><div class="orgwrap"><div class="org">${orgTree(list)}</div></div></div>
-  <div class="tw mt"><table><tr><th>이름</th><th>직책</th><th class="hm">직분</th><th class="c hm">만 나이</th><th class="hm">상위자</th><th>상태</th></tr>
-  ${list.map(s => { const up = DB.staff.find(x => x['고유번호'] === s['상위자(고유번호)']); return `<tr class="click" onclick="editStaff(${attr(s['고유번호'])})"><td><b>${esc(s['이름'])}</b> <span class="muted">${esc(s['고유번호'])}</span></td><td>${esc(s['직책'] || '')}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td class="hm">${up ? esc(up['이름']) : '-'}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`; }).join('') || `<tr><td colspan="6">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
+  const list = DB.staff.slice().sort((a, b) => (rankOf(a) - rankOf(b)) || sid(a).localeCompare(sid(b)));
+  return `<div class="ph"><div><h1>사명자 · 조직도</h1><p>상자를 끌어다 놓아 조직도를 바꾸고, 누르면 정보를 고칠 수 있어요</p></div><div class="acts"><button class="btn p" onclick="editStaff()">+ 새 사명자</button></div></div>
+  <div class="card"><div class="orghelp"><span>🖐 <b>사람 위 가운데</b>에 놓으면 그 아래로</span><span>↔ <b>상자 왼쪽·오른쪽 끝</b>에 놓으면 같은 줄에서 순서 변경</span><span>⬆ <b>맨 위 칸</b>에 놓으면 최상단으로</span></div>
+  <div id="orgTop">여기에 놓으면 맨 위(최상단)로</div><div class="orgwrap" id="orgWrap"><div class="org">${orgTree(list)}</div></div></div>
+  <div class="tw mt"><table><tr><th>이름</th><th>고유번호</th><th>직책</th><th class="hm">직분</th><th class="c hm">만 나이</th><th>상태</th></tr>
+  ${list.map(s => `<tr class="click" onclick="editStaff(${attr(sid(s))})"><td><b>${esc(s['이름'])}</b></td><td class="muted">${esc(sid(s))}</td><td>${esc(s['직책'] || '')}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`).join('') || `<tr><td colspan="6">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
 };
 function orgTree(list) {
-  const act = list.filter(s => s['상태'] !== '종료'), ids = new Set(act.map(s => s['고유번호'])), seen = new Set();
-  const roots = act.filter(s => !s['상위자(고유번호)'] || !ids.has(s['상위자(고유번호)']));
-  const node = (s, d) => { if (seen.has(s['고유번호']) || d > 12) return ''; seen.add(s['고유번호']); const k = act.filter(x => x['상위자(고유번호)'] === s['고유번호']);
-    return `<li><div class="node ${d === 0 ? 'top' : ''}" onclick="editStaff(${attr(s['고유번호'])})"><b>${esc(s['이름'])}</b><span>${esc(s['직책'] || '')}${s['직분'] ? ' · ' + esc(s['직분']) : ''}</span></div>${k.length ? '<ul>' + k.map(x => node(x, d + 1)).join('') + '</ul>' : ''}</li>`; };
-  return roots.length ? '<ul>' + roots.map(r => node(r, 0)).join('') + '</ul>' : '<div class="empty">사명자를 등록하면 조직도가 그려져요</div>';
+  const act = list.filter(s => s['상태'] !== '종료'), ids = new Set(act.map(sid)), seen = new Set();
+  const roots = act.filter(s => !supOf(s) || !ids.has(supOf(s))).sort(bySibling);
+  const cls = s => s['직책'] === '신학부장' ? 'top' : /원장/.test(s['직책'] || '') ? 'gold' : s['직책'] === '신학서무' ? 'aide' : '';
+  const node = (s, d) => { if (seen.has(sid(s)) || d > 12) return ''; seen.add(sid(s)); const k = act.filter(x => supOf(x) === sid(s)).sort(bySibling);
+    return `<li><div class="node ${cls(s)}" data-id="${esc(sid(s))}" onclick="orgClick(this)"><b>${esc(s['이름'])}</b><span>${esc(s['직책'] || '')}${s['직분'] ? ' · ' + esc(s['직분']) : ''}</span></div>${k.length ? '<ul>' + k.map(x => node(x, d + 1)).join('') + '</ul>' : ''}</li>`; };
+  return roots.length ? '<div class="orgroots">' + roots.map(r => '<ul>' + node(r, 0) + '</ul>').join('') + '</div>' : '<div class="empty">사명자를 등록하면 조직도가 그려져요</div>';
+}
+/* 끌어다 놓기 (마우스·터치 모두) */
+let OD = null, OD_END = 0;
+function orgClick(el) { if (Date.now() - OD_END < 350) return; editStaff(el.dataset.id); }
+function isUnder(id, anc) { let cur = DB.staff.find(x => sid(x) === id), n = 0; while (cur && n++ < 30) { const p = supOf(cur); if (!p) return false; if (p === anc) return true; cur = DB.staff.find(x => sid(x) === p); } return false; }
+function orgClear() { document.querySelectorAll('.org .node.drop-in,.org .node.drop-l,.org .node.drop-r').forEach(n => n.classList.remove('drop-in', 'drop-l', 'drop-r')); const t = $('#orgTop'); if (t) t.classList.remove('on'); }
+function orgTarget(x, y) {
+  const el = document.elementFromPoint(x, y); if (!el) return null;
+  if (el.closest('#orgTop')) return { top: true };
+  const n = el.closest('.org .node[data-id]'); if (!n || n.dataset.id === OD.id || isUnder(n.dataset.id, OD.id)) return null;
+  const r = n.getBoundingClientRect(), f = (x - r.left) / r.width;
+  return { id: n.dataset.id, el: n, mode: f < .25 ? 'before' : f > .75 ? 'after' : 'in' };
+}
+document.addEventListener('pointerdown', e => {
+  const n = e.target.closest && e.target.closest('.org .node[data-id]'); if (!n || e.button > 0) return;
+  OD = { id: n.dataset.id, el: n, x: e.clientX, y: e.clientY, on: false, pid: e.pointerId };
+});
+document.addEventListener('pointermove', e => {
+  if (!OD || e.pointerId !== OD.pid) return;
+  if (!OD.on) {
+    if (Math.hypot(e.clientX - OD.x, e.clientY - OD.y) < 6) return;
+    OD.on = true; OD.el.classList.add('dragging'); document.body.classList.add('orgdrag');
+    const g = document.createElement('div'); g.className = 'orgghost'; g.innerHTML = OD.el.innerHTML; document.body.appendChild(g); OD.g = g;
+  }
+  e.preventDefault();
+  OD.g.style.left = e.clientX + 'px'; OD.g.style.top = e.clientY + 'px';
+  const w = $('#orgWrap'); if (w) { const r = w.getBoundingClientRect(); if (e.clientX > r.right - 40) w.scrollLeft += 12; else if (e.clientX < r.left + 40) w.scrollLeft -= 12; }
+  orgClear(); const t = orgTarget(e.clientX, e.clientY); OD.t = t;
+  if (t && t.top) $('#orgTop').classList.add('on'); else if (t) t.el.classList.add(t.mode === 'in' ? 'drop-in' : t.mode === 'before' ? 'drop-l' : 'drop-r');
+}, { passive: false });
+function orgEnd(e) {
+  if (!OD) return; const d = OD; OD = null;
+  if (!d.on) return;
+  OD_END = Date.now(); d.el.classList.remove('dragging'); document.body.classList.remove('orgdrag'); if (d.g) d.g.remove(); orgClear();
+  if (e.type === 'pointerup' && d.t) orgMove(d.id, d.t);
+}
+document.addEventListener('pointerup', orgEnd); document.addEventListener('pointercancel', orgEnd);
+async function orgMove(id, t) {
+  const me = DB.staff.find(x => sid(x) === id); if (!me) return;
+  let parent = '', anchor = null;
+  if (t.top) parent = '';
+  else if (t.mode === 'in') parent = t.id;
+  else { anchor = DB.staff.find(x => sid(x) === t.id); parent = supOf(anchor); }
+  const act = DB.staff.filter(s => s['상태'] !== '종료'), ids = new Set(act.map(sid));
+  const sibs = act.filter(s => sid(s) !== id && (parent ? supOf(s) === parent : (!supOf(s) || !ids.has(supOf(s))))).sort(bySibling);
+  let at = sibs.length;
+  if (anchor) { at = sibs.findIndex(s => sid(s) === sid(anchor)); if (t.mode === 'after') at++; }
+  sibs.splice(at, 0, me);
+  const rows = sibs.map((s, i) => ({ '고유번호': sid(s), '상위자(고유번호)': sid(s) === id ? parent : supOf(s), '순서': i + 1 }))
+    .filter(r => { const o = DB.staff.find(x => sid(x) === r['고유번호']); return supOf(o) !== r['상위자(고유번호)'] || num(o['순서']) !== r['순서']; });
+  if (!rows.length) return;
+  const before = DB.staff.map(x => Object.assign({}, x));
+  rows.forEach(r => Object.assign(DB.staff.find(x => sid(x) === r['고유번호']), r)); render();
+  const up = parent ? DB.staff.find(x => sid(x) === parent) : null;
+  try { await api('upsert', { table: 'staff', rows }); toast(`${me['이름']} → ${up ? up['이름'] + ' 아래로' : t.mode === 'in' || t.top ? '최상단으로' : '순서 변경'}`); bgSync(); }
+  catch (err) { DB.staff = before; render(); toast(err.message, true); }
 }
 function editStaff(id) {
-  const s = id ? DB.staff.find(x => x['고유번호'] === id) : { '상태': '활동' }, ups = DB.staff.filter(x => x['고유번호'] !== id);
-  openDrawer(id ? `${esc(s['이름'])}<small>${esc(id)}</small>` : '새 사명자', `${id ? `<input type="hidden" data-k="고유번호" value="${esc(id)}">` : ''}<div class="form">
-    ${F('이름', '이름', s['이름'])}${F('직책', '직책', s['직책'], 'select', L('직책'))}
-    <label class="fld"><span>상위자<em>조직도 위치</em></span><select data-k="상위자(고유번호)"><option value="">(최상위)</option>${ups.map(u => `<option value="${esc(u['고유번호'])}" ${u['고유번호'] === s['상위자(고유번호)'] ? 'selected' : ''}>${esc(u['이름'] + ' · ' + (u['직책'] || ''))}</option>`).join('')}</select></label>
-    ${F('직분', '직분', s['직분'], 'select', L('직분'))}${F('생년월일', '생년월일', s['생년월일'], 'date')}${F('연락처', '연락처', s['연락처'], 'tel')}
-    ${F('소속팀', '소속팀', s['소속팀'])}${F('상태', '상태', s['상태'], 'select', L('사명자상태').length ? L('사명자상태') : ['활동', '휴식', '종료'])}${F('시작일', '시작일', s['시작일'], 'date')}<div></div>${F('비고', '메모', s['비고'], 'area')}</div>`,
-    `${id ? `<button class="btn d" onclick="delStaff(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveStaff(this)">저장</button>`);
+  const s = id ? DB.staff.find(x => sid(x) === id) : { '상태': '활동' };
+  openDrawer(id ? `${esc(s['이름'])}<small>${esc(id)}</small>` : '새 사명자', `<div class="form">
+    ${F('이름', '이름', s['이름'])}${F('고유번호', '고유번호', id || '', 'text', null, { ph: '부서 자체 고유번호', hint: id ? '바꾸면 조직도 연결도 함께 바뀌어요' : '필수' })}
+    ${F('직책', '직책', s['직책'], 'select', L('직책'))}${F('직분', '직분', s['직분'], 'select', L('직분'))}
+    ${F('생년월일', '생년월일', s['생년월일'], 'date')}${F('연락처', '연락처', s['연락처'], 'tel')}
+    ${F('소속팀', '소속팀', s['소속팀'])}${F('상태', '상태', s['상태'], 'select', L('사명자상태').length ? L('사명자상태') : ['활동', '휴식', '종료'])}${F('시작일', '시작일', s['시작일'], 'date')}<div></div>${F('비고', '메모', s['비고'], 'area')}</div>
+    ${id ? '' : '<p class="muted">저장하면 조직도 맨 위에 생겨요. 끌어다 원하는 자리에 놓으세요.</p>'}`,
+    `${id ? `<button class="btn d" onclick="delStaff(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveStaff(${id ? attr(id) : 'false'},this)">저장</button>`);
 }
-async function saveStaff(btn) { const v = vals(); if (!v['이름']) return toast('이름을 입력하세요', true); if (await save('staff', [v], '저장했어요', btn)) { closeDrawer(); render(); } }
-async function delStaff(id) { if (DB.staff.some(s => s['상위자(고유번호)'] === id)) return toast('이 사람을 상위자로 둔 사명자가 있어요. 먼저 바꿔 주세요.', true); if (await ask('사명자 삭제', '기록을 남기려면 삭제 대신 상태를 「종료」로 바꾸는 것을 권해요.', '삭제', true)) { if (await removeRec('staff', { '고유번호': id })) { closeDrawer(); render(); } } }
+async function saveStaff(from, btn) {
+  const v = vals(); v['고유번호'] = String(v['고유번호'] || '').trim();
+  if (!v['이름']) return toast('이름을 입력하세요', true);
+  if (!v['고유번호']) return toast('고유번호를 입력하세요', true);
+  const renamed = from && String(from) !== v['고유번호'];
+  if ((!from || renamed) && DB.staff.some(x => sid(x) === v['고유번호'])) return toast('이미 있는 고유번호예요', true);
+  if (renamed) {
+    busy(btn, true);
+    try { await api('renameStaffId', { from, to: v['고유번호'] }); }
+    catch (e) { busy(btn, false); return toast(e.message, true); }
+    busy(btn, false);
+    DB.staff.forEach(x => { if (sid(x) === from) x['고유번호'] = v['고유번호']; if (supOf(x) === from) x['상위자(고유번호)'] = v['고유번호']; });
+  }
+  busy(btn, true);
+  try { const j = await api('upsert', { table: 'staff', rows: [v], create: !from }); applyRows('staff', j.rows); toast('저장했어요'); bgSync(); closeDrawer(); render(); }
+  catch (e) { toast(e.message, true); }
+  finally { busy(btn, false); }
+}
+async function delStaff(id) {
+  const kids = DB.staff.filter(s => supOf(s) === id);
+  if (!(await ask('사명자 삭제', (kids.length ? `아래에 있는 ${kids.length}명은 한 칸 위로 올라갑니다. ` : '') + '기록을 남기려면 삭제 대신 상태를 「종료」로 바꾸는 것을 권해요.', '삭제', true))) return;
+  if (kids.length) { const me = DB.staff.find(x => sid(x) === id); try { await api('upsert', { table: 'staff', rows: kids.map(k => ({ '고유번호': sid(k), '상위자(고유번호)': supOf(me) })) }); kids.forEach(k => k['상위자(고유번호)'] = supOf(me)); } catch (e) { return toast(e.message, true); } }
+  if (await removeRec('staff', { '고유번호': id })) { closeDrawer(); render(); }
+}
 
 /* ═════════ 분석 ═════════ */
 PAGES.analysis = () => {
