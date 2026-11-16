@@ -1219,22 +1219,28 @@ async function doRegister(n, btn) {
 /* ═════════ 사명자·조직도 ═════════ */
 const sid = s => String(s['고유번호'] === undefined ? '' : s['고유번호']).replace(/^'/, '');
 const supOf = s => String(s['상위자(고유번호)'] || '').replace(/^'/, '');
-function rankOf(s) { const i = L('직책').indexOf(s['직책']); return i < 0 ? 99 : i; }
+/* 직책은 겸직 가능: 「전도사, 신학서무」처럼 쉼표로 저장 (첫 번째가 주 직책) */
+const rolesOf = s => String(s['직책'] || '').split(/\s*[,·/]\s*/).map(x => x.trim()).filter(Boolean);
+const roleText = s => { const r = rolesOf(s); return r.length > 1 ? r[0] + ' · ' + r.slice(1).join('·') + ' 겸' : (r[0] || ''); };
+const hasRole = (s, re) => rolesOf(s).some(r => typeof re === 'string' ? r === re : re.test(r));
+/* 원장·후원원장은 따로 있는 자리: 아래에 다른 사람을 둘 수 없음 */
+const isLeaf = s => hasRole(s, /원장/);
+function rankOf(s) { const rs = rolesOf(s).map(r => L('직책').indexOf(r)).filter(i => i >= 0); return rs.length ? Math.min.apply(null, rs) : 99; }
 function bySibling(a, b) { const oa = num(a['순서']) || 9999, ob = num(b['순서']) || 9999; return (oa - ob) || (rankOf(a) - rankOf(b)) || String(a['이름']).localeCompare(String(b['이름'])); }
 PAGES.staff = () => {
   const list = DB.staff.slice().sort((a, b) => (rankOf(a) - rankOf(b)) || sid(a).localeCompare(sid(b)));
   return `<div class="ph"><div><h1>사명자 · 조직도</h1><p>상자를 끌어다 놓아 조직도를 바꾸고, 누르면 정보를 고칠 수 있어요</p></div><div class="acts"><button class="btn p" onclick="editStaff()">+ 새 사명자</button></div></div>
-  <div class="card"><div class="orghelp"><span>🖐 <b>사람 위 가운데</b>에 놓으면 그 아래로</span><span>↔ <b>상자 왼쪽·오른쪽 끝</b>에 놓으면 같은 줄에서 순서 변경</span><span>⬆ <b>맨 위 칸</b>에 놓으면 최상단으로</span></div>
+  <div class="card"><div class="orghelp"><span>🖐 <b>사람 위 가운데</b>에 놓으면 그 아래로</span><span>↔ <b>상자 왼쪽·오른쪽 끝</b>에 놓으면 같은 줄에서 순서 변경</span><span>⬆ <b>맨 위 칸</b>에 놓으면 최상단으로</span><span>🟨 <b>원장·후원원장</b> 아래에는 사람을 둘 수 없어요</span></div>
   <div id="orgTop">여기에 놓으면 맨 위(최상단)로</div><div class="orgwrap" id="orgWrap"><div class="org">${orgTree(list)}</div></div></div>
   <div class="tw mt"><table><tr><th>이름</th><th>고유번호</th><th>직책</th><th class="hm">직분</th><th class="c hm">만 나이</th><th>상태</th></tr>
-  ${list.map(s => `<tr class="click" onclick="editStaff(${attr(sid(s))})"><td><b>${esc(s['이름'])}</b></td><td class="muted">${esc(sid(s))}</td><td>${esc(s['직책'] || '')}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`).join('') || `<tr><td colspan="6">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
+  ${list.map(s => `<tr class="click" onclick="editStaff(${attr(sid(s))})"><td><b>${esc(s['이름'])}</b></td><td class="muted">${esc(sid(s))}</td><td>${esc(roleText(s))}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`).join('') || `<tr><td colspan="6">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
 };
 function orgTree(list) {
   const act = list.filter(s => s['상태'] !== '종료'), ids = new Set(act.map(sid)), seen = new Set();
   const roots = act.filter(s => !supOf(s) || !ids.has(supOf(s))).sort(bySibling);
-  const cls = s => s['직책'] === '신학부장' ? 'top' : /원장/.test(s['직책'] || '') ? 'gold' : s['직책'] === '신학서무' ? 'aide' : '';
+  const cls = s => hasRole(s, '신학부장') ? 'top' : isLeaf(s) ? 'gold' : hasRole(s, '신학서무') ? 'aide' : '';
   const node = (s, d) => { if (seen.has(sid(s)) || d > 12) return ''; seen.add(sid(s)); const k = act.filter(x => supOf(x) === sid(s)).sort(bySibling);
-    return `<li><div class="node ${cls(s)}" data-id="${esc(sid(s))}" onclick="orgClick(this)"><b>${esc(s['이름'])}</b><span>${esc(s['직책'] || '')}${s['직분'] ? ' · ' + esc(s['직분']) : ''}</span></div>${k.length ? '<ul>' + k.map(x => node(x, d + 1)).join('') + '</ul>' : ''}</li>`; };
+    return `<li><div class="node ${cls(s)}" data-id="${esc(sid(s))}" onclick="orgClick(this)"><b>${esc(s['이름'])}</b><span>${esc(roleText(s))}${s['직분'] ? ' · ' + esc(s['직분']) : ''}</span></div>${k.length ? '<ul>' + k.map(x => node(x, d + 1)).join('') + '</ul>' : ''}</li>`; };
   return roots.length ? '<div class="orgroots">' + roots.map(r => '<ul>' + node(r, 0) + '</ul>').join('') + '</div>' : '<div class="empty">사명자를 등록하면 조직도가 그려져요</div>';
 }
 /* 끌어다 놓기 (마우스·터치 모두) */
@@ -1246,7 +1252,8 @@ function orgTarget(x, y) {
   const el = document.elementFromPoint(x, y); if (!el) return null;
   if (el.closest('#orgTop')) return { top: true };
   const n = el.closest('.org .node[data-id]'); if (!n || n.dataset.id === OD.id || isUnder(n.dataset.id, OD.id)) return null;
-  const r = n.getBoundingClientRect(), f = (x - r.left) / r.width;
+  const r = n.getBoundingClientRect(), f = (x - r.left) / r.width, tg = DB.staff.find(z => sid(z) === n.dataset.id);
+  if (tg && isLeaf(tg)) return { id: n.dataset.id, el: n, mode: f < .5 ? 'before' : 'after' };   // 원장 아래로는 못 들어감
   return { id: n.dataset.id, el: n, mode: f < .25 ? 'before' : f > .75 ? 'after' : 'in' };
 }
 document.addEventListener('pointerdown', e => {
@@ -1297,12 +1304,22 @@ function editStaff(id) {
   const s = id ? DB.staff.find(x => sid(x) === id) : { '상태': '활동' };
   openDrawer(id ? `${esc(s['이름'])}<small>${esc(id)}</small>` : '새 사명자', `<div class="form">
     ${F('이름', '이름', s['이름'])}${F('고유번호', '고유번호', id || '', 'text', null, { ph: '부서 자체 고유번호', hint: id ? '바꾸면 조직도 연결도 함께 바뀌어요' : '필수' })}
-    ${F('직책', '직책', s['직책'], 'select', L('직책'))}${F('직분', '직분', s['직분'], 'select', L('직분'))}
+    <div class="fld full"><span>직책<em>여러 개 고르면 겸직 · 처음 고른 것이 주 직책</em></span><input type="hidden" data-k="직책" id="roleVal" value="${esc(rolesOf(s).join(', '))}">
+      <div class="chips" id="roleChips">${L('직책').concat(rolesOf(s).filter(r => !L('직책').includes(r))).map(r => `<button type="button" class="chip ${rolesOf(s).includes(r) ? 'on' : ''}" data-r="${esc(r)}" onclick="roleToggle(this)">${esc(r)}</button>`).join('')}</div>
+      <div class="muted" id="roleNow" style="margin-top:6px;font-size:12.5px"></div></div>
+    ${F('직분', '직분', s['직분'], 'select', L('직분'))}<div></div>
     ${F('생년월일', '생년월일', s['생년월일'], 'date')}${F('연락처', '연락처', s['연락처'], 'tel')}
     ${F('소속팀', '소속팀', s['소속팀'])}${F('상태', '상태', s['상태'], 'select', L('사명자상태').length ? L('사명자상태') : ['활동', '휴식', '종료'])}${F('시작일', '시작일', s['시작일'], 'date')}<div></div>${F('비고', '메모', s['비고'], 'area')}</div>
     ${id ? '' : '<p class="muted">저장하면 조직도 맨 위에 생겨요. 끌어다 원하는 자리에 놓으세요.</p>'}`,
     `${id ? `<button class="btn d" onclick="delStaff(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveStaff(${id ? attr(id) : 'false'},this)">저장</button>`);
+  roleNow();
 }
+function roleToggle(b) {
+  let cur = String($('#roleVal').value || '').split(/\s*,\s*/).filter(Boolean); const r = b.dataset.r;
+  cur = cur.includes(r) ? cur.filter(x => x !== r) : cur.concat(r);
+  $('#roleVal').value = cur.join(', '); b.classList.toggle('on', cur.includes(r)); roleNow();
+}
+function roleNow() { const el = $('#roleNow'); if (!el) return; const cur = String($('#roleVal').value || '').split(/\s*,\s*/).filter(Boolean); el.innerHTML = cur.length ? `주 직책 <b>${esc(cur[0])}</b>${cur.length > 1 ? ' · 겸직 <b>' + esc(cur.slice(1).join(', ')) + '</b>' : ''}` : '직책을 골라 주세요'; }
 async function saveStaff(from, btn) {
   const v = vals(); v['고유번호'] = String(v['고유번호'] || '').trim();
   if (!v['이름']) return toast('이름을 입력하세요', true);
