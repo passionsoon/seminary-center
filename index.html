@@ -235,6 +235,8 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
 .org .node.grp{border-style:dashed;background:transparent;box-shadow:none;cursor:default}.org .node.grp b{font-size:13px;color:var(--sub)}
 .org .node.grp[data-k]{border-style:solid;background:var(--line2);padding:6px 14px;min-width:80px;cursor:grab;box-shadow:var(--sh)}.org .node.grp[data-k] b{color:var(--ink2)}.org .node.g-dir{background:#fff8e6}
 .orgwrap{overflow:auto;padding:4px 0 8px}
+.org{position:relative}.org li::before,.org li::after,.org ul ul::before{display:none!important}
+svg.orglines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
 .orgroots{display:flex;justify-content:center;align-items:flex-start;gap:28px;min-width:max-content;padding:0 8px}
 .orgroots>ul{padding-top:0}.orgroots>ul>li{padding-top:0}.orgroots>ul>li::before,.orgroots>ul>li::after{display:none}
 .org .node{touch-action:none;user-select:none;-webkit-user-select:none;position:relative}
@@ -1259,14 +1261,52 @@ function orgModel() {
   if (Object.values(par).includes('g:edu?')) par['g:edu?'] = 'g:edu';
   return { act, byId, groups, gById, par, head, kids, label };
 }
+/** 사명 시작일부터 오늘까지: 「3년 2개월」 */
+function careerOf(s) {
+  const d = String(s['시작일'] || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+  const a = d.split('-').map(Number), t = todayStr().split('-').map(Number);
+  let m = (t[0] - a[0]) * 12 + (t[1] - a[1]) - (t[2] < a[2] ? 1 : 0); if (m < 0) return '';
+  const y = Math.floor(m / 12); m %= 12;
+  return y || m ? (y ? y + '년' : '') + (y && m ? ' ' : '') + (m ? m + '개월' : '') : '1개월 미만';
+}
+/** 조직도 연결선: 상자의 실제 위치를 재서 그림 (폭이 달라도 정확히 맞음) */
+function drawOrgLines() {
+  const org = document.querySelector('#view .org'); if (!org || !org.querySelector('.node')) return;
+  let svg = org.querySelector('svg.orglines');
+  if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'orglines'); org.prepend(svg); }
+  const lis = [...org.querySelectorAll('li')];
+  lis.forEach(li => { const n = li.querySelector(':scope > .node'); if (n) n.style.translate = ''; });
+  // 위 상자를 아래 상자들의 가운데로 (깊은 쪽부터)
+  lis.slice().reverse().forEach(li => {
+    const n = li.querySelector(':scope > .node'), ul = li.querySelector(':scope > ul'); if (!n || !ul) return;
+    const kids = [...ul.querySelectorAll(':scope > li > .node')]; if (!kids.length) return;
+    const cx = r => r.left + r.width / 2, xs = kids.map(k => cx(k.getBoundingClientRect()));
+    let want = (Math.min(...xs) + Math.max(...xs)) / 2; const have = cx(n.getBoundingClientRect());
+    if (xs.length % 2 === 1) { const mid = xs[(xs.length - 1) / 2]; if (Math.abs(mid - want) < 40) want = mid; }   // 가운데 상자와 일직선으로
+    if (Math.abs(want - have) > .5) n.style.translate = Math.round(want - have) + 'px 0';
+  });
+  const b = org.getBoundingClientRect(); let d = '';
+  lis.forEach(li => {
+    const n = li.querySelector(':scope > .node'), ul = li.querySelector(':scope > ul'); if (!n || !ul) return;
+    const kids = [...ul.querySelectorAll(':scope > li > .node')]; if (!kids.length) return;
+    const pr = n.getBoundingClientRect(), px = Math.round(pr.left + pr.width / 2 - b.left) + .5, py = Math.round(pr.bottom - b.top);
+    const ks = kids.map(k => { const r = k.getBoundingClientRect(); return [Math.round(r.left + r.width / 2 - b.left) + .5, Math.round(r.top - b.top)]; });
+    const my = Math.round((py + Math.min(...ks.map(k => k[1]))) / 2) + .5, xs = ks.map(k => k[0]).concat(px);
+    d += `M${px} ${py}V${my}M${Math.min(...xs)} ${my}H${Math.max(...xs)}` + ks.map(([x, y]) => `M${x} ${my}V${y}`).join('');
+  });
+  svg.setAttribute('width', org.scrollWidth); svg.setAttribute('height', org.scrollHeight);
+  svg.innerHTML = `<path d="${d}" fill="none" stroke="#c9d2de" stroke-width="2" stroke-linecap="round"/>`;
+}
+AFTER.staff = () => { drawOrgLines(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawOrgLines); };
+window.addEventListener('resize', () => { if (ROUTE.page === 'staff') drawOrgLines(); });
 function under(M, k, anc) { let p = M.par[k], n = 0; while (p && n++ < 40) { if (p === anc) return true; p = M.par[p]; } return false; }
 PAGES.staff = () => {
   const list = DB.staff.slice().sort((a, b) => (rankOf(a) - rankOf(b)) || sid(a).localeCompare(sid(b)));
   return `<div class="ph"><div><h1>사명자 · 조직도</h1><p>사람과 그룹을 끌어서 마음대로 배치하세요. 놓은 자리는 그대로 저장돼요</p></div><div class="acts"><button class="btn" onclick="orgReset()">자동 배치로 되돌리기</button><button class="btn" onclick="editGroup()">+ 그룹</button><button class="btn p" onclick="editStaff()">+ 새 사명자</button></div></div>
   <div class="card"><div class="orghelp"><span>🖐 상자 <b>가운데</b>에 놓으면 그 아래로</span><span>↔ <b>왼쪽·오른쪽 끝</b>에 놓으면 옆자리로</span><span>⬆ <b>맨 위 칸</b>에 놓으면 최상단으로</span><span>🏷 그룹 이름을 누르면 이름 바꾸기·삭제</span></div>
   <div id="orgTop">여기에 놓으면 맨 위(최상단)로</div><div class="orgwrap" id="orgWrap"><div class="org">${orgTree()}</div></div></div>
-  <div class="tw mt"><table><tr><th>이름</th><th>고유번호</th><th>직책</th><th class="hm">직분</th><th class="c hm">만 나이</th><th>상태</th></tr>
-  ${list.map(s => `<tr class="click" onclick="editStaff(${attr(sid(s))})"><td><b>${esc(s['이름'])}</b></td><td class="muted">${esc(sid(s))}</td><td>${esc(roleText(s))}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`).join('') || `<tr><td colspan="6">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
+  <div class="tw mt"><table><tr><th>이름</th><th>고유번호</th><th>직책</th><th class="hm">직분</th><th class="c hm">만 나이</th><th class="c">사명 경력</th><th>상태</th></tr>
+  ${list.map(s => `<tr class="click" onclick="editStaff(${attr(sid(s))})"><td><b>${esc(s['이름'])}</b></td><td class="muted">${esc(sid(s))}</td><td>${esc(roleText(s))}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td class="c">${careerOf(s) ? `<b style="font-weight:600">${careerOf(s)}</b><div class="muted" style="font-size:11.5px">${esc(String(s['시작일']).slice(0, 10))}~</div>` : '<span class="muted">-</span>'}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`).join('') || `<tr><td colspan="7">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
 };
 function orgTree() {
   const M = orgModel(), seen = new Set();
@@ -1385,7 +1425,7 @@ function editStaff(id) {
       <div class="muted" id="roleNow" style="margin-top:6px;font-size:12.5px"></div></div>
     ${F('직분', '직분', s['직분'], 'select', L('직분'))}<div></div>
     ${F('생년월일', '생년월일', s['생년월일'], 'date')}${F('연락처', '연락처', s['연락처'], 'tel')}
-    ${F('소속팀', '소속팀', s['소속팀'])}${F('상태', '상태', s['상태'], 'select', L('사명자상태').length ? L('사명자상태') : ['활동', '휴식', '종료'])}${F('시작일', '시작일', s['시작일'], 'date')}<div></div>${F('비고', '메모', s['비고'], 'area')}</div>
+    ${F('소속팀', '소속팀', s['소속팀'])}${F('상태', '상태', s['상태'], 'select', L('사명자상태').length ? L('사명자상태') : ['활동', '휴식', '종료'])}${F('시작일', '사명 시작일', s['시작일'], 'date', null, { hint: careerOf(s) ? '경력 ' + careerOf(s) : '' })}<div></div>${F('비고', '메모', s['비고'], 'area')}</div>
     ${id ? '' : '<p class="muted">저장하면 직책에 맞는 그룹에 자동으로 들어가요. 그 뒤 끌어서 원하는 자리에 놓으세요.</p>'}`,
     `${id ? `<button class="btn d" onclick="delStaff(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveStaff(${id ? attr(id) : 'false'},this)">저장</button>`);
   roleNow();
