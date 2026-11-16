@@ -233,7 +233,7 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
 .org .node.gold{background:#fff8e6;border-color:#f0c869}.org .node.gold span{color:#8a6410}
 .org .node.aide{background:var(--pri-l);border-color:#b8d4ff}
 .org .node.grp{border-style:dashed;background:transparent;box-shadow:none;cursor:default}.org .node.grp b{font-size:13px;color:var(--sub)}
-.org .node.g-admin,.org .node.g-edu,.org .node.g-dir,.org .node.g-etc{border-style:solid;background:var(--line2);padding:6px 14px;min-width:80px}.org .node.g-dir{background:#fff8e6}
+.org .node.grp[data-k]{border-style:solid;background:var(--line2);padding:6px 14px;min-width:80px;cursor:grab;box-shadow:var(--sh)}.org .node.grp[data-k] b{color:var(--ink2)}.org .node.g-dir{background:#fff8e6}
 .orgwrap{overflow:auto;padding:4px 0 8px}
 .orgroots{display:flex;justify-content:center;align-items:flex-start;gap:28px;min-width:max-content;padding:0 8px}
 .orgroots>ul{padding-top:0}.orgroots>ul>li{padding-top:0}.orgroots>ul>li::before,.orgroots>ul>li::after{display:none}
@@ -1226,112 +1226,155 @@ const rolesOf = s => String(s['직책'] || '').split(/\s*[,·/]\s*/).map(x => x.
 const mainRole = s => rolesOf(s)[0] || '';
 const roleText = s => { const r = rolesOf(s); return r.length > 1 ? r[0] + ' · ' + r.slice(1).join('·') + ' 겸' : (r[0] || ''); };
 const hasRole = (s, re) => rolesOf(s).some(r => typeof re === 'string' ? r === re : re.test(r));
-/* 조직: 신학부장 아래 그룹이 따로 있음 — 행정(신학총무·신학서무·간사) / 교육(강사 → 전도사) / 원장(원장·후원원장) */
+/* 조직도: 기본은 신학부장 아래 행정 / 교육(강사 → 전도사) / 원장 그룹으로 자동 배치.
+   사람과 그룹 모두 끌어서 아무 곳에나 놓을 수 있고, 놓은 자리는 저장됨 (상위자 칸: 사람 고유번호, 「g:그룹」, 맨 위는 「^」) */
 const GROUPS = [['admin', '행정', ['신학총무', '신학서무', '간사']], ['edu', '교육', ['강사', '전도사']], ['dir', '원장', ['원장', '후원원장']]];
 const groupOf = s => { const r = mainRole(s); if (r === '신학부장') return 'head'; const g = GROUPS.find(x => x[2].includes(r)); return g ? g[0] : 'etc'; };
-const isLeaf = s => mainRole(s) !== '강사' && mainRole(s) !== '신학부장';
-const canHold = (p, c) => !!p && mainRole(p) === '강사' && mainRole(c) === '전도사';
 const ROLE_ORDER = ['신학부장', '신학총무', '신학서무', '간사', '강사', '전도사', '원장', '후원원장'];
 function rankOf(s) { const i = ROLE_ORDER.indexOf(mainRole(s)); return i < 0 ? 99 : i; }
-function bySibling(a, b) { const oa = num(a['순서']) || 9999, ob = num(b['순서']) || 9999; return (rankOf(a) - rankOf(b)) || (oa - ob) || String(a['이름']).localeCompare(String(b['이름'])); }
-/** 그려질 자리: 전도사는 정해 둔 강사 팀(강사가 한 명뿐이면 자동), 나머지는 자기 그룹 */
+function orgGroups() { const g = (SET().org || {}).groups; return Array.isArray(g) ? g.map(x => Object.assign({}, x)) : GROUPS.map((x, i) => ({ id: x[0], name: x[1], parent: '', order: i + 1 })); }
+/** 각 상자(사람: 고유번호, 그룹: g:아이디)가 어디 아래에 그려지는지 */
 function orgModel() {
   const act = DB.staff.filter(s => s['상태'] !== '종료'), byId = {}; act.forEach(s => byId[sid(s)] = s);
-  const heads = act.filter(s => groupOf(s) === 'head').sort(bySibling), head = heads[0] ? sid(heads[0]) : '';
+  const groups = orgGroups(), gById = {}; groups.forEach(g => gById['g:' + g.id] = g);
+  const heads = act.filter(s => groupOf(s) === 'head').sort((a, b) => (num(a['순서']) || 9999) - (num(b['순서']) || 9999)), head = heads[0] ? sid(heads[0]) : '';
   const teachers = act.filter(s => mainRole(s) === '강사');
+  const exists = k => k === '' || !!byId[k] || !!gById[k];
   const par = {};
+  groups.forEach(g => { const k = 'g:' + g.id, p = g.parent === '^' ? '' : g.parent; par[k] = p && exists(p) ? p : head; });
   act.forEach(s => {
-    const g = groupOf(s);
-    if (g === 'head') return par[sid(s)] = '';
-    if (mainRole(s) === '전도사') { const p = byId[supOf(s)]; if (canHold(p, s)) return par[sid(s)] = sid(p); return par[sid(s)] = teachers.length === 1 ? sid(teachers[0]) : teachers.length > 1 ? 'g:edu?' : 'g:edu'; }
-    par[sid(s)] = 'g:' + g;
+    const id = sid(s), st = supOf(s);
+    if (st === '^') return par[id] = '';
+    if (st && st !== id && exists(st)) return par[id] = st;
+    if (groupOf(s) === 'head') return par[id] = '';
+    if (mainRole(s) === '전도사' && teachers.length === 1) return par[id] = sid(teachers[0]);
+    if (mainRole(s) === '전도사' && teachers.length > 1 && gById['g:edu']) return par[id] = 'g:edu?';
+    const g = 'g:' + groupOf(s); par[id] = gById[g] ? g : head;
   });
-  return { act, byId, par, head };
+  // 순환(자기 아래로 들어간 경우) 끊기
+  Object.keys(par).forEach(k => { let p = par[k], n = 0; while (p && n++ < 40) { if (p === k) { par[k] = head === k ? '' : head; break; } p = par[p]; } });
+  const ord = k => gById[k] ? (num(gById[k].order) || 9999) : (num((byId[k] || {})['순서']) || 9999);
+  const label = k => gById[k] ? gById[k].name : byId[k] ? byId[k]['이름'] : k === 'g:edu?' ? '담당 강사 미정' : '';
+  const kids = key => Object.keys(par).filter(k => par[k] === key && (byId[k] || gById[k] || k === 'g:edu?')).sort((x, y) => (ord(x) - ord(y)) || ((byId[x] ? rankOf(byId[x]) : -1) - (byId[y] ? rankOf(byId[y]) : -1)) || label(x).localeCompare(label(y)));
+  if (Object.values(par).includes('g:edu?')) par['g:edu?'] = 'g:edu';
+  return { act, byId, groups, gById, par, head, kids, label };
 }
+function under(M, k, anc) { let p = M.par[k], n = 0; while (p && n++ < 40) { if (p === anc) return true; p = M.par[p]; } return false; }
 PAGES.staff = () => {
   const list = DB.staff.slice().sort((a, b) => (rankOf(a) - rankOf(b)) || sid(a).localeCompare(sid(b)));
-  return `<div class="ph"><div><h1>사명자 · 조직도</h1><p>신학부장 아래 행정 · 교육 · 원장 그룹으로 직책대로 자동 배치돼요. 상자를 누르면 정보를 고칠 수 있어요</p></div><div class="acts"><button class="btn p" onclick="editStaff()">+ 새 사명자</button></div></div>
-  <div class="card"><div class="orghelp"><span>🖐 전도사를 <b>강사 상자 가운데</b>에 놓으면 그 강사 팀으로</span><span>↔ 같은 그룹 안에서 <b>상자 왼쪽·오른쪽 끝</b>에 놓으면 순서 변경</span></div>
-  <div class="orgwrap" id="orgWrap"><div class="org">${orgTree()}</div></div></div>
+  return `<div class="ph"><div><h1>사명자 · 조직도</h1><p>사람과 그룹을 끌어서 마음대로 배치하세요. 놓은 자리는 그대로 저장돼요</p></div><div class="acts"><button class="btn" onclick="orgReset()">자동 배치로 되돌리기</button><button class="btn" onclick="editGroup()">+ 그룹</button><button class="btn p" onclick="editStaff()">+ 새 사명자</button></div></div>
+  <div class="card"><div class="orghelp"><span>🖐 상자 <b>가운데</b>에 놓으면 그 아래로</span><span>↔ <b>왼쪽·오른쪽 끝</b>에 놓으면 옆자리로</span><span>⬆ <b>맨 위 칸</b>에 놓으면 최상단으로</span><span>🏷 그룹 이름을 누르면 이름 바꾸기·삭제</span></div>
+  <div id="orgTop">여기에 놓으면 맨 위(최상단)로</div><div class="orgwrap" id="orgWrap"><div class="org">${orgTree()}</div></div></div>
   <div class="tw mt"><table><tr><th>이름</th><th>고유번호</th><th>직책</th><th class="hm">직분</th><th class="c hm">만 나이</th><th>상태</th></tr>
   ${list.map(s => `<tr class="click" onclick="editStaff(${attr(sid(s))})"><td><b>${esc(s['이름'])}</b></td><td class="muted">${esc(sid(s))}</td><td>${esc(roleText(s))}</td><td class="hm">${esc(s['직분'] || '')}</td><td class="c hm">${esc(s['만나이(자동)'] === undefined ? '' : s['만나이(자동)'])}</td><td><span class="b ${s['상태'] === '활동' ? 'ok' : s['상태'] === '종료' ? '' : 'warn'}">${esc(s['상태'] || '')}</span></td></tr>`).join('') || `<tr><td colspan="6">${empty('사명자가 없어요')}</td></tr>`}</table></div>`;
 };
 function orgTree() {
-  const { act, par, head } = orgModel(), seen = new Set();
-  const kidsOf = id => act.filter(x => par[sid(x)] === id).sort(bySibling);
+  const M = orgModel(), seen = new Set();
   const cls = s => groupOf(s) === 'head' ? 'top' : groupOf(s) === 'dir' ? 'gold' : groupOf(s) === 'admin' ? 'aide' : '';
-  const node = s => {
-    if (seen.has(sid(s))) return ''; seen.add(sid(s));
-    const k = kidsOf(sid(s)).map(node);
-    return `<li><div class="node ${cls(s)}" data-id="${esc(sid(s))}" onclick="orgClick(this)"><b>${esc(s['이름'])}</b><span>${esc(roleText(s))}${s['직분'] ? ' · ' + esc(s['직분']) : ''}</span></div>${k.length ? '<ul>' + k.join('') + '</ul>' : ''}</li>`;
+  const box = k => {
+    if (seen.has(k)) return ''; seen.add(k);
+    const ch = M.kids(k).map(box).filter(Boolean), sub = ch.length ? '<ul>' + ch.join('') + '</ul>' : '';
+    if (k === 'g:edu?') return `<li><div class="node grp"><b>담당 강사 미정</b><span>강사 상자 위로 끌어 주세요</span></div>${sub}</li>`;
+    if (M.gById[k]) return `<li><div class="node grp g-${esc(k.slice(2))}" data-k="${esc(k)}" onclick="orgClick(this)"><b>${esc(M.gById[k].name)}</b></div>${sub}</li>`;
+    const s = M.byId[k]; return `<li><div class="node ${cls(s)}" data-k="${esc(k)}" data-id="${esc(k)}" onclick="orgClick(this)"><b>${esc(s['이름'])}</b><span>${esc(roleText(s))}${s['직분'] ? ' · ' + esc(s['직분']) : ''}</span></div>${sub}</li>`;
   };
-  const grp = (g, label) => {
-    const k = kidsOf('g:' + g).map(node);
-    if (g === 'edu') { const un = kidsOf('g:edu?'); if (un.length) k.push(`<li><div class="node grp"><b>담당 강사 미정</b><span>강사 상자 위로 끌어 주세요</span></div><ul>${un.map(node).join('')}</ul></li>`); }
-    return k.length ? `<li><div class="node grp g-${g}"><b>${label}</b></div><ul>${k.join('')}</ul></li>` : '';
-  };
-  const groups = GROUPS.map(g => grp(g[0], g[1])).concat(grp('etc', '기타')).filter(Boolean);
-  const heads = act.filter(s => groupOf(s) === 'head').sort(bySibling);
-  if (!heads.length && !groups.length) return '<div class="empty">사명자를 등록하면 조직도가 그려져요</div>';
-  if (!heads.length) return '<div class="orgroots">' + groups.map(g => '<ul>' + g + '</ul>').join('') + '</div>';
-  const top = heads.map((h, i) => { seen.add(sid(h)); return `<li><div class="node top" data-id="${esc(sid(h))}" onclick="orgClick(this)"><b>${esc(h['이름'])}</b><span>${esc(roleText(h))}${h['직분'] ? ' · ' + esc(h['직분']) : ''}</span></div>${i === 0 && groups.length ? '<ul>' + groups.join('') + '</ul>' : ''}</li>`; });
-  return '<div class="orgroots">' + top.map(t => '<ul>' + t + '</ul>').join('') + '</div>';
+  const roots = M.kids('').map(box).filter(Boolean);
+  return roots.length ? '<div class="orgroots">' + roots.map(r => '<ul>' + r + '</ul>').join('') + '</div>' : '<div class="empty">사명자를 등록하면 조직도가 그려져요</div>';
 }
 /* 끌어다 놓기 (마우스·터치 모두) */
 let OD = null, OD_END = 0;
-function orgClick(el) { if (Date.now() - OD_END < 350) return; editStaff(el.dataset.id); }
-function orgClear() { document.querySelectorAll('.org .node.drop-in,.org .node.drop-l,.org .node.drop-r').forEach(n => n.classList.remove('drop-in', 'drop-l', 'drop-r')); }
+function orgClick(el) { if (Date.now() - OD_END < 350) return; const k = el.dataset.k; if (k.indexOf('g:') === 0) editGroup(k.slice(2)); else editStaff(k); }
+function orgClear() { document.querySelectorAll('.org .node.drop-in,.org .node.drop-l,.org .node.drop-r').forEach(n => n.classList.remove('drop-in', 'drop-l', 'drop-r')); const t = $('#orgTop'); if (t) t.classList.remove('on'); }
 function orgTarget(x, y) {
   const el = document.elementFromPoint(x, y); if (!el) return null;
-  const n = el.closest('.org .node[data-id]'); if (!n || n.dataset.id === OD.id) return null;
-  const me = DB.staff.find(z => sid(z) === OD.id), tg = DB.staff.find(z => sid(z) === n.dataset.id);
+  if (el.closest('#orgTop')) return { top: true };
+  const n = el.closest('.org .node[data-k]'); if (!n || n.dataset.k === OD.k || under(OD.M, n.dataset.k, OD.k)) return null;
   const r = n.getBoundingClientRect(), f = (x - r.left) / r.width;
-  if (canHold(tg, me)) return { id: n.dataset.id, el: n, mode: f < .2 ? 'before' : f > .8 ? 'after' : 'in' };
-  return { id: n.dataset.id, el: n, mode: f < .5 ? 'before' : 'after' };
+  return { k: n.dataset.k, el: n, mode: f < .22 ? 'before' : f > .78 ? 'after' : 'in' };
 }
 document.addEventListener('pointerdown', e => {
-  const n = e.target.closest && e.target.closest('.org .node[data-id]'); if (!n || e.button > 0) return;
-  OD = { id: n.dataset.id, el: n, x: e.clientX, y: e.clientY, on: false, pid: e.pointerId };
+  const n = e.target.closest && e.target.closest('.org .node[data-k]'); if (!n || e.button > 0) return;
+  OD = { k: n.dataset.k, el: n, x: e.clientX, y: e.clientY, on: false, pid: e.pointerId };
 });
 document.addEventListener('pointermove', e => {
   if (!OD || e.pointerId !== OD.pid) return;
   if (!OD.on) {
     if (Math.hypot(e.clientX - OD.x, e.clientY - OD.y) < 6) return;
-    OD.on = true; OD.el.classList.add('dragging'); document.body.classList.add('orgdrag');
+    OD.on = true; OD.M = orgModel(); OD.el.classList.add('dragging'); document.body.classList.add('orgdrag');
     const g = document.createElement('div'); g.className = 'orgghost'; g.innerHTML = OD.el.innerHTML; document.body.appendChild(g); OD.g = g;
   }
   e.preventDefault();
   OD.g.style.left = e.clientX + 'px'; OD.g.style.top = e.clientY + 'px';
   const w = $('#orgWrap'); if (w) { const r = w.getBoundingClientRect(); if (e.clientX > r.right - 40) w.scrollLeft += 12; else if (e.clientX < r.left + 40) w.scrollLeft -= 12; }
   orgClear(); const t = orgTarget(e.clientX, e.clientY); OD.t = t;
-  if (t) t.el.classList.add(t.mode === 'in' ? 'drop-in' : t.mode === 'before' ? 'drop-l' : 'drop-r');
+  if (t && t.top) $('#orgTop').classList.add('on'); else if (t) t.el.classList.add(t.mode === 'in' ? 'drop-in' : t.mode === 'before' ? 'drop-l' : 'drop-r');
 }, { passive: false });
 function orgEnd(e) {
   if (!OD) return; const d = OD; OD = null;
   if (!d.on) return;
   OD_END = Date.now(); d.el.classList.remove('dragging'); document.body.classList.remove('orgdrag'); if (d.g) d.g.remove(); orgClear();
-  if (e.type === 'pointerup' && d.t) orgMove(d.id, d.t);
+  if (e.type === 'pointerup' && d.t) orgMove(d.k, d.t);
 }
 document.addEventListener('pointerup', orgEnd); document.addEventListener('pointercancel', orgEnd);
-async function orgMove(id, t) {
-  const M = orgModel(), me = M.byId[id], tg = M.byId[t.id]; if (!me || !tg) return;
-  const key = t.mode === 'in' ? t.id : M.par[t.id];               // 들어갈 자리
-  const myKeys = groupOf(me) === 'head' ? [''] : mainRole(me) === '전도사' ? null : ['g:' + groupOf(me)];
-  const ok = myKeys ? myKeys.includes(key) : (key === 'g:edu' || key === 'g:edu?' || canHold(M.byId[key], me));
-  if (!ok) return toast(`${mainRole(me)}은(는) 그 자리로 옮길 수 없어요. 그룹이 다르면 상자를 눌러 직책을 바꿔 주세요`, true);
-  const stored = M.byId[key] ? key : '';                          // 시트에는 전도사의 담당 강사만 적음
-  const sibs = M.act.filter(s => sid(s) !== id && M.par[sid(s)] === key).sort(bySibling);
+async function orgMove(k, t) {
+  const M = orgModel();
+  let parent = t.top ? '' : t.mode === 'in' ? t.k : M.par[t.k];
+  if (parent === 'g:edu?') parent = 'g:edu';
+  if (parent === k || (parent && under(M, parent, k))) return toast('자기 아래로는 옮길 수 없어요', true);
+  const sibs = M.kids(parent).filter(x => x !== k && x !== 'g:edu?');
   let at = sibs.length;
-  if (t.mode !== 'in') { at = sibs.findIndex(s => sid(s) === t.id); if (at < 0) at = sibs.length; else if (t.mode === 'after') at++; }
-  sibs.splice(at, 0, me);
-  const rows = sibs.map((s, i) => ({ '고유번호': sid(s), '상위자(고유번호)': sid(s) === id ? stored : supOf(s), '순서': i + 1 }))
-    .filter(r => { const o = M.byId[r['고유번호']]; return supOf(o) !== r['상위자(고유번호)'] || num(o['순서']) !== r['순서']; });
-  if (!rows.length) return;
-  const before = DB.staff.map(x => Object.assign({}, x));
-  rows.forEach(r => Object.assign(DB.staff.find(x => sid(x) === r['고유번호']), r)); render();
-  const up = stored ? M.byId[stored] : null;
-  try { await api('upsert', { table: 'staff', rows }); toast(`${me['이름']} → ${t.mode === 'in' && up ? up['이름'] + ' 팀으로' : '순서 변경'}`); bgSync(); }
-  catch (err) { DB.staff = before; render(); toast(err.message, true); }
+  if (!t.top && t.mode !== 'in') { at = sibs.indexOf(t.k); if (at < 0) at = sibs.length; else if (t.mode === 'after') at++; }
+  sibs.splice(at, 0, k);
+  const store = parent === '' ? '^' : parent;
+  const rows = [], groups = M.groups; let gChanged = false;
+  sibs.forEach((x, i) => {
+    if (M.gById[x]) { const g = groups.find(y => 'g:' + y.id === x); const np = x === k ? store : g.parent; if (g.order !== i + 1 || g.parent !== np) { g.order = i + 1; g.parent = np; gChanged = true; } return; }
+    const o = M.byId[x]; if (!o) return;
+    const np = x === k ? store : supOf(o); if (num(o['순서']) !== i + 1 || supOf(o) !== np) rows.push({ '고유번호': x, '상위자(고유번호)': np, '순서': i + 1 });
+  });
+  if (!rows.length && !gChanged) return;
+  const before = DB.staff.map(x => Object.assign({}, x)), beforeSet = JSON.stringify(DB.settings || {});
+  rows.forEach(r => Object.assign(DB.staff.find(x => sid(x) === r['고유번호']), r));
+  if (gChanged) DB.settings = Object.assign({}, DB.settings, { org: { groups } });
+  render();
+  try {
+    if (rows.length) await api('upsert', { table: 'staff', rows });
+    if (gChanged) await api('saveSettings', { settings: { org: { groups } } });
+    toast(`${M.label(k)} → ${t.top ? '맨 위로' : t.mode === 'in' ? M.label(t.k) + ' 아래로' : '자리 변경'}`); bgSync();
+  } catch (err) { DB.staff = before; DB.settings = JSON.parse(beforeSet); render(); toast(err.message, true); }
+}
+async function saveGroups(groups, msg) {
+  const old = JSON.stringify(DB.settings || {});
+  DB.settings = Object.assign({}, DB.settings, { org: { groups } }); render();
+  try { await api('saveSettings', { settings: { org: { groups } } }); if (msg) toast(msg); return true; }
+  catch (e) { DB.settings = JSON.parse(old); render(); toast(e.message, true); return false; }
+}
+function editGroup(id) {
+  const g = id ? orgGroups().find(x => x.id === id) : { name: '' };
+  openDrawer(id ? `그룹 · ${esc(g.name)}` : '새 그룹', `<div class="form">${F('name', '그룹 이름', g.name, 'text', null, { ph: '예: 행정, 교육, 특별팀', full: true })}</div>
+    <p class="muted">${id ? '삭제하면 이 그룹에 있던 사람은 직책에 따라 자동 자리로 돌아가요.' : '만든 그룹은 신학부장 아래에 생겨요. 끌어서 원하는 곳에 놓고, 사람도 그룹 안으로 끌어 넣으세요.'}</p>`,
+    `${id ? `<button class="btn d" onclick="delGroup(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveGroup(${id ? attr(id) : 'false'})">저장</button>`);
+}
+async function saveGroup(id) {
+  const name = String(vals()['name'] || '').trim(); if (!name) return toast('그룹 이름을 입력하세요', true);
+  const gs = orgGroups();
+  if (id) gs.find(x => x.id === id).name = name;
+  else gs.push({ id: 'x' + Date.now().toString(36), name, parent: '', order: gs.length + 1 });
+  if (await saveGroups(gs, id ? '그룹 이름을 바꿨어요' : '그룹을 만들었어요')) closeDrawer();
+}
+async function delGroup(id) {
+  if (!(await ask('그룹 삭제', '그룹 안에 있던 사람·그룹은 자동 자리로 돌아갑니다.', '삭제', true))) return;
+  const gs = orgGroups().filter(x => x.id !== id).map(x => x.parent === 'g:' + id ? Object.assign(x, { parent: '' }) : x);
+  const rows = DB.staff.filter(s => supOf(s) === 'g:' + id).map(s => ({ '고유번호': sid(s), '상위자(고유번호)': '' }));
+  try { if (rows.length) { await api('upsert', { table: 'staff', rows }); rows.forEach(r => Object.assign(DB.staff.find(x => sid(x) === r['고유번호']), r)); } } catch (e) { return toast(e.message, true); }
+  if (await saveGroups(gs, '그룹을 삭제했어요')) closeDrawer();
+}
+async function orgReset() {
+  if (!(await ask('자동 배치로 되돌리기', '직접 옮긴 자리와 만든 그룹을 모두 지우고 직책대로 다시 배치합니다. 전도사의 담당 강사 팀도 초기화돼요.', '되돌리기', true))) return;
+  const rows = DB.staff.filter(s => supOf(s) || s['순서'] !== '').map(s => ({ '고유번호': sid(s), '상위자(고유번호)': '', '순서': '' }));
+  try { if (rows.length) await api('upsert', { table: 'staff', rows }); rows.forEach(r => Object.assign(DB.staff.find(x => sid(x) === r['고유번호']), r)); }
+  catch (e) { return toast(e.message, true); }
+  await saveGroups(GROUPS.map((x, i) => ({ id: x[0], name: x[1], parent: '', order: i + 1 })), '자동 배치로 되돌렸어요');
 }
 function editStaff(id) {
   const s = id ? DB.staff.find(x => sid(x) === id) : { '상태': '활동' };
@@ -1343,7 +1386,7 @@ function editStaff(id) {
     ${F('직분', '직분', s['직분'], 'select', L('직분'))}<div></div>
     ${F('생년월일', '생년월일', s['생년월일'], 'date')}${F('연락처', '연락처', s['연락처'], 'tel')}
     ${F('소속팀', '소속팀', s['소속팀'])}${F('상태', '상태', s['상태'], 'select', L('사명자상태').length ? L('사명자상태') : ['활동', '휴식', '종료'])}${F('시작일', '시작일', s['시작일'], 'date')}<div></div>${F('비고', '메모', s['비고'], 'area')}</div>
-    ${id ? '' : '<p class="muted">저장하면 직책에 맞는 그룹에 자동으로 들어가요. 전도사는 강사 상자 위로 끌어 팀을 정해 주세요.</p>'}`,
+    ${id ? '' : '<p class="muted">저장하면 직책에 맞는 그룹에 자동으로 들어가요. 그 뒤 끌어서 원하는 자리에 놓으세요.</p>'}`,
     `${id ? `<button class="btn d" onclick="delStaff(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveStaff(${id ? attr(id) : 'false'},this)">저장</button>`);
   roleNow();
 }
@@ -1558,7 +1601,7 @@ async function saveSets(btn) {
   busy(btn, true);
   try {
     const hourChanged = num(o.tg.hour) !== num(SETS.tg.hour);
-    SETS = (await api('saveSettings', { settings: o })).settings; DB.settings = { reg: SETS.reg, risk: SETS.risk };
+    SETS = (await api('saveSettings', { settings: o })).settings; DB.settings = { reg: SETS.reg, risk: SETS.risk, org: SETS.org };
     if (hourChanged && JOB && JOB.installed) JOB = await api('installJobs');
     toast('설정을 저장했어요'); render();
   } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
