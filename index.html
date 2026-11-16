@@ -718,7 +718,7 @@ function editCohort(name) {
   const c = name ? cohortOf(name) : { '상태': '모집중' };
   const manual = ['(수동)입고수', '(수동)등록수', '(수동)중등수', '(수동)고등수', '(수동)입교수', '(수동)수료수'];
   openDrawer(name ? esc(name) + '<small>기수 정보 수정</small>' : '새 기수', staffList() + `<div class="form">
-    ${name ? `<input type="hidden" data-k="기수명" value="${esc(name)}">` : F('기수명', '기수명', '', 'text', null, { ph: '예: 27-1기', full: true })}
+    ${F('기수명', '기수명', name || '', 'text', null, { ph: '예: 27-1기 · 2026년 봄학기 · 논산 30기', full: true, hint: name ? '바꾸면 수강생·진도·출석 기록이 모두 새 이름으로 옮겨져요' : '원하는 형식으로 자유롭게' })}
     ${F('상태', '상태', c['상태'], 'select', L('기수상태').length ? L('기수상태') : ['모집중', '진행중', '종강'])}
     ${F('개강일', '개강일', c['개강일'], 'date')}${F('센터등록일', '센터 등록일', c['센터등록일'], 'date')}
     ${F('중등진급일', '중등 진급일', c['중등진급일'], 'date')}${F('고등진급일', '고등 진급일', c['고등진급일'], 'date')}
@@ -726,12 +726,40 @@ function editCohort(name) {
     <div class="sec">담당</div><div class="form">${F('강사', '강사', c['강사'], 'text', 'dlStaff')}<div></div>${F('전도사1', '전도사 1', c['전도사1'], 'text', 'dlStaff')}${F('전도사2', '전도사 2', c['전도사2'], 'text', 'dlStaff')}</div>
     <div class="sec">메모</div>${F('비고', '', c['비고'], 'area')}
     <details class="mt2"><summary class="muted" style="cursor:pointer">명단 없는 과거 기수: 인원 직접 입력</summary><div class="form mt">${manual.map(k => F(k, k.replace('(수동)', ''), c[k], 'number')).join('')}</div></details>`,
-    `${name ? `<button class="btn d" onclick="delCohort(${attr(name)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveCohort(${name ? 'true' : 'false'},this)">저장</button>`);
+    `${name ? `<button class="btn d" onclick="delCohort(${attr(name)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveCohort(${name ? attr(name) : 'false'},this)">저장</button>`);
 }
 async function saveCohort(isEdit, btn) {
-  const v = vals(); if (!v['기수명']) return toast('기수명을 입력하세요', true);
-  if (!isEdit && cohortOf(v['기수명'])) return toast('이미 있는 기수명입니다', true);
-  if (await save('cohort', [v], '기수를 저장했어요', btn)) { closeDrawer(); setCohort(v['기수명']); render(); }
+  const v = vals(); v['기수명'] = String(v['기수명'] || '').trim();
+  if (!v['기수명']) return toast('기수명을 입력하세요', true);
+  if (v['기수명'].indexOf('|') >= 0) return toast('기수명에는 | 기호를 쓸 수 없어요', true);
+  const from = isEdit ? String(isEdit) : '';
+  const renamed = from && from !== v['기수명'];
+  if ((!from || renamed) && cohortOf(v['기수명'])) return toast('이미 있는 기수명입니다', true);
+  if (renamed) {
+    if (!(await ask('기수 이름 바꾸기', `「${from}」 → 「${v['기수명']}」 — 수강생·진도·출석 기록과 담당자 비밀번호가 모두 새 이름으로 옮겨집니다. 담당자에게 보낸 링크는 새로 보내 주세요.`, '바꾸기'))) return;
+    busy(btn, true);
+    try { await api('renameCohort', { from, to: v['기수명'] }); }
+    catch (e) { busy(btn, false); return toast(e.message, true); }
+    busy(btn, false);
+    renameLocal(from, v['기수명']);
+  }
+  if (await save('cohort', [v], renamed ? '기수 이름을 바꿨어요' : '기수를 저장했어요', btn)) {
+    closeDrawer(); setCohort(v['기수명']);
+    if (renamed && ROUTE.arg === from) go([ROUTE.page, encodeURIComponent(v['기수명']), ROUTE.tab].filter(Boolean).join('/'));
+    render();
+  }
+}
+/** 이름 바꾼 뒤 화면 데이터와 기기에 저장된 임시본도 새 이름으로 */
+function renameLocal(from, to) {
+  ['cohort', 'student', 'session', 'attend', 'summary'].forEach(t => (DB[t] || []).forEach(r => {
+    if (String(r['기수명']) === from) r['기수명'] = to;
+    if (t === 'attend' && String(r['기록ID'] || '').indexOf(from + '|') === 0) r['기록ID'] = to + String(r['기록ID']).slice(from.length);
+  }));
+  try {
+    Object.keys(localStorage).forEach(k => { const p = 'dc_draft|' + from + '|'; if (k.indexOf(p) === 0) { localStorage.setItem('dc_draft|' + to + '|' + k.slice(p.length), localStorage.getItem(k)); localStorage.removeItem(k); } });
+  } catch (e) { }
+  if (BK[from] !== undefined) { BK[to] = BK[from]; delete BK[from]; }
+  MEMO = {}; fillCohortSel();
 }
 async function delCohort(n) { if (await ask(n + ' 삭제', '수강생이 있는 기수는 삭제되지 않습니다.', '삭제', true)) { if (await removeRec('cohort', { '기수명': n })) { closeDrawer(); go('cohorts'); render(); } } }
 
@@ -1060,7 +1088,8 @@ PAGES.students = () => {
 };
 function studentTable(list, inCohort) {
   if (!list.length) return empty('수강생이 없어요', '「명단 붙여넣기」로 한 번에 등록할 수 있어요.');
-  list = list.slice().sort((a, b) => String(b['기수명']).localeCompare(String(a['기수명'])) || byEvName(a, b));
+  const ord = {}; cohorts().forEach((c, i) => ord[String(c['기수명'])] = i);
+  list = list.slice().sort((a, b) => ((ord[String(a['기수명'])] ?? 999) - (ord[String(b['기수명'])] ?? 999)) || byEvName(a, b));
   SEL = new Set([...SEL].filter(id => list.some(s => s['수강생ID'] === id)));
   const cards = `<div class="mlist">${list.map(s => `<div class="mcard" onclick="editStudent(${attr(s['수강생ID'])})"><div class="who"><b>${esc(s['이름'])}</b>${riskBadge(riskOf(s))}<div>${inCohort ? '' : esc(s['기수명']) + ' · '}${esc(s['담당전도사'] || '담당 없음')} · 출석 ${pct(s['출석률'])}</div></div>${stageBadge(stageOf(s))}${s['연락처'] ? `<a class="btn sm" href="tel:${esc(s['연락처'])}" onclick="event.stopPropagation()">${icon('phone', 15)}</a>` : ''}</div>`).join('')}</div>`;
   return cards + `<div class="tw stu"><table><tr><th style="width:40px"><input type="checkbox" onclick="selAll(this.checked)"></th><th>이름</th>${inCohort ? '' : '<th>기수</th>'}<th>단계</th><th>담당전도사</th><th class="hm">연락처</th><th class="c">출석률</th><th class="hm">소속</th><th class="hm">메모</th></tr>
