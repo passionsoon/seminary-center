@@ -301,6 +301,7 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .cal .cd.today .dn{background:var(--pri);color:#fff!important;border-radius:999px;width:22px;height:22px;display:grid;place-items:center}
 .cal .cd.drop{background:var(--pri-l);outline:2px dashed var(--pri);outline-offset:-3px}
 .cal .dn{font-size:12px;font-weight:700;color:var(--ink2)}
+.svy{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:8px}.svy summary{cursor:pointer;font-weight:700}.svy dl{margin:8px 0 0;display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13.5px}.svy dt{color:var(--ink2);font-weight:600}.svy dd{margin:0;white-space:normal;word-break:keep-all}@media(max-width:700px){.svy dl{grid-template-columns:1fr}.svy dd{margin-bottom:6px}}
 .athead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}.athead .no{background:var(--pri);color:#fff;font-weight:800;border-radius:8px;padding:3px 10px;font-size:14px}.athead b{font-size:17px}
 th .bt{font-weight:500;font-size:10px;color:var(--ink2);max-width:72px;margin:2px auto 0;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cal .bd{font-size:11.5px;line-height:1.3;padding:2px 6px;border-radius:6px;background:#fdecf3;color:#a3245e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.cal .bd.st{background:#efeafd;color:#5b3fb5}
@@ -768,6 +769,8 @@ function F(k, label, v, type, list, opt) {
   if (type === 'area') return `<label class="fld full"><span>${label}${hint}</span><textarea data-k="${esc(k)}" placeholder="${esc(opt.ph || '')}">${esc(v)}</textarea></label>`;
   return `<label class="${cls}"><span>${label}${hint}</span><input data-k="${esc(k)}" type="${type || 'text'}" value="${esc(v)}" ${list ? `list="${list}"` : ''} placeholder="${esc(opt.ph || '')}" ${opt.ro ? 'disabled' : ''}></label>`;
 }
+const DEPTS = ['자문회', '장년회', '부녀회', '청년회', '교역자'];
+const deptOpts = v => DEPTS.concat(v && !DEPTS.includes(v) ? [v] : []);
 function deptList() { return `<datalist id="dlDept">${(L('소속부서').length ? L('소속부서') : ['자문회', '장년회', '부녀회', '청년회']).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`; }
 /** 법정 생년월일 · 실제 생년월일(다를 때만) · 양력/음력 */
 function birthFields(s) {
@@ -1350,6 +1353,71 @@ async function doGen(n, btn) {
 }
 
 /* ═════════ 수강생 ═════════ */
+/* ── 앙케이트(구글 설문 응답) ── */
+const SURVEY_GROUPS = [
+  ['기본정보 · 섭외 · 신앙', ['응답일시', '열매정보', '성향(에니어·도형·MBTI·혈액형)', '주소·거주형태', '최종학력', '결혼·이성친구', '자녀', '섭외유형', '신앙여부', '신앙년수']],
+  ['인섬교 · 상담 · 복음방', ['인도자정보', '섬김이정보', '교사정보', '가장 신뢰하는 사람', '육적상담 도구', '상담 초점', '고민·관심사', '영적따기 방법', '수강목적', '종교거부감', '종교거부감 내용', '복음방 횟수', '복음방 과목']],
+  ['모략 · 침요소 · 기타', ['입막음 방법', '8개월 모략', '가족 목회자·신앙', '침 맞을 요소', '신천지 인식', '신천지 경계심', '성경 교재 인지', '성경 부담', '센터 소개 방법', '8개월 염려', '재수강 여부', '이전 탈락 사유', '가정 심방', '기본 인성', '건강', '경제(채무·사기)', '직업 문제', '센터에 부탁', '기타응답']]
+];
+function surveyView(id) {
+  const v = (DB.survey || []).find(x => x['수강생ID'] === id);
+  if (!v) return `<div class="sec">앙케이트</div><p class="muted" style="margin:0">아직 가져온 앙케이트가 없어요. 수강생 화면의 「📝 앙케이트 가져오기」로 불러오세요.</p>`;
+  return `<div class="sec">앙케이트 <span class="muted" style="font-weight:500">${esc(v['응답일시'] || '')} 응답</span></div>${SURVEY_GROUPS.map(([g, ks], gi) => {
+    const items = ks.filter(k => String(v[k] || '').trim()); if (!items.length) return '';
+    return `<details class="svy" ${gi === 0 ? 'open' : ''}><summary>${g} <span class="muted">${items.length}</span></summary><dl>${items.map(k => `<dt>${esc(k)}</dt><dd>${esc(v[k]).replace(/\n/g, '<br>')}</dd>`).join('')}</dl></details>`; }).join('')}`;
+}
+/** 시트에서 복사한 표(탭 구분, 줄바꿈 칸은 따옴표) 읽기 */
+function parseTsv(t) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"') { if (t[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; continue; }
+    if (ch === '"' && cell === '') q = true; else if (ch === '\t') { row.push(cell); cell = ''; } else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; } else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+let SV = null;
+function surveyOpen() {
+  const n = curCohort(); if (!n) return toast('기수를 먼저 고르세요', true);
+  SV = { n };
+  openDrawer('앙케이트 가져오기<small>' + esc(n) + '</small>', `<p class="muted" style="margin-top:0">구글 설문 <b>응답 시트</b>를 연결하면 답변이 수강생 정보로 들어가요. 이름으로 수강생을 찾고, 인도자·섬김이·교사(부서 포함)·주소·성별은 <b>비어 있는 칸만</b> 채웁니다. 나머지 답변은 수강생 화면의 「앙케이트」에 모두 저장돼요.</p>
+    <div class="form">${F('url', '응답 시트 주소', (cohortOf(n) || {})['앙케이트시트'] || '', 'url', null, { full: true, ph: 'https://docs.google.com/spreadsheets/d/…', hint: '설문 → 응답 → 스프레드시트에서 보기' })}</div>
+    <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">또는 응답 시트에서 표를 복사해 붙여넣기</summary><textarea id="svPaste" style="width:100%;min-height:110px;margin-top:6px" placeholder="머리글(질문) 줄까지 함께 복사해 붙여넣으세요"></textarea></details>
+    <div id="svOut"></div>`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">닫기</button><button class="btn" onclick="surveyPreview(this)">미리보기</button><button class="btn p" id="svApply" onclick="surveyApply(this)" disabled>반영하기</button>`);
+}
+function surveySrc() {
+  const u = ($('#dBody [data-k="url"]').value || '').trim(), t = ($('#svPaste').value || '').trim();
+  if (t) return { table: parseTsv(t) };
+  if (u) return { url: u };
+  return null;
+}
+async function surveyPreview(btn) {
+  const src = surveySrc(); if (!src) return toast('응답 시트 주소를 넣거나 표를 붙여넣으세요', true);
+  busy(btn, true);
+  try {
+    const j = await api('surveyPreview', Object.assign({ cohort: SV.n }, src)); SV.src = src; SV.rows = j.rows;
+    const miss = j.cols.filter(c => !c.f && c.q);
+    $('#svOut').innerHTML = `<div class="sec">응답 ${j.rows.length}명 <span class="muted" style="font-weight:500">질문 ${j.cols.length - miss.length}개 인식${miss.length ? ` · 나머지 ${miss.length}개는 「기타응답」에 저장` : ''}</span></div>
+      <div class="tw"><table><tr><th>열매 이름</th><th>응답일시</th><th>수강생</th></tr>${j.rows.map(r => `<tr><td><b>${esc(r.name)}</b></td><td class="muted">${esc(r.date)}</td><td>${r.match ? `<span class="b ok">✓ 연결</span>` : r.ambiguous ? `<span class="b bad">같은 이름이 여러 명 — 건너뜀</span>` : `<label class="row" style="gap:6px"><input type="checkbox" class="svNew" data-i="${r.i}" checked> 새 수강생으로 추가</label>`}</td></tr>`).join('')}</table></div>
+      ${miss.length ? `<p class="muted" style="font-size:12.5px">기타응답으로 들어갈 질문: ${miss.map(c => esc(c.q)).join(' · ')}</p>` : ''}`;
+    $('#svApply').disabled = !j.rows.length;
+  } catch (e) { toast(e.message, true); }
+  finally { busy(btn, false); }
+}
+async function surveyApply(btn) {
+  if (!SV || !SV.src) return;
+  const create = [...document.querySelectorAll('.svNew:checked')].map(x => num(x.dataset.i));
+  busy(btn, true);
+  try {
+    const j = await api('surveyApply', Object.assign({ cohort: SV.n, create }, SV.src));
+    await reloadSoft(); closeDrawer(); render();
+    toast(`앙케이트 ${j.saved}명 저장${j.filled ? ` · 수강생 정보 ${j.filled}명 채움` : ''}${j.created.length ? ` · 새 수강생 ${j.created.length}명` : ''}${j.skipped.length ? ` · 건너뜀 ${j.skipped.length}명` : ''}`);
+  } catch (e) { toast(e.message, true); }
+  finally { busy(btn, false); }
+}
+
 let SF = { scope: 'cur', st: '', ev: '', q: '' }, SEL = new Set();
 PAGES.students = () => {
   const n = curCohort();
@@ -1361,7 +1429,7 @@ PAGES.students = () => {
   if (SF.q) list = list.filter(s => [s['이름'], s['연락처'], s['인도자'], s['섬김이'], s['교사'], s['수강생ID']].join(' ').includes(SF.q));
   const evs = Array.from(new Set(live().map(s => s['담당전도사']).filter(Boolean))).sort();
   const base = SF.scope === 'cur' && n ? studentsOf(n) : live(), nRisk = base.filter(s => (riskOf(s) || {}).lv === 'bad').length;
-  return `<div class="ph"><div><h1>수강생</h1><p>${SF.scope === 'cur' && n ? esc(n) : '전체 기수'} · ${list.length}명</p></div><div class="acts"><button class="btn" onclick="bulkAdd()">명단 붙여넣기</button><button class="btn p" onclick="editStudent()">+ 새 수강생</button></div></div>
+  return `<div class="ph"><div><h1>수강생</h1><p>${SF.scope === 'cur' && n ? esc(n) : '전체 기수'} · ${list.length}명</p></div><div class="acts"><button class="btn" onclick="surveyOpen()">📝 앙케이트 가져오기</button><button class="btn" onclick="bulkAdd()">명단 붙여넣기</button><button class="btn p" onclick="editStudent()">+ 새 수강생</button></div></div>
   <div class="card" style="padding:14px">
     <div class="row"><div class="search" style="flex:1;min-width:200px"><input placeholder="이름, 연락처, 인도자·섬김이·교사 검색" value="${esc(SF.q)}" oninput="SF.q=this.value.trim();clearTimeout(window._q);window._q=setTimeout(()=>{render();const i=$('.search input');i.focus();i.setSelectionRange(i.value.length,i.value.length)},250)"></div>
       <select onchange="SF.scope=this.value;render()"><option value="cur" ${SF.scope === 'cur' ? 'selected' : ''}>현재 기수만</option><option value="all" ${SF.scope === 'all' ? 'selected' : ''}>전체 기수</option></select>
@@ -1399,10 +1467,11 @@ function editStudent(id) {
       ${F('성별', '성별', s['성별'], 'select', L('성별'))}${F('소속부서', '소속(편입)부서', s['소속부서'], 'select', L('소속부서'))}
       ${F('주소', '주소', s['주소'], 'text', null, { full: true })}</div>
     <div class="sec">생년월일 <span class="muted" style="font-weight:500">생일은 달력에 자동으로 떠요</span></div>${birthFields(s)}
-    <div class="sec">인도자 · 섬김이 · 교사</div>${deptList()}
-    <div class="form">${F('인도자', '인도자', s['인도자'])}${F('인도자부서', '인도자 부서', s['인도자부서'], 'text', 'dlDept')}
-      ${F('섬김이', '섬김이', s['섬김이'])}${F('섬김이부서', '섬김이 부서', s['섬김이부서'], 'text', 'dlDept')}
-      ${F('교사', '교사', s['교사'])}${F('교사부서', '교사 부서', s['교사부서'], 'text', 'dlDept')}</div>
+    <div class="sec">인도자 · 섬김이 · 교사</div>
+    <div class="form">${F('인도자', '인도자', s['인도자'])}${F('인도자부서', '인도자 부서', s['인도자부서'], 'select', deptOpts(s['인도자부서']))}
+      ${F('섬김이', '섬김이', s['섬김이'])}${F('섬김이부서', '섬김이 부서', s['섬김이부서'], 'select', deptOpts(s['섬김이부서']))}
+      ${F('교사', '교사', s['교사'])}${F('교사부서', '교사 부서', s['교사부서'], 'select', deptOpts(s['교사부서']))}</div>
+    ${id ? surveyView(id) : ''}
     <div class="sec">진행 단계 <span class="muted" style="font-weight:500">날짜를 넣으면 단계가 올라가요</span></div>
     ${stageRow('입고일', '수카 입고', s['입고일'])}${stageRow('센터등록일', '센터 등록', s['센터등록일'])}${stageRow('중등진급일', '중등 진급', s['중등진급일'])}${stageRow('고등진급일', '고등 진급', s['고등진급일'])}${stageRow('입교일', '입교(종강)', s['입교일'])}
     <label class="row" style="margin-top:10px;font-weight:600"><input type="checkbox" data-k="수료" ${s['수료'] === true || s['수료'] === 'TRUE' ? 'checked' : ''}> 수료</label>
