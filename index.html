@@ -292,6 +292,21 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .cmp .cx{display:flex;align-items:center;gap:8px;min-width:0}.cmp .cx .tr{flex:1;height:10px;background:var(--line2);border-radius:4px;overflow:hidden}.cmp .cx .tr i{display:block;height:100%;border-radius:4px}
 .cmp .cx b{width:44px;text-align:right;font-size:12.5px}
 .inst td,.inst th{white-space:nowrap}
+/* 수업 달력 */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line2);border-left:1px solid var(--line2)}
+.cal .cw{font-size:12px;font-weight:700;color:var(--sub);text-align:center;padding:6px 0;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);background:var(--line2)}
+.cal .cw.sun,.cal .cd.sun .dn{color:var(--bad)}.cal .cw.sat,.cal .cd.sat .dn{color:var(--pri)}
+.cal .cd{min-height:96px;padding:4px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0}
+.cal .cd:hover{background:#fafbfd}.cal .cd.out{background:#fbfbfc}.cal .cd.out .dn{opacity:.4}
+.cal .cd.today .dn{background:var(--pri);color:#fff!important;border-radius:999px;width:22px;height:22px;display:grid;place-items:center}
+.cal .cd.drop{background:var(--pri-l);outline:2px dashed var(--pri);outline-offset:-3px}
+.cal .dn{font-size:12px;font-weight:700;color:var(--ink2)}
+.cal .ci{font-size:12px;line-height:1.3;padding:3px 6px;border-radius:6px;background:var(--pri-l);color:#174a8c;border-left:3px solid var(--pri);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none;user-select:none}
+.cal .ci.ev{background:#fff3d6;color:#7a5200;border-left-color:#eda100}
+.cal .ci.off{background:var(--line2);color:var(--sub);border-left-color:var(--line);text-decoration:line-through}
+.cal .ci.dragging{opacity:.35}
+.ci.cghost{position:fixed;z-index:999;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 8px 24px rgba(0,27,55,.2);max-width:180px}
+@media(max-width:700px){.cal .cd{min-height:64px;padding:2px}.cal .ci{font-size:10.5px;padding:2px 3px}}
 .minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .mbar{display:grid;grid-template-columns:70px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
 .mbar .bx{height:14px;background:var(--line2);border-radius:4px;overflow:hidden}.mbar .bx i{display:block;height:100%;background:var(--pri);border-radius:0 4px 4px 0}
@@ -383,7 +398,7 @@ const NAV = [
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
   ['분석', [['analysis', 'chart', '분석'], ['settings', 'gear', '설정']]]
 ];
-const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '진도'], ['register', 'badge', '등록 판정']]]];
+const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정']]]];
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
@@ -561,7 +576,7 @@ function route() {
   closeAll(); vtip(null, '');
   render(); window.scrollTo(0, 0);
 }
-const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '진도', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석' };
+const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석' };
 function render() {
   if (!DB) return;
   MEMO = {}; paintQueue();
@@ -623,7 +638,10 @@ function riskMap(c) {
 }
 const riskOf = s => (riskMap(s['기수명'])[s['수강생ID']]);
 const riskBadge = r => r ? ` <span class="b ${r.lv}" title="${esc(r.why)}">${r.lv === 'bad' ? '위험' : '주의'}</span>` : '';
-function sessionsOf(c) { return DB.session.filter(s => String(s['기수명']) === String(c)).sort((a, b) => num(a['회차']) - num(b['회차'])); }
+/* 수업 = 강의(회차 1~) + 행사(회차 1001~, 출석 없음). 출석·등록 판정에는 강의만 쓰임 */
+const isEvent = s => s['구분'] === '행사' || num(s['회차']) > 1000;
+function sessionsOf(c) { return DB.session.filter(s => String(s['기수명']) === String(c) && !isEvent(s)).sort((a, b) => num(a['회차']) - num(b['회차'])); }
+function eventsOf(c) { return DB.session.filter(s => String(s['기수명']) === String(c) && isEvent(s)).sort((a, b) => String(a['날짜']).localeCompare(String(b['날짜']))); }
 function summaryOf(c) { return DB.summary.filter(s => String(s['기수명']) === String(c)).sort((a, b) => num(a['회차']) - num(b['회차'])); }
 function attendMap(c) { const m = {}; DB.attend.forEach(a => { if (String(a['기수명']) !== String(c)) return; (m[a['수강생ID']] = m[a['수강생ID']] || {})[num(a['회차'])] = a; }); return m; }
 function stageOf(s) { if (s['탈락일']) return '탈락'; if (s['입교일']) return '입교'; if (s['고등진급일']) return '고등'; if (s['중등진급일']) return '중등'; if (s['센터등록일']) return '초등(등록)'; return '센터(등록전)'; }
@@ -824,7 +842,7 @@ function cohortCard(c) {
   return `<div class="card ccard" onclick="go('cohort/${encodeURIComponent(n)}')">
     <div class="row"><b style="font-size:18px">${esc(n)}</b><span class="b ${c['상태'] === '진행중' ? 'blue' : ''}">${esc(c['상태'] || '-')}</span><span class="sp"></span><span class="muted">${md(c['개강일'])} 개강</span></div>
     <div class="muted" style="margin:4px 0 14px">강사 ${esc(c['강사'] || '-')} · 전도사 ${esc([c['전도사1'], c['전도사2']].filter(Boolean).join(', ') || '-')}</div>
-    <div class="row muted" style="font-size:13px;margin-bottom:6px"><span>평균 출석률${p.last ? ` · ${p.last['회차']}회차까지 진행` : ''}</span><span class="sp"></span><b style="color:var(--ink)">${pct(ar)}</b></div>
+    <div class="row muted" style="font-size:13px;margin-bottom:6px"><span>평균 출석률</span><span class="sp"></span><b style="color:var(--ink)">${pct(ar)}</b></div>
     <div class="bar"><i style="width:${ar === '' ? 0 : ar * 100}%"></i></div>
     <div class="mini"><div><span>입고</span><b>${stu.length || num(s['수카 입고'])}</b></div><div><span>재적</span><b>${rosterAt(n, todayStr()).length}</b></div><div><span>등록</span><b>${reg}</b></div><div><span>출석률</span><b>${pct(ar)}</b></div></div>
   </div>`;
@@ -886,7 +904,7 @@ async function delCohort(n) { if (await ask(n + ' 삭제', '수강생이 있는 
 PAGES.cohort = () => {
   const n = ROUTE.arg, c = cohortOf(n); if (!c) return needCohort();
   const tab = ROUTE.tab || 'overview', s = statOf(n), e = encodeURIComponent(n);
-  const tabs = [['overview', '개요'], ['students', '수강생'], ['progress', '진도'], ['attstat', '출석 현황'], ['book', '출석부']];
+  const tabs = [['overview', '개요'], ['students', '수강생'], ['progress', '수업 일정'], ['attstat', '출석 현황'], ['book', '출석부']];
   let body = '';
   if (tab === 'overview') {
     const stu = studentsOf(n), cnt = st => stu.filter(x => stageOf(x) === st).length;
@@ -1132,22 +1150,76 @@ function bookCsv(n) {
 }
 
 /* ═════════ 진도 ═════════ */
-PAGES.progress = () => { const n = curCohort(); if (!n) return needCohort(); return `<div class="ph"><div><h1>진도</h1><p>${esc(n)} · 표에서 바로 고치면 자동 저장돼요</p></div><div class="acts"><button class="btn" onclick="genSchedule(${attr(n)})">🗓 일정 자동 생성</button><button class="btn p" onclick="editSession(${attr(n)})">+ 회차 추가</button></div></div>${progressBody(n)}`; };
+PAGES.progress = () => { const n = curCohort(); if (!n) return needCohort(); return `<div class="ph"><div><h1>수업 일정</h1><p>${esc(n)} · 날짜를 누르면 강의·행사를 넣고, 끌어서 다른 날로 옮길 수 있어요</p></div><div class="acts"><button class="btn" onclick="genSchedule(${attr(n)})">🗓 강의 일정 자동 생성</button><button class="btn" onclick="CAL.view=CAL.view==='list'?'cal':'list';render()">${CAL.view === 'list' ? '📅 달력으로' : '☰ 목록으로'}</button></div></div>${progressBody(n)}`; };
+let CAL = { ym: '', view: 'cal' };
 function progressBody(n) {
-  const ss = sessionsOf(n), p = progressOf(n), smap = {}; summaryOf(n).forEach(s => smap[num(s['회차'])] = s);
-  if (!ss.length) return empty('아직 회차가 없어요', '「일정 자동 생성」을 누르면 월·화·목 수업이 한 번에 만들어져요.', `<button class="btn p" onclick="genSchedule(${attr(n)})">🗓 일정 자동 생성</button>`);
-  const byC = {}; ss.forEach(s => { const k = s['과정'] || '-'; byC[k] = byC[k] || { t: 0, d: 0 }; if (s['상태'] !== '휴강') { byC[k].t++; if (s['상태'] === '완료') byC[k].d++; } });
-  const today = todayStr();
-  return `<div class="card"><div class="row"><div><div class="muted">진행</div><div style="font-size:28px;font-weight:800">${p.done}<small style="font-size:15px;color:var(--sub)"> / ${p.plan}회차</small></div></div><span class="sp"></span><div class="chips">${Object.keys(byC).map(k => `<span class="b">${esc(k)} ${byC[k].d}/${byC[k].t}</span>`).join('')}</div></div>
-    <div class="bar" style="height:10px;margin:12px 0 10px"><i style="width:${p.rate * 100}%"></i></div>
-    <div class="row muted">${p.last ? `<span>✓ 최근 ${p.last['회차']}회차 ${esc(p.last['진도내용'] || '')}</span>` : ''}<span class="sp"></span>${p.next ? `<span>다음 ${p.next['회차']}회차 · ${md(p.next['날짜'])} ${esc(p.next['진도내용'] || '')}</span>` : ''}</div></div>
-  <div class="tw mt"><table><tr><th style="width:56px">회차</th><th>날짜</th><th class="hm">과정</th><th>진도 내용</th><th class="hm">강사</th><th style="width:110px">상태</th><th class="c">출석</th><th></th></tr>
-  ${ss.map(s => { const no = num(s['회차']), a = smap[no], k = attr({ c: n, no }); const isToday = s['날짜'] === today;
-    return `<tr ${isToday ? 'style="background:var(--pri-l)"' : ''}><td><b>${no}</b></td><td>${md(s['날짜'])}${s['날짜'] ? ` <span class="muted">(${DOW[dow(s['날짜'])]})</span>` : ''}${isToday ? ' <span class="b blue">오늘</span>' : ''}</td><td class="hm">${esc(s['과정'] || '')}</td>
-    <td class="wrap"><input class="inl" value="${esc(s['진도내용'] || '')}" data-f="진도내용" data-key="${k}" placeholder="내용 입력"></td><td class="hm">${esc(s['강사'] || '')}</td>
-    <td><select class="inl" data-f="상태" data-key="${k}" style="font-weight:700;color:${s['상태'] === '완료' ? 'var(--ok)' : s['상태'] === '휴강' ? 'var(--bad)' : 'var(--ink2)'}">${opts(['예정', '완료', '휴강'], s['상태'] || '예정')}</select></td>
-    <td class="c">${a ? `<b>${pct(num(a['재적인원']) ? (num(a['실시간출석']) + num(a['보강출석'])) / num(a['재적인원']) : '')}</b>` : `<a class="btn soft sm" href="#attend/${encodeURIComponent(n)}/${no}">체크</a>`}</td>
-    <td><button class="btn ghost sm" onclick="editSession(${attr(n)},${no})">⋯</button><span class="saved" id="sv_${no}">✓</span></td></tr>`; }).join('')}</table></div>`;
+  const ss = sessionsOf(n), ev = eventsOf(n), today = todayStr();
+  const next = ss.find(s => s['날짜'] >= today && s['상태'] !== '휴강'), nextEv = ev.find(e => e['날짜'] >= today);
+  const head = `<div class="card"><div class="row" style="gap:18px;flex-wrap:wrap">${next ? `<span>다음 강의 <b>${next['회차']}회차</b> · ${md(next['날짜'])}(${DOW[dow(next['날짜'])]}) ${esc(next['진도내용'] || '')}</span>` : '<span class="muted">예정된 강의가 없어요</span>'}${nextEv ? `<span>다음 행사 <b style="color:#b07800">${esc(nextEv['진도내용'] || '행사')}</b> · ${md(nextEv['날짜'])}</span>` : ''}<span class="sp"></span><span class="lgd" style="margin:0"><span><i class="sq" style="background:var(--pri)"></i>강의</span><span><i class="sq" style="background:#eda100"></i>행사</span><span><i class="sq" style="background:var(--line)"></i>휴강</span></span></div></div>`;
+  return head + (CAL.view === 'list' ? listBody(n) : calBody(n));
+}
+function calBody(n) {
+  const today = todayStr(), co = cohortOf(n) || {}, items = DB.session.filter(s => String(s['기수명']) === String(n) && s['날짜']);
+  if (!CAL.ym) { const nx = items.map(s => s['날짜']).filter(d => d >= today).sort()[0]; CAL.ym = (nx && nx.slice(0, 7) <= today.slice(0, 7) ? today : (nx || co['개강일'] || today)).slice(0, 7); }
+  const [y, m] = CAL.ym.split('-').map(Number), first = new Date(y, m - 1, 1), start = addDays(ymd(first), -first.getDay()), smap = {};
+  summaryOf(n).forEach(x => smap[num(x['회차'])] = x);
+  const byDay = {}; items.forEach(s => (byDay[s['날짜']] = byDay[s['날짜']] || []).push(s));
+  let cells = '';
+  for (let i = 0; i < 42; i++) {
+    const d = addDays(start, i), inM = d.slice(0, 7) === CAL.ym, list = (byDay[d] || []).sort((a, b) => (isEvent(a) - isEvent(b)) || num(a['회차']) - num(b['회차']));
+    if (i === 35 && !inM) break;
+    cells += `<div class="cd ${inM ? '' : 'out'} ${d === today ? 'today' : ''} ${dow(d) === 0 ? 'sun' : dow(d) === 6 ? 'sat' : ''}" data-d="${d}" onclick="calDay(event,${attr(n)},'${d}')"><div class="dn">${Number(d.slice(8))}</div>${list.map(s => {
+      const ev = isEvent(s), no = num(s['회차']), off = s['상태'] === '휴강', att = !ev && smap[no];
+      return `<div class="ci ${ev ? 'ev' : ''} ${off ? 'off' : ''}" data-no="${no}" onclick="event.stopPropagation();calOpen(${attr(n)},${no})" data-tip="${esc(ev ? '행사' : no + '회차 · ' + (s['과정'] || ''))}${s['진도내용'] ? '<br>' + esc(s['진도내용']) : ''}${off ? '<br>휴강' : ''}${att ? '<br>출석 체크됨' : ''}">${ev ? '' : `<b>${no}</b> `}${esc(s['진도내용'] || (ev ? '행사' : ''))}${att ? ' ✓' : ''}</div>`;
+    }).join('')}</div>`;
+  }
+  return `<div class="card mt"><div class="row" style="margin-bottom:10px"><button class="btn sm" onclick="calNav(-1)">‹</button><b style="font-size:17px;min-width:110px;text-align:center">${y}년 ${m}월</b><button class="btn sm" onclick="calNav(1)">›</button><button class="btn ghost sm" onclick="CAL.ym='${today.slice(0, 7)}';render()">이번 달</button><span class="sp"></span><span class="muted" style="font-size:12.5px">빈 곳을 누르면 추가 · 수업을 끌어서 날짜 이동</span></div>
+    <div class="cal">${DOW.map((w, i) => `<div class="cw ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</div>`).join('')}${cells}</div></div>`;
+}
+function calNav(k) { const [y, m] = CAL.ym.split('-').map(Number), d = new Date(y, m - 1 + k, 1); CAL.ym = ymd(d).slice(0, 7); render(); }
+function calOpen(n, no) { if (Date.now() - CD_END < 350) return; if (no > 1000) editEvent(n, no); else editSession(n, no); }
+function calDay(e, n, d) {
+  if (Date.now() - CD_END < 350) return;
+  openDrawer(`${md(d)}(${DOW[dow(d)]}) 추가<small>${esc(n)}</small>`, `<div class="chips" style="margin-bottom:6px"><button class="chip on" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('#addLec').style.display='';$('#addEv').style.display='none'">강의</button><button class="chip" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('#addLec').style.display='none';$('#addEv').style.display=''">행사</button></div>
+    <div id="addLec"><button class="btn p" style="width:100%" onclick="editSession(${attr(n)},0,'${d}')">이 날에 강의 추가</button></div>
+    <div id="addEv" style="display:none"><button class="btn p" style="width:100%;background:#eda100;border-color:#eda100" onclick="editEvent(${attr(n)},0,'${d}')">이 날에 행사 추가</button></div>`, `<span class="sp"></span><button class="btn" onclick="closeDrawer()">닫기</button>`);
+}
+/* 달력에서 끌어서 날짜 옮기기 */
+let CD = null, CD_END = 0;
+document.addEventListener('pointerdown', e => { const it = e.target.closest && e.target.closest('.cal .ci'); if (!it || e.button > 0) return; CD = { el: it, no: num(it.dataset.no), x: e.clientX, y: e.clientY, on: false, pid: e.pointerId }; });
+document.addEventListener('pointermove', e => {
+  if (!CD || e.pointerId !== CD.pid) return;
+  if (!CD.on) { if (Math.hypot(e.clientX - CD.x, e.clientY - CD.y) < 6) return; CD.on = true; CD.el.classList.add('dragging'); const g = CD.el.cloneNode(true); g.className += ' cghost'; document.body.appendChild(g); CD.g = g; }
+  e.preventDefault(); CD.g.style.left = e.clientX + 'px'; CD.g.style.top = e.clientY + 'px';
+  document.querySelectorAll('.cal .cd.drop').forEach(c => c.classList.remove('drop'));
+  const el = document.elementFromPoint(e.clientX, e.clientY), cd = el && el.closest('.cal .cd'); CD.to = cd ? cd.dataset.d : null; if (cd) cd.classList.add('drop');
+}, { passive: false });
+function calEnd(e) {
+  if (!CD) return; const d = CD; CD = null; if (!d.on) return;
+  CD_END = Date.now(); d.el.classList.remove('dragging'); if (d.g) d.g.remove(); document.querySelectorAll('.cal .cd.drop').forEach(c => c.classList.remove('drop'));
+  if (e.type === 'pointerup' && d.to) calMove(curCohort(), d.no, d.to);
+}
+document.addEventListener('pointerup', calEnd); document.addEventListener('pointercancel', calEnd);
+async function calMove(n, no, to) {
+  const s = DB.session.find(x => String(x['기수명']) === String(n) && num(x['회차']) === no); if (!s || s['날짜'] === to) return;
+  if (!isEvent(s) && summaryOf(n).some(x => num(x['회차']) === no) && !(await ask(`${no}회차 날짜 옮기기`, '이미 출석이 체크된 수업이에요. 수업 날짜만 옮기고 출석 기록은 그대로 둡니다.', '옮기기'))) return;
+  const from = s['날짜'], row = { '기수명': n, '회차': no, '날짜': to };
+  if (!isEvent(s)) row['과정'] = courseAt(n, to);
+  s['날짜'] = to; render();
+  try { const j = await api('upsert', { table: 'session', rows: [row] }); applyRows('session', j.rows); toast(`${isEvent(s) ? (s['진도내용'] || '행사') : no + '회차'} → ${md(to)}(${DOW[dow(to)]})`); bgSync(); }
+  catch (err) { s['날짜'] = from; render(); toast(err.message, true); }
+}
+function listBody(n) {
+  const ss = DB.session.filter(s => String(s['기수명']) === String(n)).sort((a, b) => String(a['날짜'] || '9').localeCompare(String(b['날짜'] || '9')) || num(a['회차']) - num(b['회차']));
+  if (!ss.length) return empty('아직 수업이 없어요', '「강의 일정 자동 생성」을 누르거나 달력에서 날짜를 눌러 추가하세요.', `<button class="btn p" onclick="genSchedule(${attr(n)})">🗓 강의 일정 자동 생성</button>`);
+  const smap = {}; summaryOf(n).forEach(s => smap[num(s['회차'])] = s); const today = todayStr();
+  return `<div class="tw mt"><table><tr><th style="width:70px">구분</th><th>날짜</th><th class="hm">과정</th><th>내용</th><th style="width:110px">상태</th><th class="c">출석</th><th></th></tr>
+  ${ss.map(s => { const ev = isEvent(s), no = num(s['회차']), a = smap[no], k = attr({ c: n, no });
+    return `<tr ${s['날짜'] === today ? 'style="background:var(--pri-l)"' : ''}><td>${ev ? '<span class="b" style="background:#fff3d6;color:#8a6410">행사</span>' : `<b>${no}회차</b>`}</td><td>${md(s['날짜'])}${s['날짜'] ? ` <span class="muted">(${DOW[dow(s['날짜'])]})</span>` : ''}</td><td class="hm">${ev ? '' : esc(s['과정'] || '')}</td>
+    <td class="wrap"><input class="inl" value="${esc(s['진도내용'] || '')}" data-f="진도내용" data-key="${k}" placeholder="${ev ? '행사 이름' : '내용 입력'}"></td>
+    <td>${ev ? '' : `<select class="inl" data-f="상태" data-key="${k}" style="font-weight:700;color:${s['상태'] === '완료' ? 'var(--ok)' : s['상태'] === '휴강' ? 'var(--bad)' : 'var(--ink2)'}">${opts(['예정', '완료', '휴강'], s['상태'] || '예정')}</select>`}</td>
+    <td class="c">${ev ? '' : a ? `<b>${pct(num(a['재적인원']) ? (num(a['실시간출석']) + num(a['보강출석'])) / num(a['재적인원']) : '')}</b>` : `<a class="btn soft sm" href="#attend/${encodeURIComponent(n)}/${no}">체크</a>`}</td>
+    <td><button class="btn ghost sm" onclick="calOpen(${attr(n)},${no})">⋯</button><span class="saved" id="sv_${no}">✓</span></td></tr>`; }).join('')}</table></div>`;
 }
 AFTER.progress = () => {
   document.querySelectorAll('[data-f]').forEach(el => el.addEventListener('change', async () => {
@@ -1155,18 +1227,31 @@ AFTER.progress = () => {
     if (await save('session', [row])) { const s = $('#sv_' + k.no); if (s) { s.classList.add('on'); setTimeout(() => s.classList.remove('on'), 1500); } if (el.dataset.f === '상태') render(); }
   }));
 };
-function editSession(n, no) {
+function editEvent(n, no, date) {
+  const s = no ? DB.session.find(x => String(x['기수명']) === String(n) && num(x['회차']) === no) : null, v = s || { '날짜': date || todayStr() };
+  openDrawer(s ? `행사<small>${esc(n)}</small>` : '행사 추가', `<div class="form">${F('진도내용', '행사 이름', v['진도내용'], 'text', null, { full: true, ph: '예: 수료식, 체육대회, 특강' })}${F('날짜', '날짜', v['날짜'], 'date')}<div></div>${F('비고', '메모', v['비고'], 'area')}</div>`,
+    `${s ? `<button class="btn d" onclick="delEvent(${attr(n)},${no})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveEvent(${attr(n)},${no || 0},this)">저장</button>`);
+}
+async function saveEvent(n, no, btn) {
+  const v = vals(); if (!v['진도내용']) return toast('행사 이름을 입력하세요', true); if (!v['날짜']) return toast('날짜를 입력하세요', true);
+  v['기수명'] = n; v['구분'] = '행사'; v['회차'] = no || Math.max(1000, ...eventsOf(n).map(x => num(x['회차']))) + 1;
+  if (await save('session', [v], '행사를 저장했어요', btn)) { closeDrawer(); render(); }
+}
+async function delEvent(n, no) { if (await ask('행사 삭제', '이 행사를 일정에서 지웁니다.', '삭제', true)) { if (await removeRec('session', { '기수명': n, '회차': no })) { closeDrawer(); render(); } } }
+function editSession(n, no, date) {
   const ss = sessionsOf(n), s = no ? ss.find(x => num(x['회차']) === no) : null, co = cohortOf(n) || {};
-  const v = s || { '회차': Math.max(0, ...ss.map(x => num(x['회차']))) + 1, '상태': '예정', '강사': co['강사'] || '' };
-  openDrawer(s ? `${no}회차<small>${esc(n)}</small>` : '회차 추가', `<div class="form">
+  let sug = Math.max(0, ...ss.map(x => num(x['회차']))) + 1;
+  if (date) { const k = ss.filter(x => x['날짜'] && x['날짜'] < date).length + 1; if (!ss.some(x => num(x['회차']) === k)) sug = k; }
+  const v = s || { '회차': sug, '날짜': date || '', '상태': '예정', '강사': co['강사'] || '' };
+  openDrawer(s ? `${no}회차 강의<small>${esc(n)}</small>` : '강의 추가', `<div class="form">
     ${s ? `<input type="hidden" data-k="회차" value="${no}">` : F('회차', '회차', v['회차'], 'number')}${F('날짜', '날짜', v['날짜'], 'date')}
     ${F('과정', '과정', v['과정'] || courseAt(n, v['날짜']), 'select', L('과정'))}${F('상태', '상태', v['상태'] || '예정', 'select', ['예정', '완료', '휴강'])}
     ${F('진도내용', '진도 내용', v['진도내용'], 'text', null, { full: true })}${F('강사', '강사', v['강사'])}<div></div>${F('비고', '메모', v['비고'], 'area')}</div>`,
     `${s && !isCo() ? `<button class="btn d" onclick="delSession(${attr(n)},${no})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveSession(${attr(n)},${no || 0},this)">저장</button>`);
 }
 async function saveSession(n, old, btn) {
-  const v = vals(); v['기수명'] = n; v['회차'] = num(v['회차']);
-  if (!v['회차']) return toast('회차를 입력하세요', true);
+  const v = vals(); v['기수명'] = n; v['회차'] = num(v['회차']); v['구분'] = '강의';
+  if (!v['회차'] || v['회차'] > 1000) return toast('회차는 1~1000 사이로 입력하세요', true);
   if (!old && sessionsOf(n).some(x => num(x['회차']) === v['회차'])) return toast('이미 있는 회차입니다', true);
   if (await save('session', [v], '진도를 저장했어요', btn)) { closeDrawer(); render(); }
 }
@@ -1184,7 +1269,7 @@ async function doGen(n, btn) {
   if (!v.from || !v.to || v.from > v.to) return toast('기간을 확인하세요', true);
   if (!days.length) return toast('요일을 하나 이상 고르세요', true);
   const exist = new Set(sessionsOf(n).map(s => num(s['회차']))), existD = new Set(sessionsOf(n).map(s => s['날짜'])), co = cohortOf(n) || {}, rows = []; let no = 0;
-  for (let d = v.from; d <= v.to && rows.length < 400; d = addDays(d, 1)) { if (!days.includes(dow(d))) continue; no++; if (exist.has(no) || existD.has(d)) continue; rows.push({ '기수명': n, '회차': no, '날짜': d, '과정': courseAt(n, d), '진도내용': v.content || (no + '강'), '강사': co['강사'] || '', '상태': '예정' }); }
+  for (let d = v.from; d <= v.to && rows.length < 400; d = addDays(d, 1)) { if (!days.includes(dow(d))) continue; no++; if (exist.has(no) || existD.has(d)) continue; rows.push({ '기수명': n, '회차': no, '날짜': d, '과정': courseAt(n, d), '진도내용': v.content || (no + '강'), '강사': co['강사'] || '', '상태': '예정', '구분': '강의' }); }
   if (!rows.length) return toast('새로 만들 회차가 없어요', true);
   if (await save('session', rows, rows.length + '개 회차를 만들었어요', btn)) { closeDrawer(); render(); }
 }
@@ -1615,7 +1700,7 @@ PAGES.report = () => {
   const rkList = stu.filter(x => rk[x['수강생ID']]);
   return `<div class="row noprint" style="margin-bottom:14px"><a class="btn ghost sm" href="#cohort/${encodeURIComponent(n)}">‹ ${esc(n)}</a><span class="sp"></span><button class="btn p" onclick="window.print()">${icon('print', 16)}인쇄 · PDF 저장</button></div>
   <div class="rp-h"><div><div class="muted">논산교회 신학부 기수 현황 보고</div><h1 style="margin:2px 0 0;font-size:26px">${esc(n)}</h1></div><span class="sp"></span><div class="muted" style="text-align:right">작성 ${todayStr()}<br>강사 ${esc(c['강사'] || '-')} · 전도사 ${esc([c['전도사1'], c['전도사2']].filter(Boolean).join(', ') || '-')}</div></div>
-  <div class="grid g-kpi">${[['개강', md(c['개강일']) || '-'], ['진도', p.done + '/' + p.plan + '회'], ['재적', rosterAt(n, todayStr()).length + '명'], ['평균 출석률', pct(attRate(n))], ['탈락', drops.length + '명'], ['탈락 위험', Object.values(rk).filter(x => x.lv === 'bad').length + '명']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="font-size:22px">${k[1]}</div></div>`).join('')}</div>
+  <div class="grid g-kpi">${[['개강', md(c['개강일']) || '-'], ['재적', rosterAt(n, todayStr()).length + '명'], ['평균 출석률', pct(attRate(n))], ['탈락', drops.length + '명'], ['탈락 위험', Object.values(rk).filter(x => x.lv === 'bad').length + '명']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="font-size:22px">${k[1]}</div></div>`).join('')}</div>
   <div class="grid g-2 mt"><div class="card"><h3>단계별 흐름</h3>${funnelHTML(n)}</div><div class="card"><h3>회차별 출석률</h3>${lineChart(pts)}</div></div>
   <div class="grid g-2 mt"><div class="card"><h3>챙겨야 할 사람 <small>${rkList.length}명</small></h3>${rkList.length ? rkList.map(x => `<div class="row" style="padding:5px 0;border-bottom:1px solid var(--line2)"><b>${esc(x['이름'])}</b><span class="muted">${esc(x['담당전도사'] || '')}</span><span class="sp"></span>${riskBadge(rk[x['수강생ID']])}<span class="muted">${esc(rk[x['수강생ID']].why)}</span></div>`).join('') : '<div class="muted">없음</div>'}
     <div class="muted mt">보강 필요 결석 ${abs.length}건 · 연락 안 함 ${todo.length}건</div></div>
