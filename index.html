@@ -442,6 +442,10 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
 .ftab .hv{min-width:0;padding:3px 6px}
 .hb .tr{height:14px;border-radius:6px}.hb .tr i{border-radius:6px!important;background-image:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,0))}
 .bar{height:9px}.bar i{background:linear-gradient(90deg,#3b7bff,#6a5cff)}
+.pbar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--line2);gap:2px}.pbar i{display:block;height:100%;background-image:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0))}.pbar.sm{height:10px;border-radius:5px}
+.wkk{display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:4px 12px;border-left:1px solid var(--line)}.wkk span{font-size:11.5px;color:var(--sub);font-weight:600}.wkk b{font-size:20px;font-weight:800;line-height:1.1}.wkk b small{font-size:12px;color:var(--sub)}
+.wk{border-top:4px solid var(--c)}
+@media (max-width:760px){.wkk{border-left:0;align-items:flex-start;padding:4px 8px 0 0}}
 </style>
 </head>
 <body>
@@ -500,15 +504,16 @@ const IC = {
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
   trend: '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  week: '<rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 14h10" stroke-width="3"/>',
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'
 };
 const icon = (k, sz) => `<svg class="i" width="${sz || 18}" height="${sz || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ''}</svg>`;
 const NAV = [
-  ['운영', [['home', 'home', '대시보드'], ['book', 'cal', '출석부']]],
+  ['운영', [['home', 'home', '대시보드'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부']]],
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
   ['분석', [['analysis', 'chart', '분석'], ['settings', 'gear', '설정']]]
 ];
-const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정']]]];
+const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정']]]];
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
@@ -718,7 +723,7 @@ window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); 
 function route() {
   const h = decodeURIComponent(location.hash.slice(1) || 'home').split('/');
   ROUTE = { page: h[0], arg: h[1], tab: h[2] };
-  if (isCo() && !['attend', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
+  if (isCo() && !['attend', 'weekly', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
   if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   closeAll(); vtip(null, '');
@@ -1289,6 +1294,99 @@ async function fuSave(id, makeup, btn) {
   if (r) { closeDrawer(); render(); if (!r.queued) toast(makeup ? a['이름'] + ' 보강 완료' : '연락 기록을 저장했어요'); }
 }
 
+/* ═════════ 주간 현황 ═════════ */
+let WK = { start: '', scope: 'cur', per: 'week' };
+const monOf = d => addDays(d, -((dow(d) + 6) % 7));
+const CAT = { all: ['전부 실시간', 'ok'], mk: ['보강 포함', 'warn'], ab: ['결석 포함', 'bad'], part: ['일부 미기록', ''], none: ['기록 없음', ''] };
+/** 기간 안의 수업과 수강생별 출석 */
+function periodData(n, from, to) {
+  const ses = summaryOf(n).filter(x => x['날짜'] >= from && x['날짜'] <= to), nos = ses.map(x => num(x['회차'])), am = attendMap(n);
+  const titles = {}; sessionsOf(n).forEach(x => titles[num(x['회차'])] = x['진도내용']);
+  const inR = new Set(rosterAt(n, to).map(x => x['수강생ID']));
+  const rows = studentsOf(n).filter(st => inR.has(st['수강생ID']) || nos.some(no => (am[st['수강생ID']] || {})[no])).map(st => {
+    const rec = am[st['수강생ID']] || {}, list = nos.map(no => rec[no] ? rec[no]['출석'] : '');
+    const c = k => list.filter(x => x === k).length, real = c('실시간'), mk = c('보강'), ab = c('결석'), none = c('');
+    const cat = !nos.length ? '' : ab ? 'ab' : none === nos.length ? 'none' : mk ? 'mk' : none ? 'part' : 'all';
+    return { st, list, real, mk, ab, none, cat };
+  });
+  return { ses, nos, titles, rows };
+}
+function sumRows(rows) {
+  const o = { n: rows.length, real: 0, mk: 0, ab: 0, all: 0, mkN: 0, abN: 0 };
+  rows.forEach(r => { o.real += r.real; o.mk += r.mk; o.ab += r.ab; if (r.cat === 'all') o.all++; if (r.cat === 'mk') o.mkN++; if (r.cat === 'ab') o.abN++; });
+  const t = o.real + o.mk + o.ab; o.rec = t; o.rate = t ? (o.real + o.mk) / t : ''; o.realR = t ? o.real / t : ''; o.mkR = t ? o.mk / t : ''; o.abR = t ? o.ab / t : '';
+  return o;
+}
+const resTxt = r => !r.list.length ? '-' : r.cat === 'all' ? `실시간 ${r.real}/${r.list.length}` : [r.real ? '실시간 ' + r.real : '', r.mk ? '보강 ' + r.mk : '', r.ab ? '결석 ' + r.ab : '', r.none ? '미기록 ' + r.none : ''].filter(Boolean).join(' · ');
+function patternBar(o) {
+  const n = Math.max(1, o.n), seg = (v, col, l) => v ? `<i style="width:${v / n * 100}%;background:${col}" data-tip="${l} ${v}명 (${pct(v / n)})"></i>` : '';
+  const rest = o.n - o.all - o.mkN - o.abN;
+  return `<div class="pbar">${seg(o.all, 'var(--ok)', '전부 실시간')}${seg(o.mkN, 'var(--warn)', '보강 포함')}${seg(o.abN, 'var(--bad)', '결석 포함')}${seg(rest, '#cfd6e2', '미기록')}</div>
+    <div class="lgd" style="margin-top:6px"><span><i class="sq" style="background:var(--ok)"></i>전부 실시간 <b>${o.all}</b></span><span><i class="sq" style="background:var(--warn)"></i>보강 포함 <b>${o.mkN}</b></span><span><i class="sq" style="background:var(--bad)"></i>결석 포함 <b>${o.abN}</b></span>${rest ? `<span><i class="sq" style="background:#cfd6e2"></i>미기록 <b>${rest}</b></span>` : ''}</div>`;
+}
+function wkCohorts() { if (isCo()) return [cohortOf(ROLE.cohort) || { '기수명': ROLE.cohort }]; return WK.scope === 'all' ? cohorts().filter(c => c['상태'] !== '종강') : [cohortOf(curCohort()) || { '기수명': curCohort() }].filter(c => c['기수명']); }
+PAGES.weekly = () => {
+  if (!WK.start) WK.start = monOf(todayStr());
+  const from = WK.start, to = addDays(from, 6), pf = addDays(from, -7), pt = addDays(from, -1), tab = ROUTE.arg || 'week';
+  const cs = wkCohorts(); if (!cs.length) return needCohort();
+  const tabs = [['week', '주간 출석'], ['group', '전도사·분반별'], ['trend', '최근 8주']];
+  const head = `<div class="ph"><div><h1>주간 현황</h1><p>${md(from)}(월) ~ ${md(to)}(일) · 수업마다 실시간·보강·결석을 한 주로 묶어 봐요</p></div>
+    <div class="acts"><button class="btn" onclick="WK.start=addDays(WK.start,-7);render()">‹ 지난주</button><button class="btn ${from === monOf(todayStr()) ? 'soft' : ''}" onclick="WK.start=monOf(todayStr());render()">이번 주</button><button class="btn" onclick="WK.start=addDays(WK.start,7);render()">다음주 ›</button></div></div>
+    <div class="row" style="margin-bottom:14px;gap:10px"><div class="tabs" style="margin:0">${tabs.map(t => `<a href="#weekly/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div><span class="sp"></span>${isCo() ? '' : `<div class="chips">${[['cur', esc(curCohort() || '현재 기수')], ['all', '진행중 전체']].map(x => `<button class="chip ${WK.scope === x[0] ? 'on' : ''}" onclick="WK.scope='${x[0]}';render()">${x[1]}</button>`).join('')}</div>`}</div>`;
+  if (tab === 'group') return head + wkGroup(cs, from, to);
+  if (tab === 'trend') return head + wkTrend(cs, from);
+  return head + cs.map(c => {
+    const n = String(c['기수명']), d = periodData(n, from, to), o = sumRows(d.rows), pd = periodData(n, pf, pt), po = pd.nos.length ? sumRows(pd.rows) : { rate: '', all: '', n: 0 }, col = colorOf(n);
+    if (!d.nos.length) return `<div class="card mt" style="--c:${col}"><div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="muted">이번 주에 올라온 출석이 없어요</span></div></div>`;
+    const ord = { ab: 0, mk: 1, part: 2, none: 3, all: 4 }, rows = d.rows.slice().sort((a, b) => ord[a.cat] - ord[b.cat] || String(a.st['담당전도사'] || '').localeCompare(String(b.st['담당전도사'] || '')) || String(a.st['이름']).localeCompare(String(b.st['이름'])));
+    return `<div class="card mt wk" style="--c:${col}">
+      <div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="b blue">이번 주 수업 ${d.nos.length}회</span><span class="sp"></span>
+        <div class="wkk"><span>주간 출석률</span><b>${pct(o.rate)}</b>${dlt(o.rate, po.rate, 'p')}</div><div class="wkk"><span>전부 실시간</span><b>${o.all}<small>/${o.n}명</small></b>${dlt(o.all, po.all, '명')}</div></div>
+      <div class="muted" style="margin:8px 0 12px">${d.ses.map(x => `${num(x['회차'])}회차 ${md(x['날짜'])}(${DOW[dow(x['날짜'])]})${d.titles[num(x['회차'])] ? ' ' + esc(d.titles[num(x['회차'])]) : ''}`).join(' · ')}</div>
+      ${patternBar(o)}
+      <div class="tw mt" style="box-shadow:none"><table><tr><th>이름</th><th class="hm">담당전도사</th><th class="hm">분반</th>${d.nos.map(no => `<th class="c">${no}회<div style="font-weight:500;font-size:10px">${md(d.ses.find(x => num(x['회차']) === no)['날짜'])}</div></th>`).join('')}<th>이번 주</th></tr>
+      ${rows.map(r => `<tr><td><b>${esc(r.st['이름'])}</b></td><td class="hm">${esc(r.st['담당전도사'] || '-')}</td><td class="hm">${esc(r.st['분반'] || '-')}</td>${r.list.map(v => `<td class="c" style="padding:6px"><span class="cell ${v || 'none'}" style="cursor:default">${v ? SYM[v] : '·'}</span></td>`).join('')}<td><span class="b ${CAT[r.cat] ? CAT[r.cat][1] : ''}">${esc(resTxt(r))}</span></td></tr>`).join('')}</table></div>
+    </div>`;
+  }).join('');
+};
+/** 전도사별 · 분반별: 같은 기간 · 그 전 같은 길이 기간과 비교 */
+function wkGroup(cs, from, to) {
+  const per = WK.per, today = todayStr();
+  let a = from, b = to;
+  if (per === '4w') { a = addDays(from, -21); b = to; }
+  if (per === 'all') { a = '0000-00-00'; b = '9999-99-99'; }
+  const len = per === '4w' ? 28 : 7, pa = addDays(a, -len), pb = addDays(a, -1);
+  const multi = cs.length > 1;
+  const collect = (x, y) => cs.flatMap(c => periodData(String(c['기수명']), x, y).rows.map(r => Object.assign({ co: String(c['기수명']) }, r)));
+  const cur = collect(a, b), prev = per === 'all' ? [] : collect(pa, pb);
+  const table = (title, keyOf) => {
+    const g = {}, pg = {}; cur.forEach(r => (g[keyOf(r)] = g[keyOf(r)] || []).push(r)); prev.forEach(r => (pg[keyOf(r)] = pg[keyOf(r)] || []).push(r));
+    const rows = Object.keys(g).map(k => ({ k, o: sumRows(g[k]), p: pg[k] ? sumRows(pg[k]) : null })).filter(x => x.o.rec).sort((x, y) => y.o.rate - x.o.rate);
+    if (!rows.length) return `<div class="card mt"><h3>${title}</h3><div class="muted">이 기간에 출석 기록이 없어요</div></div>`;
+    const best = rows[0].o.rate, worst = rows[rows.length - 1].o.rate;
+    return `<div class="card mt"><h3>${title} <small>출석률 높은 순 · ${per === 'all' ? '기수 전체' : '지난 기간 대비 증감'}</small></h3><div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>${title.replace('별', '')}</th><th class="c">인원</th><th class="c">출석률</th><th class="c">실시간</th><th class="c">보강</th><th class="c">결석</th><th class="c">${per === 'week' ? '전부 실시간' : '결석 없는 사람'}</th><th style="min-width:160px">${per === 'week' ? '한 주 결과' : '실시간 · 보강 · 결석'}</th></tr>
+      ${rows.map(x => { const o = x.o, clean = per === 'week' ? o.all : g[x.k].filter(r => !r.ab && (r.real + r.mk)).length;
+        return `<tr><td><b>${esc(x.k)}</b>${rows.length > 1 && o.rate === worst && best - worst >= .05 ? ' <span class="b bad">가장 낮음</span>' : ''}</td><td class="c">${o.n}</td>
+        <td class="c"><span class="hv ${TONE(o.rate, .85, .75)}">${pct(o.rate)}</span>${x.p && x.p.rec ? '<div>' + dlt(o.rate, x.p.rate, 'p') + '</div>' : ''}</td>
+        <td class="c">${pct(o.realR)}</td><td class="c">${pct(o.mkR)}</td><td class="c" style="color:${o.ab ? 'var(--bad)' : ''}">${pct(o.abR)}</td><td class="c"><b>${clean}</b><span class="muted">/${o.n}</span></td>
+        <td>${per === 'week' ? `<div class="pbar sm">${['all', 'mk', 'ab'].map(k => { const v = k === 'all' ? o.all : k === 'mk' ? o.mkN : o.abN; return v ? `<i style="width:${v / o.n * 100}%;background:var(--${k === 'all' ? 'ok' : k === 'mk' ? 'warn' : 'bad'})" data-tip="${CAT[k][0]} ${v}명"></i>` : ''; }).join('')}</div>` : `<div class="pbar sm"><i style="width:${(o.realR || 0) * 100}%;background:var(--ok)" data-tip="실시간 ${pct(o.realR)}"></i><i style="width:${(o.mkR || 0) * 100}%;background:var(--warn)" data-tip="보강 ${pct(o.mkR)}"></i><i style="width:${(o.abR || 0) * 100}%;background:var(--bad)" data-tip="결석 ${pct(o.abR)}"></i></div>`}</td></tr>`; }).join('')}</table></div></div>`;
+  };
+  return `<div class="chips" style="margin-bottom:4px">${[['week', '이번 주'], ['4w', '최근 4주'], ['all', '기수 전체']].map(x => `<button class="chip ${per === x[0] ? 'on' : ''}" onclick="WK.per='${x[0]}';render()">${x[1]}</button>`).join('')}<span class="muted" style="align-self:center;margin-left:6px">${per === 'all' ? '기수 시작부터 지금까지' : md(a) + ' ~ ' + md(b < today ? b : b)}</span></div>
+    ${table('전도사별', r => r.st['담당전도사'] || '(담당 미지정)')}
+    ${table('분반별', r => (multi ? r.co + ' · ' : '') + (r.st['분반'] || '(분반 미지정)'))}
+    ${multi ? table('기수별', r => r.co) : ''}
+    <p class="muted" style="margin-top:12px">분반은 수강생 정보에서 정해요. 전도사·분반이 비어 있으면 「미지정」으로 묶여요.</p>`;
+}
+/** 최근 8주: 기수별 주간 출석률 · 전부 실시간 비율 */
+function wkTrend(cs, from) {
+  const weeks = []; for (let i = 7; i >= 0; i--) weeks.push(addDays(from, -7 * i));
+  return `<div class="tw"><table class="htbl"><tr><th>기수</th>${weeks.map(w => `<th class="c">${md(w)}주</th>`).join('')}</tr>
+    ${cs.map(c => { const n = String(c['기수명']); let prev = null;
+      const tds = weeks.map(w => { const d = periodData(n, w, addDays(w, 6)); if (!d.nos.length) { return `<td class="c muted">-</td>`; } const o = sumRows(d.rows), out = `<td class="c"><span class="hv ${TONE(o.rate, .85, .75)}">${pct(o.rate)}</span>${prev !== null ? '<div>' + dlt(o.rate, prev, 'p') + '</div>' : ''}<div class="muted" style="font-size:11.5px">수업 ${d.nos.length} · 전부실시간 ${o.all}/${o.n}</div></td>`; prev = o.rate; return out; }).join('');
+      return `<tr><td><i class="dot" style="background:${colorOf(n)}"></i><b>${esc(n)}</b></td>${tds}</tr>`; }).join('')}</table></div>
+    <p class="muted" style="margin-top:10px">한 주 = 월요일부터 일요일까지 · 증감은 바로 앞 주(수업이 있던 주) 대비</p>`;
+}
+
 /* ═════════ 출석부 ═════════ */
 PAGES.book = () => {
   const n = curCohort(); if (!n) return needCohort();
@@ -1580,7 +1678,8 @@ function editStudent(id) {
   const dropped = !!s['탈락일'];
   openDrawer(id ? `${esc(s['이름'])} ${stageBadge(stageOf(s))}<small>${esc(s['기수명'])}</small>` : '새 수강생', staffList() + `${id ? `<input type="hidden" data-k="수강생ID" value="${esc(id)}">` : ''}
     <div class="form">${F('이름', '이름', s['이름'])}${F('기수명', '기수', s['기수명'], 'select', cohorts().map(c => c['기수명']))}
-      ${F('담당전도사', '담당전도사', s['담당전도사'], 'text', 'dlStaff')}${F('연락처', '연락처', s['연락처'], 'tel', null, { ph: '010-0000-0000' })}
+      ${F('담당전도사', '담당전도사', s['담당전도사'], 'text', 'dlStaff')}${F('분반', '분반', s['분반'], 'text', 'dlBan', { ph: '예: 1반, 임희순반' })}<datalist id="dlBan">${[...new Set(DB.student.map(x => x['분반']).filter(Boolean))].map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+      ${F('연락처', '연락처', s['연락처'], 'tel', null, { ph: '010-0000-0000' })}<div></div>
       ${F('성별', '성별', s['성별'], 'select', L('성별'))}${F('소속부서', '소속(편입)부서', s['소속부서'], 'select', L('소속부서'))}
       ${F('주소', '주소', s['주소'], 'text', null, { full: true })}</div>
     <div class="sec">생년월일 <span class="muted" style="font-weight:500">생일은 달력에 자동으로 떠요</span></div>${birthFields(s)}
@@ -2074,7 +2173,7 @@ PAGES.report = () => {
 };
 
 /* ═════════ 과거 자료 가져오기 ═════════ */
-const HMAP = { '이름': ['이름', '성명'], '연락처': ['연락처', '전화', '전화번호', '휴대폰', '핸드폰'], '성별': ['성별'], '생년월일': ['생년월일', '생일'], '담당전도사': ['담당전도사', '전도사', '담당'], '인도자': ['인도자', '전도자'], '소속부서': ['소속부서', '부서', '소속'], '주소': ['주소', '거주지'], '실제생년월일': ['실제생년월일', '실제생일'], '양음력': ['양음력', '양력음력', '음양력'], '인도자부서': ['인도자부서'], '섬김이': ['섬김이'], '섬김이부서': ['섬김이부서'], '교사': ['교사'], '교사부서': ['교사부서'],
+const HMAP = { '이름': ['이름', '성명'], '연락처': ['연락처', '전화', '전화번호', '휴대폰', '핸드폰'], '성별': ['성별'], '생년월일': ['생년월일', '생일'], '담당전도사': ['담당전도사', '전도사', '담당'], '분반': ['분반', '반'], '인도자': ['인도자', '전도자'], '소속부서': ['소속부서', '부서', '소속'], '주소': ['주소', '거주지'], '실제생년월일': ['실제생년월일', '실제생일'], '양음력': ['양음력', '양력음력', '음양력'], '인도자부서': ['인도자부서'], '섬김이': ['섬김이'], '섬김이부서': ['섬김이부서'], '교사': ['교사'], '교사부서': ['교사부서'],
   '입고일': ['입고일', '수카입고', '입고'], '센터등록일': ['센터등록일', '등록일', '센터등록', '등록'], '중등진급일': ['중등진급일', '중등'], '고등진급일': ['고등진급일', '고등'], '입교일': ['입교일', '종강일', '입교', '종강'], '탈락일': ['탈락일', '탈락'], '탈락사유': ['탈락사유', '사유'] };
 const DATE_COLS = ['생년월일', '실제생년월일', '입고일', '센터등록일', '중등진급일', '고등진급일', '입교일', '탈락일'];
 function normDate(v) {
