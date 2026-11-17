@@ -271,6 +271,27 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .funnel .st .bx i{display:block;height:100%;background:var(--pri);border-radius:0 6px 6px 0;opacity:.85}
 .funnel .cv{font-size:12px;color:var(--sub);margin:-2px 0 -2px 94px}
 .funnel .cv b{font-weight:700}
+/* 종합 대시보드 그래프 */
+.dash2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px}
+.vz{width:100%;height:auto;display:block;overflow:visible}
+.vz text{font-size:11px;fill:var(--sub)}.vz .lbl{font-size:12px;font-weight:600}
+.vz .gl{stroke:var(--line2);stroke-width:1}.vz .ax{stroke:var(--line);stroke-width:1}
+.vz .pt{stroke:#fff;stroke-width:2;cursor:pointer}.vz .pt:hover{r:6}
+.lgd{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink2);margin:2px 0 8px}
+.lgd i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.lgd i.sq{height:10px;width:10px;border-radius:3px}
+#vtip{position:fixed;z-index:1000;pointer-events:none;background:#16202c;color:#fff;font-size:12.5px;line-height:1.45;padding:7px 10px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);display:none;max-width:260px}
+.hb{display:grid;grid-template-columns:96px 1fr 56px;gap:8px;align-items:center;font-size:13px;margin:7px 0}
+.hb .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.hb .tr{height:12px;background:var(--line2);border-radius:4px;display:flex;gap:2px;overflow:hidden}
+.hb .tr i{display:block;height:100%}.hb .tr i:first-child{border-radius:4px 0 0 4px}.hb .tr i:last-child{border-radius:0 4px 4px 0}
+.hb b{text-align:right;font-weight:700}
+.hb.click{cursor:pointer;border-radius:8px}.hb.click:hover .nm{color:var(--pri)}
+.cmp{display:grid;grid-template-columns:96px 1fr 1fr;gap:6px 12px;align-items:center;font-size:13px}
+.cmp .h{font-size:12px;color:var(--sub);font-weight:600}
+.cmp .cx{display:flex;align-items:center;gap:8px;min-width:0}.cmp .cx .tr{flex:1;height:10px;background:var(--line2);border-radius:4px;overflow:hidden}.cmp .cx .tr i{display:block;height:100%;border-radius:4px}
+.cmp .cx b{width:44px;text-align:right;font-size:12.5px}
+.inst td,.inst th{white-space:nowrap}
 .minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .mbar{display:grid;grid-template-columns:70px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
 .mbar .bx{height:14px;background:var(--line2);border-radius:4px;overflow:hidden}.mbar .bx i{display:block;height:100%;background:var(--pri);border-radius:0 4px 4px 0}
@@ -537,7 +558,7 @@ function route() {
   if (isCo() && !['attend', 'book', 'progress', 'followup'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
   if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
-  closeAll();
+  closeAll(); vtip(null, '');
   render(); window.scrollTo(0, 0);
 }
 const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '진도', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석' };
@@ -699,25 +720,109 @@ document.addEventListener('click', e => { const p = $('#pop'); if (p && !p.conta
 const PAGES = {};
 
 /* ═════════ 대시보드 ═════════ */
+/* ═════════ 종합 대시보드 (신학부장용) ═════════ */
+const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'];
+const ST_COL = { ok: '#1baf7a', wait: '#eda100', todo: '#e34948' };
+function vtip(e, html) { let t = document.getElementById('vtip'); if (!t) { t = document.createElement('div'); t.id = 'vtip'; document.body.appendChild(t); } if (!html) { t.style.display = 'none'; return; } t.innerHTML = html; t.style.display = 'block'; const x = Math.min(e.clientX + 14, innerWidth - t.offsetWidth - 8), y = Math.max(8, e.clientY - t.offsetHeight - 12); t.style.left = x + 'px'; t.style.top = y + 'px'; }
+document.addEventListener('pointerover', e => { const m = e.target.closest && e.target.closest('[data-tip]'); if (m) vtip(e, m.getAttribute('data-tip')); });
+document.addEventListener('pointermove', e => { const m = e.target.closest && e.target.closest('[data-tip]'); if (m) vtip(e, m.getAttribute('data-tip')); else vtip(e, ''); });
+/** 차트에 올릴 기수: 출석 기록이 있는 기수 중 진행중 우선, 최근 개강 순 최대 6개 (색은 기수에 고정) */
+function chartCohorts() {
+  const cs = cohorts().filter(c => summaryOf(c['기수명']).length);
+  return cs.sort((a, b) => ((a['상태'] === '진행중' ? 0 : 1) - (b['상태'] === '진행중' ? 0 : 1)) || String(b['개강일']).localeCompare(String(a['개강일']))).slice(0, 6)
+    .sort((a, b) => String(a['개강일']).localeCompare(String(b['개강일'])));
+}
+function colorOf(n) { const all = cohorts().slice().sort((a, b) => String(a['개강일']).localeCompare(String(b['개강일']))).map(c => String(c['기수명'])); return SERIES[Math.max(0, all.indexOf(String(n))) % SERIES.length]; }
+function sesRates(n) { return summaryOf(n).slice().sort((a, b) => num(a['회차']) - num(b['회차'])).map(s => ({ ses: num(s['회차']), date: s['날짜'], real: num(s['실시간출석']), mk: num(s['보강출석']), tot: num(s['재적인원']), r: num(s['재적인원']) ? (num(s['실시간출석']) + num(s['보강출석'])) / num(s['재적인원']) : 0 })); }
+function trendChart() {
+  const cs = chartCohorts(); if (!cs.length) return '<div class="muted" style="padding:30px 0;text-align:center">출석을 체크하면 회차별 출석률이 그려져요</div>';
+  const W = 480, H = 220, L = 36, R = cs.length <= 4 ? 64 : 12, T = 10, B = 34;
+  const maxS = Math.max(4, ...cs.map(c => Math.max(0, ...sesRates(c['기수명']).map(x => x.ses))));
+  const X = v => L + (v - 1) / Math.max(1, maxS - 1) * (W - L - R), Y = v => T + (1 - v) * (H - T - B);
+  let g = [0, .5, 1].map(v => `<line class="gl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${v * 100}%</text>`).join('');
+  const step = Math.ceil(maxS / 12); for (let i = 1; i <= maxS; i += step) g += `<text x="${X(i)}" y="${H - 18}" text-anchor="middle">${i}</text>`;
+  const lines = cs.map(c => {
+    const n = c['기수명'], col = colorOf(n), pts = sesRates(n); if (!pts.length) return '';
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + X(p.ses).toFixed(1) + ' ' + Y(p.r).toFixed(1)).join('');
+    const last = pts[pts.length - 1];
+    return `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` +
+      pts.map(p => `<circle class="pt" cx="${X(p.ses)}" cy="${Y(p.r)}" r="4" fill="${col}" data-tip="<b>${esc(n)}</b> · ${p.ses}회차 (${md(p.date)})<br>출석 ${pct(p.r)} · 실시간 ${p.real} + 보강 ${p.mk} / ${p.tot}명"/>`).join('') +
+      (cs.length <= 4 ? `<text class="lbl" x="${X(last.ses) + 8}" y="${Y(last.r) + 4}" style="fill:var(--ink2)">${esc(n)}</text>` : '');
+  }).join('');
+  return `${cs.length > 1 ? `<div class="lgd">${cs.map(c => `<span><i style="background:${colorOf(c['기수명'])}"></i>${esc(c['기수명'])}</span>`).join('')}</div>` : ''}
+    <svg class="vz" viewBox="0 0 ${W} ${H}" role="img" aria-label="기수별 회차 출석률"><line class="ax" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>${g}${lines}<text x="${(L + W - R) / 2}" y="${H - 2}" text-anchor="middle" style="font-size:10.5px">회차</text></svg>`;
+}
+function compareChart() {
+  const cs = cohorts().filter(c => c['상태'] !== '종강' || summaryOf(c['기수명']).length).slice(0, 8);
+  if (!cs.length) return '<div class="muted">기수를 만들면 비교가 나와요</div>';
+  const cell = (v, col, tip) => `<div class="cx" data-tip="${tip}"><div class="tr"><i style="width:${v === '' ? 0 : Math.round(v * 100)}%;background:${col}"></i></div><b>${pct(v)}</b></div>`;
+  return `<div class="cmp"><span></span><span class="h">출석률</span><span class="h">진도율</span>${cs.map(c => { const n = c['기수명'], ar = attRate(n), p = progressOf(n), col = colorOf(n);
+    return `<a class="nm" href="#cohort/${encodeURIComponent(n)}" style="font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${col};margin-right:6px"></i>${esc(n)}</a>${cell(ar, col, `<b>${esc(n)}</b> 평균 출석률 ${pct(ar)}`)}${cell(p.rate, col, `<b>${esc(n)}</b> 진도 ${p.done}/${p.plan}회차`)}`; }).join('')}</div>`;
+}
+function absStats(n) { const all = DB.attend.filter(a => String(a['기수명']) === String(n) && (a['출석'] === '결석' || a['출석'] === '보강')); const ab = absList(n); return { done: all.filter(a => a['출석'] === '보강').length, wait: ab.filter(x => doneC(x.a)).length, todo: ab.filter(x => !doneC(x.a)).length }; }
+function absChart() {
+  const cs = cohorts().filter(c => c['상태'] !== '종강' || absList(c['기수명']).length);
+  const rows = cs.map(c => ({ n: c['기수명'], ...absStats(c['기수명']) })).filter(r => r.done + r.wait + r.todo > 0);
+  if (!rows.length) return '<div class="muted" style="padding:20px 0;text-align:center">아직 결석 기록이 없어요 👍</div>';
+  const max = Math.max(...rows.map(r => r.done + r.wait + r.todo));
+  return `<div class="lgd"><span><i class="sq" style="background:${ST_COL.todo}"></i>연락 전</span><span><i class="sq" style="background:${ST_COL.wait}"></i>연락함 · 보강 대기</span><span><i class="sq" style="background:${ST_COL.ok}"></i>보강 완료</span></div>` +
+    rows.map(r => { const t = r.done + r.wait + r.todo, seg = (v, c, l) => v ? `<i style="width:${v / max * 100}%;background:${c}" data-tip="<b>${esc(r.n)}</b> · ${l} ${v}건"></i>` : '';
+      return `<div class="hb click" onclick="FU.scope='one';setCohort(${attr(r.n)});go('followup')"><span class="nm">${esc(r.n)}</span><div class="tr" style="background:transparent">${seg(r.todo, ST_COL.todo, '연락 전')}${seg(r.wait, ST_COL.wait, '연락함·보강 대기')}${seg(r.done, ST_COL.ok, '보강 완료')}</div><b>${r.todo ? `<span style="color:var(--bad)">${r.todo}</span>/` : ''}${t}</b></div>`; }).join('') +
+    `<div class="muted" style="font-size:12px;margin-top:6px">숫자: 연락 전 / 전체 결석 · 막대를 누르면 그 기수의 결석·보강으로 이동</div>`;
+}
+function funnelAll() {
+  const cs = cohorts(); if (!cs.length) return '<div class="muted">기수가 없어요</div>';
+  const steps = funnelSteps(cs[0]['기수명']).map(x => [x[0], 0]);
+  cs.forEach(c => funnelSteps(c['기수명']).forEach((x, i) => { if (steps[i]) steps[i][1] += x[1]; }));
+  const top = Math.max(1, steps[0][1]); if (!steps[0][1]) return '<div class="muted">수강생이 등록되면 그려져요</div>';
+  return steps.map((x, i) => `<div class="hb" data-tip="<b>${x[0]}</b> ${x[1]}명${i ? ` · 앞 단계의 ${pct(steps[i - 1][1] ? x[1] / steps[i - 1][1] : 0)}` : ''}"><span class="nm">${x[0]}</span><div class="tr"><i style="width:${x[1] / top * 100}%;background:${SERIES[0]};opacity:${1 - i * .13}"></i></div><b>${x[1]}명</b></div>`).join('') +
+    `<div class="muted" style="font-size:12px;margin-top:6px">모든 기수 합계 · 각 단계에 올라간 누적 인원</div>`;
+}
+/** 기수별 입력 현황: 담당자가 제때 올리고 있는지 */
+function missedSessions(n) { const t = todayStr(), sm = new Set(summaryOf(n).map(x => num(x['회차']))); return sessionsOf(n).filter(s => s['상태'] !== '휴강' && s['날짜'] && s['날짜'] < t && !sm.has(num(s['회차']))); }
+function lastInput(n) { let best = null; DB.attend.forEach(a => { if (String(a['기수명']) === String(n) && a['기록일시'] && (!best || String(a['기록일시']) > String(best['기록일시']))) best = a; }); return best; }
+let LINKS = null;
+function inputTable() {
+  const cs = cohorts().filter(c => c['상태'] !== '종강'); if (!cs.length) return '<div class="muted">진행중·모집중 기수가 없어요</div>';
+  return `<div class="tw"><table class="inst"><tr><th>기수</th><th>담당자 링크</th><th>마지막 입력</th><th class="c">빠진 회차</th><th class="c">연락 전 결석</th><th></th></tr>${cs.map(c => {
+    const n = c['기수명'], li = lastInput(n), ms = missedSessions(n), todo = absStats(n).todo, has = LINKS ? !!LINKS[n] : null;
+    return `<tr><td><b>${esc(n)}</b> <span class="b ${c['상태'] === '진행중' ? 'blue' : ''}">${esc(c['상태'] || '')}</span></td>
+      <td>${has === null ? '<span class="muted">확인 중…</span>' : has ? '<span class="b ok">사용 중</span>' : '<span class="b warn">아직 없음</span>'}</td>
+      <td>${li ? `${md(String(li['기록일시']).slice(0, 10))} <span class="muted">${esc(li['수정자'] || '')}</span>` : '<span class="muted">-</span>'}</td>
+      <td class="c">${ms.length ? `<a class="b bad" href="#attend/${encodeURIComponent(n)}/${ms[0]['회차']}" data-tip="${ms.map(x => x['회차'] + '회차 ' + md(x['날짜'])).join('<br>')}">${ms.length}회</a>` : '<span class="b ok">없음</span>'}</td>
+      <td class="c">${todo ? `<span class="b warn">${todo}건</span>` : '<span class="muted">0</span>'}</td>
+      <td><button class="btn sm" onclick="linkDrawer(${attr(n)})">${icon('link', 14)}${has ? '링크 보기' : '링크 만들기'}</button></td></tr>`; }).join('')}</table></div>`;
+}
 PAGES.home = () => {
-  const cs = cohorts(), st = DB.cohortStats || [], active = cs.filter(c => c['상태'] !== '종강');
-  const today = todayStr(), alerts = [];
+  const cs = cohorts(), active = cs.filter(c => c['상태'] !== '종강'), today = todayStr();
   const sum = (f, k) => cs.reduce((a, c) => { const stu = studentsOf(c['기수명']); return a + (stu.length ? stu.filter(f).length : num(statOf(c['기수명'])[k])); }, 0);
+  let r = 0, t = 0; active.forEach(c => summaryOf(c['기수명']).forEach(x => { r += num(x['실시간출석']) + num(x['보강출석']); t += num(x['재적인원']); }));
+  const todoAll = active.reduce((a, c) => a + absStats(c['기수명']).todo, 0), missAll = active.reduce((a, c) => a + missedSessions(c['기수명']).length, 0);
+  const alerts = [];
   active.forEach(c => {
     const n = String(c['기수명']), e = encodeURIComponent(n);
     const ses = sessionsOf(n).find(s => s['날짜'] === today && s['상태'] !== '휴강');
-    if (ses && !summaryOf(n).some(s => num(s['회차']) === num(ses['회차']))) alerts.push(['blue', `${esc(n)} · 오늘 ${ses['회차']}회차 출석을 아직 체크하지 않았어요`, `attend/${e}/${ses['회차']}`]);
+    if (ses && !summaryOf(n).some(s => num(s['회차']) === num(ses['회차']))) alerts.push(['blue', `${esc(n)} · 오늘 ${ses['회차']}회차 출석이 아직 안 올라왔어요`, `attend/${e}/${ses['회차']}`]);
+    const ms = missedSessions(n); if (ms.length) alerts.push(['bad', `${esc(n)} · 지난 회차 ${ms.length}회 출석이 비어 있어요 (${ms.slice(0, 3).map(x => x['회차'] + '회차').join(', ')})`, `attend/${e}/${ms[0]['회차']}`]);
     const reg = registerCandidates(n).filter(x => x.state === 'ok'); if (reg.length) alerts.push(['', `${esc(n)} · 센터 등록 가능 ${reg.length}명`, `register/${e}`]);
     const rk = studentsOf(n).filter(s => (riskOf(s) || {}).lv === 'bad'); if (rk.length) alerts.push(['bad', `${esc(n)} · 탈락 위험 ${rk.length}명 (${rk.slice(0, 3).map(x => esc(x['이름'])).join(', ')}${rk.length > 3 ? ' 외' : ''})`, `followup/${e}`]);
-    const todo = absList(n).filter(x => !doneC(x.a)).length; if (todo) alerts.push(['warn', `${esc(n)} · 연락하지 않은 결석 ${todo}건`, `followup/${e}`]);
   });
-  return `<div class="ph"><div><h1>안녕하세요 👋</h1><p>${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}</p></div></div>
-  <div class="grid g-kpi">${[['진행중 기수', active.length, '개', 'cohorts'], ['재적 수강생', active.reduce((a, c) => a + rosterAt(c['기수명'], today).length, 0), '명', 'students'], ['누적 입고', sum(x => true, '수카 입고'), '명', 'analysis/cohort'], ['누적 센터등록', sum(x => x['센터등록일'], '센터 등록(초등)'), '명', 'analysis/cohort'], ['누적 입교', sum(x => x['입교일'], '입교(종강)'), '명', 'analysis/cohort'], ['전체 기수', cs.length, '개', 'cohorts']]
-    .map(k => `<a class="card kpi" href="#${k[3]}"><div class="l">${k[0]}</div><div class="v">${k[1]}<small>${k[2]}</small></div></a>`).join('')}</div>
+  const kpi = [['진행중 기수', active.filter(c => c['상태'] === '진행중').length, '개', 'cohorts'], ['재적 수강생', active.reduce((a, c) => a + rosterAt(c['기수명'], today).length, 0), '명', 'students'],
+    ['평균 출석률', t ? Math.round(r / t * 100) : '-', t ? '%' : '', 'analysis/cohort'], ['연락 전 결석', todoAll, '건', 'followup/all'], ['빠진 출석 회차', missAll, '회', ''], ['누적 입교', sum(x => stageOf(x) === '입교', '입교(종강)'), '명', 'analysis/cohort']];
+  return `<div class="ph"><div><h1>종합 현황</h1><p>${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })} · 모든 기수를 한눈에</p></div></div>
+  <div class="grid g-kpi">${kpi.map(k => `<${k[3] ? `a href="#${k[3]}"` : 'div'} class="card kpi"><div class="l">${k[0]}</div><div class="v" ${(k[0] === '연락 전 결석' || k[0] === '빠진 출석 회차') && k[1] ? 'style="color:var(--bad)"' : ''}>${k[1]}<small>${k[2]}</small></div></${k[3] ? 'a' : 'div'}>`).join('')}</div>
   ${alerts.length ? `<div class="card mt"><h3>오늘 확인할 일</h3>${alerts.map(a => `<a class="alert ${a[0]}" href="#${a[2]}">${a[1]}<span class="go">›</span></a>`).join('')}</div>` : ''}
+  <div class="dash2 mt">
+    <div class="card"><h3>기수별 출석률 추이 <small>회차마다 실시간 + 보강 / 재적</small></h3>${trendChart()}</div>
+    <div class="card"><h3>결석 · 보강 처리 현황 <small>기수별</small></h3>${absChart()}</div>
+    <div class="card"><h3>기수 비교 <small>출석률 · 진도율</small></h3>${compareChart()}</div>
+    <div class="card"><h3>전체 단계 흐름 <small>입고 → 입교</small></h3>${funnelAll()}</div>
+  </div>
+  <div class="card mt"><h3>기수별 입력 현황 <small>각 기수 담당자가 링크로 올린 출석이 자동으로 모여요</small></h3>${inputTable()}</div>
   <div class="row mt2" style="margin-bottom:12px"><h3 style="margin:0;font-size:17px">진행중 기수</h3><span class="sp"></span><a class="btn ghost sm" href="#cohorts">전체 보기 ›</a></div>
   <div class="grid g-2">${active.length ? active.map(cohortCard).join('') : empty('진행중인 기수가 없습니다', '', `<button class="btn p" onclick="go('cohorts');setTimeout(()=>editCohort(),50)">+ 새 기수</button>`)}</div>`;
 };
+AFTER.home = async () => { if (LINKS || isCo()) return; try { LINKS = (await api('cohortKeys')).keys || {}; if (ROUTE.page === 'home') render(); } catch (e) { } };
 function cohortCard(c) {
   const n = String(c['기수명']), s = statOf(n), p = progressOf(n), ar = attRate(n), stu = studentsOf(n);
   const reg = stu.filter(x => x['센터등록일']).length || num(s['센터 등록(초등)']);
@@ -837,7 +942,7 @@ async function saveLink(n, off, btn) {
   if (!off && k.length < 4) return toast('비밀번호를 4자 이상으로 정해 주세요', true);
   if (off && !await ask('담당자 링크 끄기', n + ' 담당자 링크로 더 이상 들어올 수 없게 됩니다.', '끄기', true)) return;
   busy(btn, true);
-  try { await api('setCohortKey', { cohort2: n, cohortKey: k }); toast(off ? '링크를 껐어요' : '비밀번호를 저장했어요. 문구를 복사해 보내 주세요'); if (off) closeDrawer(); }
+  try { await api('setCohortKey', { cohort2: n, cohortKey: k }); if (LINKS) { if (k) LINKS[n] = k; else delete LINKS[n]; } toast(off ? '링크를 껐어요' : '비밀번호를 저장했어요. 문구를 복사해 보내 주세요'); if (off) closeDrawer(); }
   catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
 async function copyLink() { const t = $('#lkMsg'); try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); } toast('복사했어요'); }
@@ -923,7 +1028,7 @@ async function saveAtt(btn) {
 }
 
 /* ═════════ 결석·보강 관리 ═════════ */
-let FU = { f: 'todo' };
+let FU = { f: 'todo', scope: 'one' };
 const doneC = x => x['연락완료'] === true || x['연락완료'] === 'TRUE';
 function absList(n) {
   const ids = {}; studentsOf(n).forEach(s => { if (!s['탈락일']) ids[s['수강생ID']] = s; });
@@ -931,21 +1036,25 @@ function absList(n) {
     .sort((x, y) => num(y.a['회차']) - num(x.a['회차']));
 }
 PAGES.followup = () => {
+  if (ROUTE.arg === 'all') FU.scope = 'all';
+  const allMode = FU.scope === 'all' && !isCo();
   const n = curCohort(); if (!n) return needCohort();
-  const all = absList(n), todo = all.filter(x => !doneC(x.a)), list = FU.f === 'todo' ? todo : FU.f === 'done' ? all.filter(x => doneC(x.a)) : all;
-  const risky = studentsOf(n).filter(s => (riskOf(s) || {}).lv === 'bad');
-  const recent = DB.attend.filter(a => String(a['기수명']) === String(n) && a['출석'] === '보강').sort((x, y) => String(y['보강일']).localeCompare(String(x['보강일']))).slice(0, 8);
-  return `<div class="ph"><div><h1>결석 · 보강 관리</h1><p>${esc(n)} · 결석한 사람에게 연락하고, 보강하면 「보강 완료」를 누르세요</p></div></div>
-  <div class="grid g-kpi">${[['보강 필요(결석)', all.length, 'var(--bad)'], ['연락 안 함', todo.length, 'var(--warn-d)'], ['탈락 위험', risky.length, 'var(--bad)'], ['보강 완료', DB.attend.filter(a => String(a['기수명']) === String(n) && a['출석'] === '보강').length, 'var(--ok)']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="color:${k[2]}">${k[1]}<small>건</small></div></div>`).join('')}</div>
+  const scopeBar = isCo() ? '' : `<div class="chips" style="margin-bottom:12px"><button class="chip ${allMode ? '' : 'on'}" onclick="FU.scope='one';go('followup')">${esc(n)}</button><button class="chip ${allMode ? 'on' : ''}" onclick="FU.scope='all';go('followup/all')">전체 기수</button></div>`;
+  const cohortsIn = allMode ? cohorts().filter(c => c['상태'] !== '종강' || absList(c['기수명']).length).map(c => c['기수명']) : [n];
+  const all = [].concat(...cohortsIn.map(absList)), todo = all.filter(x => !doneC(x.a)), list = FU.f === 'todo' ? todo : FU.f === 'done' ? all.filter(x => doneC(x.a)) : all;
+  const risky = [].concat(...cohortsIn.map(c => studentsOf(c))).filter(s => (riskOf(s) || {}).lv === 'bad');
+  const recent = DB.attend.filter(a => cohortsIn.includes(String(a['기수명'])) && a['출석'] === '보강').sort((x, y) => String(y['보강일']).localeCompare(String(x['보강일']))).slice(0, 8);
+  return `<div class="ph"><div><h1>결석 · 보강 관리</h1><p>${allMode ? '모든 기수' : esc(n)} · 결석한 사람에게 연락하고, 보강하면 「보강 완료」를 누르세요</p></div></div>${scopeBar}
+  <div class="grid g-kpi">${[['보강 필요(결석)', all.length, 'var(--bad)'], ['연락 안 함', todo.length, 'var(--warn-d)'], ['탈락 위험', risky.length, 'var(--bad)'], ['보강 완료', DB.attend.filter(a => cohortsIn.includes(String(a['기수명'])) && a['출석'] === '보강').length, 'var(--ok)']].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v" style="color:${k[2]}">${k[1]}<small>건</small></div></div>`).join('')}</div>
   ${risky.length ? `<div class="card mt"><h3>탈락 위험 <small>먼저 챙겨 주세요</small></h3><div class="chips">${risky.map(s => `<span class="b bad" title="${esc(riskOf(s).why)}">${esc(s['이름'])} · ${esc(riskOf(s).why)}</span>`).join('')}</div></div>` : ''}
   <div class="row mt2" style="margin-bottom:10px"><div class="chips">${[['todo', '연락 안 함 ' + todo.length], ['done', '연락함 ' + (all.length - todo.length)], ['all', '전체 ' + all.length]].map(c => `<button class="chip ${FU.f === c[0] ? 'on' : ''}" onclick="FU.f='${c[0]}';render()">${c[1]}</button>`).join('')}</div></div>
   ${list.length ? `<div class="card" style="padding:0">${list.map(x => { const a = x.a, rid = attr(a['기록ID']); return `<div class="fu">
     <div class="who"><b>${esc(x.s['이름'])}</b>${riskBadge(riskOf(x.s))} <span class="b ${doneC(a) ? 'ok' : ''}">${doneC(a) ? '연락함' : '연락 전'}</span>
-      <div class="meta">${a['회차']}회차 · ${md(a['날짜'])} 결석${a['결석사유'] ? ' · ' + esc(a['결석사유']) : ''} · 담당 ${esc(x.s['담당전도사'] || '-')}</div>
+      <div class="meta">${allMode ? `<b style="color:${colorOf(a['기수명'])}">${esc(a['기수명'])}</b> · ` : ''}${a['회차']}회차 · ${md(a['날짜'])} 결석${a['결석사유'] ? ' · ' + esc(a['결석사유']) : ''} · 담당 ${esc(x.s['담당전도사'] || '-')}</div>
       ${a['연락메모'] ? `<div class="memo">${esc(a['연락메모'])}</div>` : ''}</div>
     <div class="acts"><button class="btn sm" onclick="fuContact(${rid})">${icon('phone', 15)}연락 기록</button><button class="btn soft sm" onclick="fuMakeup(${rid})">보강 완료</button></div></div>`; }).join('')}</div>`
     : empty(FU.f === 'todo' ? '연락할 결석이 없어요 👍' : '해당하는 기록이 없어요')}
-  ${recent.length ? `<div class="card mt"><h3>최근 보강</h3>${recent.map(a => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line2)"><b>${esc(a['이름'])}</b><span class="muted">${a['회차']}회차 결석 → ${md(a['보강일']) || '-'} 보강</span></div>`).join('')}</div>` : ''}`;
+  ${recent.length ? `<div class="card mt"><h3>최근 보강</h3>${recent.map(a => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line2)"><b>${esc(a['이름'])}</b><span class="muted">${allMode ? esc(a['기수명']) + ' · ' : ''}${a['회차']}회차 결석 → ${md(a['보강일']) || '-'} 보강</span></div>`).join('')}</div>` : ''}`;
 };
 const recOf = id => DB.attend.find(a => a['기록ID'] === id);
 function fuContact(id) {
