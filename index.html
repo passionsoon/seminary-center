@@ -301,6 +301,8 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .cal .cd.today .dn{background:var(--pri);color:#fff!important;border-radius:999px;width:22px;height:22px;display:grid;place-items:center}
 .cal .cd.drop{background:var(--pri-l);outline:2px dashed var(--pri);outline-offset:-3px}
 .cal .dn{font-size:12px;font-weight:700;color:var(--ink2)}
+.cal .dh{display:flex;align-items:center;gap:4px;min-width:0}.cal .hn{font-size:10.5px;font-weight:600;color:var(--bad);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal .cd.hol{background:#fff7f7}.cal .cd.hol.out{background:#fdf9f9}
 .cal .ci{font-size:12px;line-height:1.3;padding:3px 6px;border-radius:6px;background:var(--pri-l);color:#174a8c;border-left:3px solid var(--pri);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none;user-select:none}
 .cal .ci.ev{background:#fff3d6;color:#7a5200;border-left-color:#eda100}
 .cal .ci.off{background:var(--line2);color:var(--sub);border-left-color:var(--line);text-decoration:line-through}
@@ -1152,6 +1154,23 @@ function bookCsv(n) {
 /* ═════════ 진도 ═════════ */
 PAGES.progress = () => { const n = curCohort(); if (!n) return needCohort(); return `<div class="ph"><div><h1>수업 일정</h1><p>${esc(n)} · 날짜를 누르면 강의·행사를 넣고, 끌어서 다른 날로 옮길 수 있어요</p></div><div class="acts"><button class="btn" onclick="genSchedule(${attr(n)})">🗓 강의 일정 자동 생성</button><button class="btn" onclick="CAL.view=CAL.view==='list'?'cal':'list';render()">${CAL.view === 'list' ? '📅 달력으로' : '☰ 목록으로'}</button></div></div>${progressBody(n)}`; };
 let CAL = { ym: '', view: 'cal' };
+/* 대한민국 공휴일 (우주항공청 월력요항 기준, 대체·임시공휴일 포함). 표에 없는 해는 양력 고정 공휴일만 */
+const HOLI = {
+  '2025-01-01': '신정', '2025-01-27': '임시공휴일', '2025-01-28': '설날 연휴', '2025-01-29': '설날', '2025-01-30': '설날 연휴', '2025-03-01': '삼일절', '2025-03-03': '대체공휴일',
+  '2025-05-05': '어린이날·부처님오신날', '2025-05-06': '대체공휴일', '2025-06-03': '대통령선거', '2025-06-06': '현충일', '2025-08-15': '광복절', '2025-10-03': '개천절',
+  '2025-10-05': '추석 연휴', '2025-10-06': '추석', '2025-10-07': '추석 연휴', '2025-10-08': '대체공휴일', '2025-10-09': '한글날', '2025-12-25': '성탄절',
+  '2026-01-01': '신정', '2026-02-16': '설날 연휴', '2026-02-17': '설날', '2026-02-18': '설날 연휴', '2026-03-01': '삼일절', '2026-03-02': '대체공휴일', '2026-05-01': '노동절',
+  '2026-05-05': '어린이날', '2026-05-24': '부처님오신날', '2026-05-25': '대체공휴일', '2026-06-03': '지방선거', '2026-06-06': '현충일', '2026-07-17': '제헌절',
+  '2026-08-15': '광복절', '2026-08-17': '대체공휴일', '2026-09-24': '추석 연휴', '2026-09-25': '추석', '2026-09-26': '추석 연휴', '2026-10-03': '개천절', '2026-10-05': '대체공휴일',
+  '2026-10-09': '한글날', '2026-12-25': '성탄절',
+  '2027-01-01': '신정', '2027-02-06': '설날 연휴', '2027-02-07': '설날', '2027-02-08': '설날 연휴', '2027-02-09': '대체공휴일', '2027-03-01': '삼일절', '2027-05-01': '노동절',
+  '2027-05-03': '대체공휴일', '2027-05-05': '어린이날', '2027-05-13': '부처님오신날', '2027-06-06': '현충일', '2027-07-17': '제헌절', '2027-07-19': '대체공휴일',
+  '2027-08-15': '광복절', '2027-08-16': '대체공휴일', '2027-09-14': '추석 연휴', '2027-09-15': '추석', '2027-09-16': '추석 연휴', '2027-10-03': '개천절', '2027-10-04': '대체공휴일',
+  '2027-10-09': '한글날', '2027-10-11': '대체공휴일', '2027-12-25': '성탄절', '2027-12-27': '대체공휴일'
+};
+const HOLI_FIXED = { '01-01': '신정', '03-01': '삼일절', '05-01': '노동절', '05-05': '어린이날', '06-06': '현충일', '07-17': '제헌절', '08-15': '광복절', '10-03': '개천절', '10-09': '한글날', '12-25': '성탄절' };
+const HOLI_YEARS = ['2025', '2026', '2027'];
+function holidayOf(d) { if (!d) return ''; if (HOLI_YEARS.includes(d.slice(0, 4))) return HOLI[d] || ''; return HOLI_FIXED[d.slice(5)] || ''; }
 function progressBody(n) {
   const ss = sessionsOf(n), ev = eventsOf(n), today = todayStr();
   const next = ss.find(s => s['날짜'] >= today && s['상태'] !== '휴강'), nextEv = ev.find(e => e['날짜'] >= today);
@@ -1168,9 +1187,10 @@ function calBody(n) {
   for (let i = 0; i < 42; i++) {
     const d = addDays(start, i), inM = d.slice(0, 7) === CAL.ym, list = (byDay[d] || []).sort((a, b) => (isEvent(a) - isEvent(b)) || num(a['회차']) - num(b['회차']));
     if (i === 35 && !inM) break;
-    cells += `<div class="cd ${inM ? '' : 'out'} ${d === today ? 'today' : ''} ${dow(d) === 0 ? 'sun' : dow(d) === 6 ? 'sat' : ''}" data-d="${d}" onclick="calDay(event,${attr(n)},'${d}')"><div class="dn">${Number(d.slice(8))}</div>${list.map(s => {
+    const hol = holidayOf(d);
+    cells += `<div class="cd ${inM ? '' : 'out'} ${d === today ? 'today' : ''} ${dow(d) === 0 || hol ? 'sun' : dow(d) === 6 ? 'sat' : ''} ${hol ? 'hol' : ''}" data-d="${d}" onclick="calDay(event,${attr(n)},'${d}')"><div class="dh"><span class="dn">${Number(d.slice(8))}</span>${hol ? `<span class="hn">${esc(hol)}</span>` : ''}</div>${list.map(s => {
       const ev = isEvent(s), no = num(s['회차']), off = s['상태'] === '휴강', att = !ev && smap[no];
-      return `<div class="ci ${ev ? 'ev' : ''} ${off ? 'off' : ''}" data-no="${no}" onclick="event.stopPropagation();calOpen(${attr(n)},${no})" data-tip="${esc(ev ? '행사' : no + '회차 · ' + (s['과정'] || ''))}${s['진도내용'] ? '<br>' + esc(s['진도내용']) : ''}${off ? '<br>휴강' : ''}${att ? '<br>출석 체크됨' : ''}">${ev ? '' : `<b>${no}</b> `}${esc(s['진도내용'] || (ev ? '행사' : ''))}${att ? ' ✓' : ''}</div>`;
+      return `<div class="ci ${ev ? 'ev' : ''} ${off ? 'off' : ''}" data-no="${no}" onclick="event.stopPropagation();calOpen(${attr(n)},${no})" data-tip="${esc(ev ? '행사' : no + '회차 · ' + (s['과정'] || ''))}${s['진도내용'] ? '<br>' + esc(s['진도내용']) : ''}${hol && !ev && !off ? '<br>⚠ 공휴일(' + esc(hol) + ')' : ''}${off ? '<br>휴강' : ''}${att ? '<br>출석 체크됨' : ''}">${ev ? '' : `<b>${no}</b> `}${esc(s['진도내용'] || (ev ? '행사' : ''))}${att ? ' ✓' : ''}</div>`;
     }).join('')}</div>`;
   }
   return `<div class="card mt"><div class="row" style="margin-bottom:10px"><button class="btn sm" onclick="calNav(-1)">‹</button><b style="font-size:17px;min-width:110px;text-align:center">${y}년 ${m}월</b><button class="btn sm" onclick="calNav(1)">›</button><button class="btn ghost sm" onclick="CAL.ym='${today.slice(0, 7)}';render()">이번 달</button><span class="sp"></span><span class="muted" style="font-size:12.5px">빈 곳을 누르면 추가 · 수업을 끌어서 날짜 이동</span></div>
@@ -1180,7 +1200,7 @@ function calNav(k) { const [y, m] = CAL.ym.split('-').map(Number), d = new Date(
 function calOpen(n, no) { if (Date.now() - CD_END < 350) return; if (no > 1000) editEvent(n, no); else editSession(n, no); }
 function calDay(e, n, d) {
   if (Date.now() - CD_END < 350) return;
-  openDrawer(`${md(d)}(${DOW[dow(d)]}) 추가<small>${esc(n)}</small>`, `<div class="chips" style="margin-bottom:6px"><button class="chip on" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('#addLec').style.display='';$('#addEv').style.display='none'">강의</button><button class="chip" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('#addLec').style.display='none';$('#addEv').style.display=''">행사</button></div>
+  openDrawer(`${md(d)}(${DOW[dow(d)]}) 추가<small>${esc(n)}${holidayOf(d) ? ' · <b style="color:var(--bad)">' + esc(holidayOf(d)) + '</b>' : ''}</small>`, `<div class="chips" style="margin-bottom:6px"><button class="chip on" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('#addLec').style.display='';$('#addEv').style.display='none'">강의</button><button class="chip" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');$('#addLec').style.display='none';$('#addEv').style.display=''">행사</button></div>
     <div id="addLec"><button class="btn p" style="width:100%" onclick="editSession(${attr(n)},0,'${d}')">이 날에 강의 추가</button></div>
     <div id="addEv" style="display:none"><button class="btn p" style="width:100%;background:#eda100;border-color:#eda100" onclick="editEvent(${attr(n)},0,'${d}')">이 날에 행사 추가</button></div>`, `<span class="sp"></span><button class="btn" onclick="closeDrawer()">닫기</button>`);
 }
@@ -1215,7 +1235,7 @@ function listBody(n) {
   const smap = {}; summaryOf(n).forEach(s => smap[num(s['회차'])] = s); const today = todayStr();
   return `<div class="tw mt"><table><tr><th style="width:70px">구분</th><th>날짜</th><th class="hm">과정</th><th>내용</th><th style="width:110px">상태</th><th class="c">출석</th><th></th></tr>
   ${ss.map(s => { const ev = isEvent(s), no = num(s['회차']), a = smap[no], k = attr({ c: n, no });
-    return `<tr ${s['날짜'] === today ? 'style="background:var(--pri-l)"' : ''}><td>${ev ? '<span class="b" style="background:#fff3d6;color:#8a6410">행사</span>' : `<b>${no}회차</b>`}</td><td>${md(s['날짜'])}${s['날짜'] ? ` <span class="muted">(${DOW[dow(s['날짜'])]})</span>` : ''}</td><td class="hm">${ev ? '' : esc(s['과정'] || '')}</td>
+    return `<tr ${s['날짜'] === today ? 'style="background:var(--pri-l)"' : ''}><td>${ev ? '<span class="b" style="background:#fff3d6;color:#8a6410">행사</span>' : `<b>${no}회차</b>`}</td><td>${md(s['날짜'])}${s['날짜'] ? ` <span class="muted">(${DOW[dow(s['날짜'])]})</span>` : ''}${holidayOf(s['날짜']) ? ` <span class="b bad">${esc(holidayOf(s['날짜']))}</span>` : ''}</td><td class="hm">${ev ? '' : esc(s['과정'] || '')}</td>
     <td class="wrap"><input class="inl" value="${esc(s['진도내용'] || '')}" data-f="진도내용" data-key="${k}" placeholder="${ev ? '행사 이름' : '내용 입력'}"></td>
     <td>${ev ? '' : `<select class="inl" data-f="상태" data-key="${k}" style="font-weight:700;color:${s['상태'] === '완료' ? 'var(--ok)' : s['상태'] === '휴강' ? 'var(--bad)' : 'var(--ink2)'}">${opts(['예정', '완료', '휴강'], s['상태'] || '예정')}</select>`}</td>
     <td class="c">${ev ? '' : a ? `<b>${pct(num(a['재적인원']) ? (num(a['실시간출석']) + num(a['보강출석'])) / num(a['재적인원']) : '')}</b>` : `<a class="btn soft sm" href="#attend/${encodeURIComponent(n)}/${no}">체크</a>`}</td>
@@ -1261,7 +1281,8 @@ function genSchedule(n) {
   openDrawer('일정 자동 생성<small>' + esc(n) + '</small>', `<p class="muted" style="margin-top:0">고른 요일마다 회차를 만들어요. 이미 있는 회차는 건너뜁니다.</p><div class="form">
     ${F('from', '시작일', c['개강일'] || todayStr(), 'date')}${F('to', '종료일', c['종강일(입교)'] || addDays(c['개강일'] || todayStr(), 180), 'date')}
     <div class="fld full"><span>요일</span><div class="chips" id="gsDow">${DOW.map((d, i) => `<button type="button" class="chip ${[1, 2, 4].includes(i) ? 'on' : ''}" data-d="${i}" onclick="this.classList.toggle('on')">${d}</button>`).join('')}</div></div>
-    ${F('content', '진도 내용 기본값', '', 'text', null, { full: true, ph: '비워두면 「1강, 2강…」' })}</div>`,
+    ${F('content', '진도 내용 기본값', '', 'text', null, { full: true, ph: '비워두면 「1강, 2강…」' })}
+    <label class="row full" style="font-weight:600"><input type="checkbox" id="gsHol" checked> 공휴일(대체·임시공휴일 포함)은 건너뛰기</label></div>`,
     `<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="doGen(${attr(n)},this)">만들기</button>`);
 }
 async function doGen(n, btn) {
@@ -1269,7 +1290,8 @@ async function doGen(n, btn) {
   if (!v.from || !v.to || v.from > v.to) return toast('기간을 확인하세요', true);
   if (!days.length) return toast('요일을 하나 이상 고르세요', true);
   const exist = new Set(sessionsOf(n).map(s => num(s['회차']))), existD = new Set(sessionsOf(n).map(s => s['날짜'])), co = cohortOf(n) || {}, rows = []; let no = 0;
-  for (let d = v.from; d <= v.to && rows.length < 400; d = addDays(d, 1)) { if (!days.includes(dow(d))) continue; no++; if (exist.has(no) || existD.has(d)) continue; rows.push({ '기수명': n, '회차': no, '날짜': d, '과정': courseAt(n, d), '진도내용': v.content || (no + '강'), '강사': co['강사'] || '', '상태': '예정', '구분': '강의' }); }
+  const skipHol = $('#gsHol') ? $('#gsHol').checked : true;
+  for (let d = v.from; d <= v.to && rows.length < 400; d = addDays(d, 1)) { if (!days.includes(dow(d))) continue; if (skipHol && holidayOf(d)) continue; no++; if (exist.has(no) || existD.has(d)) continue; rows.push({ '기수명': n, '회차': no, '날짜': d, '과정': courseAt(n, d), '진도내용': v.content || (no + '강'), '강사': co['강사'] || '', '상태': '예정', '구분': '강의' }); }
   if (!rows.length) return toast('새로 만들 회차가 없어요', true);
   if (await save('session', rows, rows.length + '개 회차를 만들었어요', btn)) { closeDrawer(); render(); }
 }
