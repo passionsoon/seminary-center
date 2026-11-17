@@ -1437,7 +1437,7 @@ function stageRow(k, label, v) { return `<div class="stage"><b>${label}</b><inpu
 function editStudent(id) {
   const s = id ? DB.student.find(x => x['수강생ID'] === id) : { '기수명': curCohort(), '입고일': todayStr() };
   const dropped = !!s['탈락일'];
-  openDrawer(id ? `${esc(s['이름'])} ${stageBadge(stageOf(s))}<small>${esc(id)} · ${esc(s['기수명'])}</small>` : '새 수강생', staffList() + `${id ? `<input type="hidden" data-k="수강생ID" value="${esc(id)}">` : ''}
+  openDrawer(id ? `${esc(s['이름'])} ${stageBadge(stageOf(s))}<small>${esc(s['기수명'])}</small>` : '새 수강생', staffList() + `${id ? `<input type="hidden" data-k="수강생ID" value="${esc(id)}">` : ''}
     <div class="form">${F('이름', '이름', s['이름'])}${F('기수명', '기수', s['기수명'], 'select', cohorts().map(c => c['기수명']))}
       ${F('담당전도사', '담당전도사', s['담당전도사'], 'text', 'dlStaff')}${F('연락처', '연락처', s['연락처'], 'tel', null, { ph: '010-0000-0000' })}
       ${F('성별', '성별', s['성별'], 'select', L('성별'))}${F('소속부서', '소속(편입)부서', s['소속부서'], 'select', L('소속부서'))}
