@@ -408,7 +408,7 @@ const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['book'
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
-const KEYS = { staff: ['고유번호'], cohort: ['기수명'], student: ['수강생ID'], session: ['기수명', '회차'], attend: ['기록ID'], summary: ['기수명', '회차'] };
+const KEYS = { staff: ['고유번호'], cohort: ['기수명'], student: ['수강생ID'], session: ['기수명', '회차'], attend: ['기록ID'], summary: ['기수명', '회차'], survey: ['수강생ID'] };
 let DB = null, ROUTE = { page: 'home' }, DIRTY = false, MEMO = {};
 const LINK_C = new URLSearchParams(location.search).get('c') || '';   // 기수 담당자 링크(?c=기수명)
 let ROLE = { type: LINK_C ? 'cohort' : 'admin', cohort: LINK_C };
@@ -1353,69 +1353,45 @@ async function doGen(n, btn) {
 }
 
 /* ═════════ 수강생 ═════════ */
-/* ── 앙케이트(구글 설문 응답) ── */
-const SURVEY_GROUPS = [
-  ['기본정보 · 섭외 · 신앙', ['응답일시', '열매정보', '성향(에니어·도형·MBTI·혈액형)', '주소·거주형태', '최종학력', '결혼·이성친구', '자녀', '섭외유형', '신앙여부', '신앙년수']],
-  ['인섬교 · 상담 · 복음방', ['인도자정보', '섬김이정보', '교사정보', '가장 신뢰하는 사람', '육적상담 도구', '상담 초점', '고민·관심사', '영적따기 방법', '수강목적', '종교거부감', '종교거부감 내용', '복음방 횟수', '복음방 과목']],
-  ['모략 · 침요소 · 기타', ['입막음 방법', '8개월 모략', '가족 목회자·신앙', '침 맞을 요소', '신천지 인식', '신천지 경계심', '성경 교재 인지', '성경 부담', '센터 소개 방법', '8개월 염려', '재수강 여부', '이전 탈락 사유', '가정 심방', '기본 인성', '건강', '경제(채무·사기)', '직업 문제', '센터에 부탁', '기타응답']]
+/* ── 수강생 상세정보 (앙케이트 항목) — 수강생 화면에서 직접 입력, DB_앙케이트에 저장 ── */
+const DOPT = {
+  '거주형태': ['자취(혼자)', '자취(룸메)', '기숙사', '가족', '별거'], '최종학력': ['고등졸업', '대학재학', '대학졸업'],
+  '결혼·이성친구': ['미혼 · 이성친구 O', '미혼 · 이성친구 X', '돌싱 · 이성친구 O', '돌싱 · 이성친구 X', '기혼'], '자녀': ['자녀 없음', '1명', '2명', '3명 이상'],
+  '섭외유형': ['가족', '단순 지인', '회사 동료', '노방', '당근', '인스타그램'], '신앙여부': ['기독교', '휴신앙', '불교', '무교 : 신O / 영O', '무교 : 신X / 영O', '무교 : 신X / 영X'],
+  '신앙년수': ['0~5년', '5~10년', '10년 이상', '모태 신앙'], '상중하': ['상', '중', '하', '미파악'], '친분': ['상', '중', '하'], 'OX': ['O', 'X'], '네아니오': ['네', '아니오'],
+  '컨셉': ['처음 수강', '재수강'], '복음방 횟수': ['0회', '1~3회', '4~6회', '6회 이상'], '혈액형': ['A', 'B', 'O', 'AB']
+};
+// [칸, 이름표, 종류(s=고르기 · l=고르거나 직접쓰기 · a=긴 글 · t=짧은 글), 보기]
+const DGROUPS = [
+  ['기본정보 · 섭외 · 신앙', [['에니어', '에니어', 't'], ['도형', '도형', 't'], ['MBTI', 'MBTI', 't'], ['혈액형', '혈액형', 's', '혈액형'],
+    ['거주형태', '거주형태', 'l', '거주형태'], ['최종학력', '최종학력', 'l', '최종학력'], ['결혼·이성친구', '결혼 · 이성친구', 's', '결혼·이성친구'], ['자녀', '자녀', 's', '자녀'],
+    ['섭외유형', '섭외 유형', 'l', '섭외유형'], ['신앙여부', '신앙 여부', 'l', '신앙여부', '기타 종교는 직접 적어주세요'], ['신앙년수', '신앙 년수', 's', '신앙년수']]],
+  ['인도자 · 섬김이 · 교사', [['인도자직책', '인도자 직책', 't', null, '예: 구역장'], ['인도자연락처', '인도자 연락처', 'tel'], ['인도자컨셉', '인도자 컨셉', 'l', '컨셉'], ['인도자친분', '인도자 친분', 's', '친분'], ['인도자주관리', '인도자 주 관리자', 's', 'OX'],
+    ['섬김이직책', '섬김이 직책', 't'], ['섬김이연락처', '섬김이 연락처', 'tel'], ['섬김이컨셉', '섬김이 컨셉', 'l', '컨셉'], ['섬김이친분', '섬김이 친분', 's', '친분'], ['섬김이주관리', '섬김이 주 관리자', 's', 'OX'],
+    ['교사직책', '교사 직책', 't'], ['교사연락처', '교사 연락처', 'tel'], ['교사컨셉', '교사 컨셉', 't', null, '예: ○○회사 소속 컨설턴트'], ['교사친분', '교사 친분', 's', '친분'],
+    ['가장 신뢰하는 사람', '열매가 가장 신뢰하는 사람', 'a']]],
+  ['상담 · 복음방', [['육적상담 도구', '육적상담 도구', 'a', null, '예: 에니어, 도형, SSCT, 인생 그래프'], ['상담 초점', '상담 초점', 'a'], ['고민·관심사', '고민과 관심사', 'a'], ['영적따기 방법', '영적따기 방법', 'a'],
+    ['수강목적', '수강 목적', 'a'], ['종교거부감', '종교 거부감', 's', '상중하'], ['종교거부감 내용', '거부감 내용', 'a'], ['복음방 횟수', '복음방 횟수', 's', '복음방 횟수'], ['복음방 과목', '복음방 진행 과목', 'a']]],
+  ['모략 · 침요소', [['입막음 방법', '입막음 방법·인지·시행', 'a', null, '보안 서약서, 상황극 등'], ['8개월 모략', '8개월 과정 모략', 'a'], ['가족 목회자·신앙', '가족 중 목회자 · 가족 신앙', 'a'], ['침 맞을 요소', '주변 침 맞을 요소', 'a'],
+    ['신천지 인식', '신천지를 어떻게 알고 있나', 'a'], ['신천지 경계심', '신천지 경계심', 's', '상중하'], ['성경 교재 인지', '교재가 성경인 것 인지', 's', '네아니오'], ['성경 부담', '성경 진행 부담', 'a'], ['센터 소개 방법', '센터 과정 소개 방법', 'a'],
+    ['8개월 염려', '8개월 동안 염려', 'a', null, '출산, 군 입대, 수술, 해외출국, 타지이동, 비자 등']]],
+  ['재수강 · 기본 점검 · 기타', [['재수강 여부', '재수강 · 재입교', 's', '네아니오'], ['가정 심방', '가정 심방(신원·거주지 확인)', 's', '네아니오'], ['이전 탈락 사유', '재수강이면 이전 탈락 시점·사유', 'a'],
+    ['기본 인성', '기본 인성 (약속·사회성·이성·술담배)', 'a'], ['건강', '건강 (신체·정신)', 'a'], ['경제(채무·사기)', '경제 (과도한 채무·사기 전력)', 'a'], ['직업 문제', '직업상 신앙생활 문제', 'a'], ['센터에 부탁', '센터에 부탁', 'a']]]
 ];
-function surveyView(id) {
-  const v = (DB.survey || []).find(x => x['수강생ID'] === id);
-  if (!v) return `<div class="sec">앙케이트</div><p class="muted" style="margin:0">아직 가져온 앙케이트가 없어요. 수강생 화면의 「📝 앙케이트 가져오기」로 불러오세요.</p>`;
-  return `<div class="sec">앙케이트 <span class="muted" style="font-weight:500">${esc(v['응답일시'] || '')} 응답</span></div>${SURVEY_GROUPS.map(([g, ks], gi) => {
-    const items = ks.filter(k => String(v[k] || '').trim()); if (!items.length) return '';
-    return `<details class="svy" ${gi === 0 ? 'open' : ''}><summary>${g} <span class="muted">${items.length}</span></summary><dl>${items.map(k => `<dt>${esc(k)}</dt><dd>${esc(v[k]).replace(/\n/g, '<br>')}</dd>`).join('')}</dl></details>`; }).join('')}`;
-}
-/** 시트에서 복사한 표(탭 구분, 줄바꿈 칸은 따옴표) 읽기 */
-function parseTsv(t) {
-  const rows = []; let row = [], cell = '', q = false;
-  for (let i = 0; i < t.length; i++) {
-    const ch = t[i];
-    if (q) { if (ch === '"') { if (t[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; continue; }
-    if (ch === '"' && cell === '') q = true; else if (ch === '\t') { row.push(cell); cell = ''; } else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; } else cell += ch;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  return rows;
-}
-let SV = null;
-function surveyOpen() {
-  const n = curCohort(); if (!n) return toast('기수를 먼저 고르세요', true);
-  SV = { n };
-  openDrawer('앙케이트 가져오기<small>' + esc(n) + '</small>', `<p class="muted" style="margin-top:0">구글 설문 <b>응답 시트</b>를 연결하면 답변이 수강생 정보로 들어가요. 이름으로 수강생을 찾고, 인도자·섬김이·교사(부서 포함)·주소·성별은 <b>비어 있는 칸만</b> 채웁니다. 나머지 답변은 수강생 화면의 「앙케이트」에 모두 저장돼요.</p>
-    <div class="form">${F('url', '응답 시트 주소', (cohortOf(n) || {})['앙케이트시트'] || '', 'url', null, { full: true, ph: 'https://docs.google.com/spreadsheets/d/…', hint: '설문 → 응답 → 스프레드시트에서 보기' })}</div>
-    <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">또는 응답 시트에서 표를 복사해 붙여넣기</summary><textarea id="svPaste" style="width:100%;min-height:110px;margin-top:6px" placeholder="머리글(질문) 줄까지 함께 복사해 붙여넣으세요"></textarea></details>
-    <div id="svOut"></div>`,
-    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">닫기</button><button class="btn" onclick="surveyPreview(this)">미리보기</button><button class="btn p" id="svApply" onclick="surveyApply(this)" disabled>반영하기</button>`);
-}
-function surveySrc() {
-  const u = ($('#dBody [data-k="url"]').value || '').trim(), t = ($('#svPaste').value || '').trim();
-  if (t) return { table: parseTsv(t) };
-  if (u) return { url: u };
-  return null;
-}
-async function surveyPreview(btn) {
-  const src = surveySrc(); if (!src) return toast('응답 시트 주소를 넣거나 표를 붙여넣으세요', true);
-  busy(btn, true);
-  try {
-    const j = await api('surveyPreview', Object.assign({ cohort: SV.n }, src)); SV.src = src; SV.rows = j.rows;
-    const miss = j.cols.filter(c => !c.f && c.q);
-    $('#svOut').innerHTML = `<div class="sec">응답 ${j.rows.length}명 <span class="muted" style="font-weight:500">질문 ${j.cols.length - miss.length}개 인식${miss.length ? ` · 나머지 ${miss.length}개는 「기타응답」에 저장` : ''}</span></div>
-      <div class="tw"><table><tr><th>열매 이름</th><th>응답일시</th><th>수강생</th></tr>${j.rows.map(r => `<tr><td><b>${esc(r.name)}</b></td><td class="muted">${esc(r.date)}</td><td>${r.match ? `<span class="b ok">✓ 연결</span>` : r.ambiguous ? `<span class="b bad">같은 이름이 여러 명 — 건너뜀</span>` : `<label class="row" style="gap:6px"><input type="checkbox" class="svNew" data-i="${r.i}" checked> 새 수강생으로 추가</label>`}</td></tr>`).join('')}</table></div>
-      ${miss.length ? `<p class="muted" style="font-size:12.5px">기타응답으로 들어갈 질문: ${miss.map(c => esc(c.q)).join(' · ')}</p>` : ''}`;
-    $('#svApply').disabled = !j.rows.length;
-  } catch (e) { toast(e.message, true); }
-  finally { busy(btn, false); }
-}
-async function surveyApply(btn) {
-  if (!SV || !SV.src) return;
-  const create = [...document.querySelectorAll('.svNew:checked')].map(x => num(x.dataset.i));
-  busy(btn, true);
-  try {
-    const j = await api('surveyApply', Object.assign({ cohort: SV.n, create }, SV.src));
-    await reloadSoft(); closeDrawer(); render();
-    toast(`앙케이트 ${j.saved}명 저장${j.filled ? ` · 수강생 정보 ${j.filled}명 채움` : ''}${j.created.length ? ` · 새 수강생 ${j.created.length}명` : ''}${j.skipped.length ? ` · 건너뜀 ${j.skipped.length}명` : ''}`);
-  } catch (e) { toast(e.message, true); }
-  finally { busy(btn, false); }
+const DKEYS = DGROUPS.flatMap(g => g[1].map(f => f[0]));
+function detailOf(id) { return (DB.survey || []).find(x => x['수강생ID'] === id) || {}; }
+function detailFields(id) {
+  const v = id ? detailOf(id) : {};
+  return DGROUPS.map(([g, fs], gi) => {
+    const n = fs.filter(f => String(v[f[0]] || '').trim()).length;
+    return `<details class="svy" ${gi === 0 ? 'open' : ''}><summary>${g} <span class="muted">${n ? n + '/' + fs.length : ''}</span></summary><div class="form" style="margin-top:8px">${fs.map(([k, label, ty, o, ph]) => {
+      const key = 'd:' + k, cur = v[k] || '';
+      if (ty === 's') return F(key, label, cur, 'select', DOPT[o].concat(cur && !DOPT[o].includes(cur) ? [cur] : []));
+      if (ty === 'l') return `<label class="fld"><span>${label}</span><input data-k="${esc(key)}" value="${esc(cur)}" list="dl_${esc(o)}" placeholder="${esc(ph || '고르거나 직접 쓰기')}"><datalist id="dl_${esc(o)}">${DOPT[o].map(x => `<option value="${esc(x)}">`).join('')}</datalist></label>`;
+      if (ty === 'a') return F(key, label, cur, 'area', null, { ph: ph || '' });
+      return F(key, label, cur, ty === 'tel' ? 'tel' : 'text', null, { ph: ph || '' });
+    }).join('')}</div></details>`;
+  }).join('');
 }
 
 let SF = { scope: 'cur', st: '', ev: '', q: '' }, SEL = new Set();
@@ -1429,7 +1405,7 @@ PAGES.students = () => {
   if (SF.q) list = list.filter(s => [s['이름'], s['연락처'], s['인도자'], s['섬김이'], s['교사'], s['수강생ID']].join(' ').includes(SF.q));
   const evs = Array.from(new Set(live().map(s => s['담당전도사']).filter(Boolean))).sort();
   const base = SF.scope === 'cur' && n ? studentsOf(n) : live(), nRisk = base.filter(s => (riskOf(s) || {}).lv === 'bad').length;
-  return `<div class="ph"><div><h1>수강생</h1><p>${SF.scope === 'cur' && n ? esc(n) : '전체 기수'} · ${list.length}명</p></div><div class="acts"><button class="btn" onclick="surveyOpen()">📝 앙케이트 가져오기</button><button class="btn" onclick="bulkAdd()">명단 붙여넣기</button><button class="btn p" onclick="editStudent()">+ 새 수강생</button></div></div>
+  return `<div class="ph"><div><h1>수강생</h1><p>${SF.scope === 'cur' && n ? esc(n) : '전체 기수'} · ${list.length}명</p></div><div class="acts"><button class="btn" onclick="bulkAdd()">명단 붙여넣기</button><button class="btn p" onclick="editStudent()">+ 새 수강생</button></div></div>
   <div class="card" style="padding:14px">
     <div class="row"><div class="search" style="flex:1;min-width:200px"><input placeholder="이름, 연락처, 인도자·섬김이·교사 검색" value="${esc(SF.q)}" oninput="SF.q=this.value.trim();clearTimeout(window._q);window._q=setTimeout(()=>{render();const i=$('.search input');i.focus();i.setSelectionRange(i.value.length,i.value.length)},250)"></div>
       <select onchange="SF.scope=this.value;render()"><option value="cur" ${SF.scope === 'cur' ? 'selected' : ''}>현재 기수만</option><option value="all" ${SF.scope === 'all' ? 'selected' : ''}>전체 기수</option></select>
@@ -1471,7 +1447,7 @@ function editStudent(id) {
     <div class="form">${F('인도자', '인도자', s['인도자'])}${F('인도자부서', '인도자 부서', s['인도자부서'], 'select', deptOpts(s['인도자부서']))}
       ${F('섬김이', '섬김이', s['섬김이'])}${F('섬김이부서', '섬김이 부서', s['섬김이부서'], 'select', deptOpts(s['섬김이부서']))}
       ${F('교사', '교사', s['교사'])}${F('교사부서', '교사 부서', s['교사부서'], 'select', deptOpts(s['교사부서']))}</div>
-    ${id ? surveyView(id) : ''}
+    <div class="sec">상세 정보 <span class="muted" style="font-weight:500">앙케이트 항목 · 아는 것만 적어도 돼요</span></div>${detailFields(id)}
     <div class="sec">진행 단계 <span class="muted" style="font-weight:500">날짜를 넣으면 단계가 올라가요</span></div>
     ${stageRow('입고일', '수카 입고', s['입고일'])}${stageRow('센터등록일', '센터 등록', s['센터등록일'])}${stageRow('중등진급일', '중등 진급', s['중등진급일'])}${stageRow('고등진급일', '고등 진급', s['고등진급일'])}${stageRow('입교일', '입교(종강)', s['입교일'])}
     <label class="row" style="margin-top:10px;font-weight:600"><input type="checkbox" data-k="수료" ${s['수료'] === true || s['수료'] === 'TRUE' ? 'checked' : ''}> 수료</label>
@@ -1485,7 +1461,8 @@ function editStudent(id) {
     `${id ? `<button class="btn d" onclick="delStudent(${attr(id)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveStudent(this)">저장</button>`);
 }
 async function saveStudent(btn) {
-  const v = vals();
+  const v = vals(), det = {};
+  Object.keys(v).forEach(k => { if (k.startsWith('d:')) { det[k.slice(2)] = v[k]; delete v[k]; } });
   if (!v['이름']) return toast('이름을 입력하세요', true);
   if (!v['기수명']) return toast('기수를 고르세요', true);
   if (v['탈락일'] && !v['탈락사유']) return toast('탈락사유를 골라 주세요', true);
@@ -1493,7 +1470,10 @@ async function saveStudent(btn) {
   const order = ['입고일', '센터등록일', '중등진급일', '고등진급일', '입교일'].filter(k => v[k]);
   for (let i = 1; i < order.length; i++) if (v[order[i]] < v[order[i - 1]]) return toast(order[i].replace('일', '') + ' 날짜가 ' + order[i - 1].replace('일', '') + '보다 빨라요', true);
   if (!v['수강생ID'] && DB.student.some(s => s['이름'] === v['이름'] && String(s['기수명']) === v['기수명']) && !await ask('같은 이름이 있어요', '같은 기수에 ' + v['이름'] + '님이 이미 있습니다. 동명이인으로 추가할까요?', '추가')) return;
-  if (await save('student', [v], v['수강생ID'] ? '저장했어요' : v['이름'] + '님을 등록했어요', btn)) { closeDrawer(); render(); }
+  const out = await save('student', [v], v['수강생ID'] ? '저장했어요' : v['이름'] + '님을 등록했어요', btn); if (!out) return;
+  const id = out[0]['수강생ID'], had = detailOf(id)['수강생ID'], chg = DKEYS.some(k => String(det[k] || '') !== String(detailOf(id)[k] || ''));
+  if (chg && (had || DKEYS.some(k => det[k]))) await save('survey', [Object.assign({ '수강생ID': id, '기수명': v['기수명'], '이름': v['이름'] }, det)]);
+  closeDrawer(); render();
 }
 async function delStudent(id) {
   if (!await ask('수강생 삭제', '목록에서 빼고 「설정 › 휴지통」으로 옮깁니다. 출석 기록은 그대로 남고, 언제든 되살릴 수 있어요.\n탈락한 분은 삭제 대신 「탈락 처리」를 권해요.', '휴지통으로', true)) return;
