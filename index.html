@@ -444,6 +444,8 @@ async function api(action, payload) {
   } finally { loading(false); }
 }
 async function reload() { const j = await api('all'); DB = j.data; lastFull = Date.now(); MEMO = {}; $('#syncAt').textContent = '동기화 ' + j.at.slice(11, 16); fillCohortSel(); }
+/** 회차가 다시 매겨진 뒤 출석·요약까지 새 번호로 받아옴 */
+async function reloadSoft() { try { await reload(); } catch (e) { } }
 let bgTimer = null, lastFull = Date.now();
 /** 저장 후에는 계산 시트(분석)만 가볍게 다시 받음. 전체 동기화는 5분마다 */
 function bgSync() {
@@ -466,7 +468,7 @@ function applyRows(t, rows) {
 }
 async function save(table, rows, msg, btn) {
   busy(btn, true);
-  try { const j = await api('upsert', { table, rows }); applyRows(table, j.rows); if (msg) toast(msg); bgSync(); return j.rows; }
+  try { const j = await api('upsert', { table, rows }); applyRows(table, j.rows); if (j.renumbered) await reloadSoft(); if (msg) toast(msg + (j.renumbered ? ' · 회차 순서를 날짜대로 다시 맞췄어요' : '')); bgSync(); return j.rows; }
   catch (e) { toast(e.message, true); return null; }
   finally { busy(btn, false); }
 }
@@ -476,7 +478,8 @@ async function removeRec(table, keyValues, msg) {
     const k = keyOf(table, keyValues); DB[table] = DB[table].filter(x => keyOf(table, x) !== k);
     if (table === 'student') DB.attend = DB.attend.filter(a => a['수강생ID'] !== keyValues['수강생ID']);
     if (table === 'session') { DB.attend = DB.attend.filter(a => !(String(a['기수명']) === String(keyValues['기수명']) && num(a['회차']) === num(keyValues['회차']))); DB.summary = DB.summary.filter(s => keyOf('summary', s) !== k); }
-    toast((msg || '삭제했습니다') + (r.cascade ? ` · 출석기록 ${r.cascade}건 포함` : '')); bgSync(); return true;
+    if (r.renumbered) await reloadSoft();
+    toast((msg || '삭제했습니다') + (r.cascade ? ` · 출석기록 ${r.cascade}건 포함` : '') + (r.renumbered ? ' · 뒤 회차를 당겼어요' : '')); bgSync(); return true;
   } catch (e) { toast(e.message, true); return false; }
 }
 /** 출석 저장 + 화면 즉시 반영. 인터넷이 끊기면 기기에 보관했다가 자동 재전송 */
@@ -1222,11 +1225,10 @@ function calEnd(e) {
 document.addEventListener('pointerup', calEnd); document.addEventListener('pointercancel', calEnd);
 async function calMove(n, no, to) {
   const s = DB.session.find(x => String(x['기수명']) === String(n) && num(x['회차']) === no); if (!s || s['날짜'] === to) return;
-  if (!isEvent(s) && summaryOf(n).some(x => num(x['회차']) === no) && !(await ask(`${no}회차 날짜 옮기기`, '이미 출석이 체크된 수업이에요. 수업 날짜만 옮기고 출석 기록은 그대로 둡니다.', '옮기기'))) return;
   const from = s['날짜'], row = { '기수명': n, '회차': no, '날짜': to };
   if (!isEvent(s)) row['과정'] = courseAt(n, to);
   s['날짜'] = to; render();
-  try { const j = await api('upsert', { table: 'session', rows: [row] }); applyRows('session', j.rows); toast(`${isEvent(s) ? (s['진도내용'] || '행사') : no + '회차'} → ${md(to)}(${DOW[dow(to)]})`); bgSync(); }
+  try { const j = await api('upsert', { table: 'session', rows: [row] }); applyRows('session', j.rows); if (j.renumbered) { await reloadSoft(); render(); } toast(`${isEvent(s) ? (s['진도내용'] || '행사') : '강의'} → ${md(to)}(${DOW[dow(to)]})${j.renumbered ? ' · 회차를 날짜 순서대로 다시 맞췄어요' : ''}`); bgSync(); }
   catch (err) { s['날짜'] = from; render(); toast(err.message, true); }
 }
 function listBody(n) {
@@ -1260,25 +1262,25 @@ async function saveEvent(n, no, btn) {
 async function delEvent(n, no) { if (await ask('행사 삭제', '이 행사를 일정에서 지웁니다.', '삭제', true)) { if (await removeRec('session', { '기수명': n, '회차': no })) { closeDrawer(); render(); } } }
 function editSession(n, no, date) {
   const ss = sessionsOf(n), s = no ? ss.find(x => num(x['회차']) === no) : null, co = cohortOf(n) || {};
-  let sug = Math.max(0, ...ss.map(x => num(x['회차']))) + 1;
-  if (date) { const k = ss.filter(x => x['날짜'] && x['날짜'] < date).length + 1; if (!ss.some(x => num(x['회차']) === k)) sug = k; }
-  const v = s || { '회차': sug, '날짜': date || '', '상태': '예정', '강사': co['강사'] || '' };
+  const v = s || { '날짜': date || '', '상태': '예정', '강사': co['강사'] || '' };
   openDrawer(s ? `${no}회차 강의<small>${esc(n)}</small>` : '강의 추가', `<div class="form">
-    ${s ? `<input type="hidden" data-k="회차" value="${no}">` : F('회차', '회차', v['회차'], 'number')}${F('날짜', '날짜', v['날짜'], 'date')}
+    <p class="muted full" style="margin:0">회차는 날짜 순서대로 자동으로 매겨져요. 날짜를 바꾸면 회차도 따라 바뀌고, 출석 기록도 그 강의를 따라갑니다. (행사는 회차에 들어가지 않아요)</p>
+    ${s ? `<input type="hidden" data-k="회차" value="${no}">` : ''}${F('날짜', '날짜', v['날짜'], 'date')}
     ${F('과정', '과정', v['과정'] || courseAt(n, v['날짜']), 'select', L('과정'))}${F('상태', '상태', v['상태'] || '예정', 'select', ['예정', '완료', '휴강'])}
     ${F('진도내용', '진도 내용', v['진도내용'], 'text', null, { full: true })}${F('강사', '강사', v['강사'])}<div></div>${F('비고', '메모', v['비고'], 'area')}</div>`,
     `${s && !isCo() ? `<button class="btn d" onclick="delSession(${attr(n)},${no})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveSession(${attr(n)},${no || 0},this)">저장</button>`);
 }
 async function saveSession(n, old, btn) {
-  const v = vals(); v['기수명'] = n; v['회차'] = num(v['회차']); v['구분'] = '강의';
-  if (!v['회차'] || v['회차'] > 1000) return toast('회차는 1~1000 사이로 입력하세요', true);
-  if (!old && sessionsOf(n).some(x => num(x['회차']) === v['회차'])) return toast('이미 있는 회차입니다', true);
-  if (await save('session', [v], '진도를 저장했어요', btn)) { closeDrawer(); render(); }
+  const v = vals(); v['기수명'] = n; v['구분'] = '강의';
+  if (!v['날짜']) return toast('날짜를 입력하세요', true);
+  v['회차'] = old || Math.max(0, ...sessionsOf(n).map(x => num(x['회차']))) + 1;
+  if (v['회차'] > 1000) return toast('강의는 1000회차까지만 넣을 수 있어요', true);
+  if (await save('session', [v], '강의를 저장했어요', btn)) { closeDrawer(); render(); }
 }
-async function delSession(n, no) { if (await ask(`${no}회차 삭제`, '이 회차의 출석 기록도 함께 지워집니다.', '삭제', true)) { if (await removeRec('session', { '기수명': n, '회차': no })) { closeDrawer(); render(); } } }
+async function delSession(n, no) { if (await ask(`${no}회차 삭제`, '이 회차의 출석 기록도 함께 지워지고, 뒤 회차 번호는 자동으로 하나씩 당겨집니다.', '삭제', true)) { if (await removeRec('session', { '기수명': n, '회차': no })) { closeDrawer(); render(); } } }
 function genSchedule(n) {
   const c = cohortOf(n) || {};
-  openDrawer('일정 자동 생성<small>' + esc(n) + '</small>', `<p class="muted" style="margin-top:0">고른 요일마다 회차를 만들어요. 이미 있는 회차는 건너뜁니다.</p><div class="form">
+  openDrawer('일정 자동 생성<small>' + esc(n) + '</small>', `<p class="muted" style="margin-top:0">고른 요일마다 강의를 만들어요. 이미 강의가 있는 날짜는 건너뛰고, 회차는 날짜 순서대로 자동으로 매겨집니다.</p><div class="form">
     ${F('from', '시작일', c['개강일'] || todayStr(), 'date')}${F('to', '종료일', c['종강일(입교)'] || addDays(c['개강일'] || todayStr(), 180), 'date')}
     <div class="fld full"><span>요일</span><div class="chips" id="gsDow">${DOW.map((d, i) => `<button type="button" class="chip ${[1, 2, 4].includes(i) ? 'on' : ''}" data-d="${i}" onclick="this.classList.toggle('on')">${d}</button>`).join('')}</div></div>
     ${F('content', '진도 내용 기본값', '', 'text', null, { full: true, ph: '비워두면 「1강, 2강…」' })}
@@ -1289,11 +1291,14 @@ async function doGen(n, btn) {
   const v = vals(), days = [...document.querySelectorAll('#gsDow .chip.on')].map(x => num(x.dataset.d));
   if (!v.from || !v.to || v.from > v.to) return toast('기간을 확인하세요', true);
   if (!days.length) return toast('요일을 하나 이상 고르세요', true);
-  const exist = new Set(sessionsOf(n).map(s => num(s['회차']))), existD = new Set(sessionsOf(n).map(s => s['날짜'])), co = cohortOf(n) || {}, rows = []; let no = 0;
-  const skipHol = $('#gsHol') ? $('#gsHol').checked : true;
-  for (let d = v.from; d <= v.to && rows.length < 400; d = addDays(d, 1)) { if (!days.includes(dow(d))) continue; if (skipHol && holidayOf(d)) continue; no++; if (exist.has(no) || existD.has(d)) continue; rows.push({ '기수명': n, '회차': no, '날짜': d, '과정': courseAt(n, d), '진도내용': v.content || (no + '강'), '강사': co['강사'] || '', '상태': '예정', '구분': '강의' }); }
-  if (!rows.length) return toast('새로 만들 회차가 없어요', true);
-  if (await save('session', rows, rows.length + '개 회차를 만들었어요', btn)) { closeDrawer(); render(); }
+  const ss = sessionsOf(n), existD = new Set(ss.map(s => s['날짜'])), co = cohortOf(n) || {}, rows = []; let tmp = Math.max(0, ...ss.map(s => num(s['회차'])));
+  const skipHol = $('#gsHol') ? $('#gsHol').checked : true, dates = [];
+  for (let d = v.from; d <= v.to && dates.length < 400; d = addDays(d, 1)) { if (!days.includes(dow(d))) continue; if (skipHol && holidayOf(d)) continue; if (!existD.has(d)) dates.push(d); }
+  const all = ss.map(s => s['날짜'] || '9999').concat(dates).sort();
+  dates.forEach(d => { const ord = all.indexOf(d) + 1; rows.push({ '기수명': n, '회차': ++tmp, '날짜': d, '과정': courseAt(n, d), '진도내용': v.content || (ord + '강'), '강사': co['강사'] || '', '상태': '예정', '구분': '강의' }); });
+  if (!rows.length) return toast('새로 만들 강의가 없어요', true);
+  if (tmp > 1000) return toast('강의는 1000회차까지만 넣을 수 있어요', true);
+  if (await save('session', rows, rows.length + '개 강의를 만들었어요', btn)) { closeDrawer(); render(); }
 }
 
 /* ═════════ 수강생 ═════════ */
