@@ -272,7 +272,7 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .funnel .cv{font-size:12px;color:var(--sub);margin:-2px 0 -2px 94px}
 .funnel .cv b{font-weight:700}
 /* 종합 대시보드 그래프 */
-.dash2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px}
+.dash2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:12px}
 .vz{width:100%;height:auto;display:block;overflow:visible}
 .vz text{font-size:11px;fill:var(--sub)}.vz .lbl{font-size:12px;font-weight:600}
 .vz .gl{stroke:var(--line2);stroke-width:1}.vz .ax{stroke:var(--line);stroke-width:1}
@@ -446,6 +446,35 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
 .wkk{display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:4px 12px;border-left:1px solid var(--line)}.wkk span{font-size:11.5px;color:var(--sub);font-weight:600}.wkk b{font-size:20px;font-weight:800;line-height:1.1}.wkk b small{font-size:12px;color:var(--sub)}
 .wk{border-top:4px solid var(--c)}
 @media (max-width:760px){.wkk{border-left:0;align-items:flex-start;padding:4px 8px 0 0}}
+
+/* ── 휴대폰 최적화 ── */
+@media (max-width:760px){
+  main{padding:12px 12px 112px}
+  .ph{margin-bottom:14px}.ph h1{font-size:22px}.ph p{font-size:13px}
+  .card{padding:14px;border-radius:16px}.card h3{font-size:15.5px;margin-bottom:10px}
+  .card h3 small{display:block;margin:2px 0 0}
+  .tabs{display:flex;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tabs a{padding:7px 12px;font-size:13.5px}
+  main .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}main .chip{flex-shrink:0}
+  .row{gap:6px}
+  td{padding:10px 10px}th{padding:9px 10px}
+  .htbl td{padding:8px 8px}.hv{min-width:44px;font-size:12px;padding:3px 6px}
+  .nc .big{gap:6px}.nc .big>div{padding:8px 9px;border-radius:12px}.nc .big b{font-size:18px}.nc .dl{font-size:11px;padding:1px 5px}
+  .nc .ls{white-space:normal}
+  .wk .row{flex-wrap:wrap}.wkk{flex:1;min-width:120px}
+  .iss{padding:10px 12px;gap:10px}.iss b{font-size:13.5px}.iss .ic{width:30px;height:30px}
+  .hb{grid-template-columns:78px 1fr 48px;font-size:12.5px}
+  .ftab .fh,.ftab .fr{grid-template-columns:minmax(64px,1.3fr) .5fr .9fr .9fr .8fr;font-size:12px}
+  .dock{left:8px;right:8px;padding:8px 8px 8px 14px;gap:8px;border-radius:14px}.dock .cnt{gap:8px;font-size:12px}.pvh{display:none}
+  .athead b{font-size:15.5px}.pvs{width:100%;text-align:center}
+  #drawer .db{padding:16px}#drawer .dh{padding:14px 16px}#drawer .df{padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  .kp::after{width:80px;height:80px;right:-24px;top:-24px}
+  .dash2{gap:10px}
+  .cal .cw{font-size:11px}.cal .dn{font-size:11px}.cal .hn{display:none}.cal .bd{font-size:10px;padding:1px 3px}
+  .alert{font-size:13px;padding:10px 12px}
+  .svy dl{grid-template-columns:1fr}
+  input,select,textarea{font-size:16px}
+}
 </style>
 </head>
 <body>
@@ -729,7 +758,7 @@ function route() {
   closeAll(); vtip(null, '');
   render(); window.scrollTo(0, 0);
 }
-const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석' };
+const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석', weekly: '주간 현황' };
 function render() {
   if (!DB) return;
   MEMO = {}; paintQueue();
@@ -1230,7 +1259,7 @@ const DKEY = (n, s) => 'dc_draft|' + n + '|' + s;
 function saveDraft() { if (!AT.n) return; try { const d = $('#atD'); localStorage.setItem(DKEY(AT.n, AT.sel), JSON.stringify({ at: Date.now(), date: d ? d.value : '', list: AT.list })); } catch (e) { } }
 function clearDraft(n, s) { try { localStorage.removeItem(DKEY(n, s)); } catch (e) { } }
 function loadDraft(n, s) { try { return JSON.parse(localStorage.getItem(DKEY(n, s)) || 'null'); } catch (e) { return null; } }
-function atCount() { const v = Object.values(AT.list || {}), c = a => v.filter(x => x.status === a).length, el = $('#atCount'), p = AT.prev; if (el) el.innerHTML = `<span>실시간 <b>${c('실시간')}</b>${p ? ' ' + dlt(c('실시간'), p.real, '') : ''}</span><span>보강 <b>${c('보강')}</b></span><span>결석 <b>${c('결석')}</b></span>${c('') ? `<span style="color:#ffd43b">미체크 <b>${c('')}</b></span>` : ''}${p ? '<span class="pvh">지난 수업 대비</span>' : ''}`; }
+function atCount() { const v = Object.values(AT.list || {}), c = a => v.filter(x => x.status === a).length, el = $('#atCount'), p = v.some(x => x.status) ? AT.prev : null; if (el) el.innerHTML = `<span>실시간 <b>${c('실시간')}</b>${p ? ' ' + dlt(c('실시간'), p.real, '') : ''}</span><span>보강 <b>${c('보강')}</b></span><span>결석 <b>${c('결석')}</b></span>${c('') ? `<span style="color:#ffd43b">미체크 <b>${c('')}</b></span>` : ''}${p ? '<span class="pvh">지난 수업 대비</span>' : ''}`; }
 async function saveAtt(btn) {
   const ids = Object.keys(AT.list), miss = ids.filter(id => !AT.list[id].status), date = $('#atD').value;
   if (!date) return toast('날짜를 입력하세요', true);
@@ -1326,7 +1355,7 @@ function patternBar(o) {
 }
 function wkCohorts() { if (isCo()) return [cohortOf(ROLE.cohort) || { '기수명': ROLE.cohort }]; return WK.scope === 'all' ? cohorts().filter(c => c['상태'] !== '종강') : [cohortOf(curCohort()) || { '기수명': curCohort() }].filter(c => c['기수명']); }
 PAGES.weekly = () => {
-  if (!WK.start) WK.start = monOf(todayStr());
+  if (!WK.start) { const t = todayStr(), ds = wkCohorts().flatMap(c => summaryOf(c['기수명']).map(x => x['날짜'])).filter(d => d && d <= addDays(monOf(t), 6)).sort(); WK.start = monOf(ds.length && ds[ds.length - 1] < monOf(t) ? ds[ds.length - 1] : t); }
   const from = WK.start, to = addDays(from, 6), pf = addDays(from, -7), pt = addDays(from, -1), tab = ROUTE.arg || 'week';
   const cs = wkCohorts(); if (!cs.length) return needCohort();
   const tabs = [['week', '주간 출석'], ['group', '전도사·분반별'], ['trend', '최근 8주']];
@@ -1337,14 +1366,14 @@ PAGES.weekly = () => {
   if (tab === 'trend') return head + wkTrend(cs, from);
   return head + cs.map(c => {
     const n = String(c['기수명']), d = periodData(n, from, to), o = sumRows(d.rows), pd = periodData(n, pf, pt), po = pd.nos.length ? sumRows(pd.rows) : { rate: '', all: '', n: 0 }, col = colorOf(n);
-    if (!d.nos.length) return `<div class="card mt" style="--c:${col}"><div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="muted">이번 주에 올라온 출석이 없어요</span></div></div>`;
+    if (!d.nos.length) return `<div class="card mt" style="--c:${col}"><div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="muted">이 주에 올라온 출석이 없어요</span><span class="sp"></span>${(() => { const ds = summaryOf(n).map(x => x['날짜']).filter(Boolean).sort(); return ds.length ? `<button class="btn sm" onclick="WK.start=monOf('${ds[ds.length - 1]}');render()">최근 출석 주로 ›</button>` : ''; })()}</div></div>`;
     const ord = { ab: 0, mk: 1, part: 2, none: 3, all: 4 }, rows = d.rows.slice().sort((a, b) => ord[a.cat] - ord[b.cat] || String(a.st['담당전도사'] || '').localeCompare(String(b.st['담당전도사'] || '')) || String(a.st['이름']).localeCompare(String(b.st['이름'])));
     return `<div class="card mt wk" style="--c:${col}">
-      <div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="b blue">이번 주 수업 ${d.nos.length}회</span><span class="sp"></span>
+      <div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="b blue">${from === monOf(todayStr()) ? '이번 주' : '이 주'} 수업 ${d.nos.length}회</span><span class="sp"></span>
         <div class="wkk"><span>주간 출석률</span><b>${pct(o.rate)}</b>${dlt(o.rate, po.rate, 'p')}</div><div class="wkk"><span>전부 실시간</span><b>${o.all}<small>/${o.n}명</small></b>${dlt(o.all, po.all, '명')}</div></div>
       <div class="muted" style="margin:8px 0 12px">${d.ses.map(x => `${num(x['회차'])}회차 ${md(x['날짜'])}(${DOW[dow(x['날짜'])]})${d.titles[num(x['회차'])] ? ' ' + esc(d.titles[num(x['회차'])]) : ''}`).join(' · ')}</div>
       ${patternBar(o)}
-      <div class="tw mt" style="box-shadow:none"><table><tr><th>이름</th><th class="hm">담당전도사</th><th class="hm">분반</th>${d.nos.map(no => `<th class="c">${no}회<div style="font-weight:500;font-size:10px">${md(d.ses.find(x => num(x['회차']) === no)['날짜'])}</div></th>`).join('')}<th>이번 주</th></tr>
+      <div class="tw mt" style="box-shadow:none"><table><tr><th>이름</th><th class="hm">담당전도사</th><th class="hm">분반</th>${d.nos.map(no => `<th class="c">${no}회<div style="font-weight:500;font-size:10px">${md(d.ses.find(x => num(x['회차']) === no)['날짜'])}</div></th>`).join('')}<th>한 주 결과</th></tr>
       ${rows.map(r => `<tr><td><b>${esc(r.st['이름'])}</b></td><td class="hm">${esc(r.st['담당전도사'] || '-')}</td><td class="hm">${esc(r.st['분반'] || '-')}</td>${r.list.map(v => `<td class="c" style="padding:6px"><span class="cell ${v || 'none'}" style="cursor:default">${v ? SYM[v] : '·'}</span></td>`).join('')}<td><span class="b ${CAT[r.cat] ? CAT[r.cat][1] : ''}">${esc(resTxt(r))}</span></td></tr>`).join('')}</table></div>
     </div>`;
   }).join('');
@@ -2051,7 +2080,7 @@ PAGES.analysis = () => {
   let body = '';
   if (tab === 'diag') body = diagBody();
   if (tab === 'flow') body = flowBody();
-  if (tab === 'cohort') body = cohortMinis() + statTable((DB.cohortStats || []).slice().sort((a, b) => String(b['개강일']).localeCompare(String(a['개강일']))), [['기수명', 't'], ['상태', 't'], ['수카 입고', 'n'], ['센터 등록(초등)', 'n'], ['입교(종강)', 'n'], ['입고→등록률', 'p'], ['등록→중등 진급률', 'p'], ['중등→고등 진급률', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['병목 구간', 't']], r => `go('cohort/'+encodeURIComponent(${attr(String(r['기수명']))}))`);
+  if (tab === 'cohort') body = scope + cohortMinis() + statTable((DB.cohortStats || []).slice().sort((a, b) => String(b['개강일']).localeCompare(String(a['개강일']))), [['기수명', 't'], ['상태', 't'], ['수카 입고', 'n'], ['센터 등록(초등)', 'n'], ['입교(종강)', 'n'], ['입고→등록률', 'p'], ['등록→중등 진급률', 'p'], ['중등→고등 진급률', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['병목 구간', 't']], r => `go('cohort/'+encodeURIComponent(${attr(String(r['기수명']))}))`);
   if (tab === 'ins') body = scope + statTable(DB.instructorStats || [], [['강사', 't'], ['담당 기수 수', 'n'], ['입고', 'n'], ['등록', 'n'], ['입교', 'n'], ['입고→등록', 'p'], ['등록→중등', 'p'], ['종강률(등록→입교)', 'p'], ['평균 출석률', 'p'], ['종강률 전체대비', 'd'], ['가장 약한 구간', 't']]);
   if (tab === 'eva') body = scope + `<p class="muted" style="margin-top:0">수강생별 담당전도사 기준</p>` + statTable(DB.evangelistStats || [], [['전도사', 't'], ['담당 학생(입고)', 'n'], ['등록', 'n'], ['입교', 'n'], ['탈락', 'n'], ['입고→등록', 'p'], ['종강률(등록→입교)', 'p'], ['학생 평균 출석률', 'p'], ['종강률 전체대비', 'd'], ['주요 탈락사유', 't'], ['가장 약한 구간', 't']]);
   if (tab === 'drop') {
@@ -2173,7 +2202,7 @@ function cohortMinis() {
   return `<div class="minis" style="margin-bottom:12px">${chart('입고 → 센터 등록', '입고→등록률')}${chart('종강률 (등록 → 입교)', '종강률(등록→입교)')}${chart('평균 출석률', '평균 출석률')}</div>`;
 }
 function statTable(rows, cols, onclick) {
-  if (!rows.length) return empty('데이터가 아직 없어요');
+  if (!rows.length) return empty('아직 계산할 자료가 없어요', (DB.statScope || '종강 기수만') === '종강 기수만' ? '지금은 「종강 기수만」 기준이에요. 위의 「전체 기수」를 누르면 진행 중인 기수도 함께 볼 수 있어요.' : '');
   const cell = (v, t) => t === 'p' ? `<td class="c"><span class="b ${v === '' || v === undefined ? '' : num(v) < .5 ? 'bad' : num(v) < .7 ? 'warn' : 'ok'}">${pct(v)}</span></td>`
     : t === 'd' ? `<td class="c" style="font-weight:700;color:${num(v) > 0 ? 'var(--ok)' : num(v) < 0 ? 'var(--bad)' : ''}">${v === '' || v === undefined ? '-' : (num(v) > 0 ? '+' : '') + (Math.round(num(v) * 1000) / 10) + '%p'}</td>`
     : t === 'n' ? `<td class="c">${v === '' || v === undefined ? '-' : v}</td>` : `<td>${esc(v)}</td>`;
