@@ -649,7 +649,12 @@ const attr = v => esc(JSON.stringify(v));
 function toast(msg, err) { document.querySelectorAll('#toast').forEach(x => x.remove()); const t = document.createElement('div'); t.id = 'toast'; if (err) t.className = 'err'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), err ? 4500 : 2200); }
 let loadingN = 0;
 function loading(on) { loadingN += on ? 1 : -1; let l = $('#loading'); if (loadingN > 0 && !l) { l = document.createElement('div'); l.id = 'loading'; document.body.appendChild(l); } if (loadingN <= 0) { loadingN = 0; l && l.remove(); } }
-function busy(btn, on) { if (btn) btn.classList.toggle('busy', on); }
+function busy(btn, on) {
+  if (!btn) return;
+  btn.classList.toggle('busy', on);
+  if (on) { if (!btn.dataset.t) { btn.dataset.t = btn.innerHTML; btn.textContent = /저장|등록|추가/.test(btn.textContent) ? '저장 중…' : btn.textContent; } }
+  else if (btn.dataset.t) { btn.innerHTML = btn.dataset.t; delete btn.dataset.t; }
+}
 
 /* ═════════ API ═════════ */
 const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, pw: sessionStorage.getItem(PWK) || localStorage.getItem(PWK) || '' });
@@ -664,7 +669,11 @@ async function api(action, payload) {
     return j;
   } finally { loading(false); }
 }
-async function reload() { const j = await api('all'); DB = j.data; lastFull = Date.now(); MEMO = {}; $('#syncAt').textContent = '동기화 ' + j.at.slice(11, 16); fillCohortSel(); }
+async function reload(fresh) { const j = await api('all', fresh ? { fresh: true } : {}); DB = j.data; lastFull = Date.now(); MEMO = {}; $('#syncAt').textContent = '동기화 ' + j.at.slice(11, 16); fillCohortSel(); cacheDB(); }
+/** 마지막으로 받은 데이터를 이 기기에 보관 → 다음에 열 때 바로 보여 주고 뒤에서 새로 받음 (로그인 유지한 기기만) */
+const DBK = () => 'dc_db|' + (isCo() ? 'c|' + ROLE.cohort : 'admin');
+function cacheDB() { try { if (localStorage.getItem(PWK)) localStorage.setItem(DBK(), JSON.stringify({ at: Date.now(), db: DB })); else localStorage.removeItem(DBK()); } catch (e) { } }
+function cachedDB() { try { const o = JSON.parse(localStorage.getItem(DBK()) || 'null'); return o && Date.now() - o.at < 14 * 864e5 && localStorage.getItem(PWK) ? o : null; } catch (e) { return null; } }
 /** 회차가 다시 매겨진 뒤 출석·요약까지 새 번호로 받아옴 */
 async function reloadSoft() { try { await reload(); } catch (e) { } }
 let bgTimer = null, lastFull = Date.now();
@@ -681,7 +690,7 @@ setInterval(async () => {
   if (!DB || document.hidden || !idle() || Date.now() - lastFull < 5 * 60e3) return;
   try { await reload(); if (idle()) render(); } catch (e) { }
 }, 30e3);
-async function manualSync() { try { await reload(); render(); toast('시트에서 새로 불러왔습니다'); } catch (e) { toast(e.message, true); } }
+async function manualSync() { try { await reload(true); render(); toast('시트에서 새로 불러왔습니다'); } catch (e) { toast(e.message, true); } }
 function keyOf(t, o) { return KEYS[t].map(k => String(o[k] === undefined ? '' : o[k])).join('|'); }
 function applyRows(t, rows) {
   const list = DB[t], idx = {}; list.forEach((r, i) => idx[keyOf(t, r)] = i);
@@ -768,7 +777,7 @@ async function saveAttendance(payload, btn, opt) {
 
 /* ═════════ 로그인·라우팅 ═════════ */
 function showLogin(msg) { if (LINK_C) { $('#login h1').textContent = LINK_C + ' 출석 체크'; $('#login p.muted').textContent = '담당자용 화면입니다. 이 기수의 출석과 진도를 기록하면 중앙 데이터센터에 바로 저장됩니다.'; $('#lgPw').placeholder = '담당자 비밀번호'; } $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#lgUrl').value = cfg().url; $('#lgErr').textContent = msg || ''; setTimeout(() => $('#lgPw').focus(), 50); }
-function logout(expired) { sessionStorage.removeItem(PWK); localStorage.removeItem(PWK); showLogin(expired ? '비밀번호를 다시 입력해 주세요.' : ''); }
+function logout(expired) { sessionStorage.removeItem(PWK); localStorage.removeItem(PWK); try { localStorage.removeItem(DBK()); } catch (e) { } showLogin(expired ? '비밀번호를 다시 입력해 주세요.' : ''); }
 $('#lgBtn').onclick = async () => {
   const url = $('#lgUrl').value.trim() || DEFAULT_API, pw = $('#lgPw').value;
   if (!pw) { $('#lgErr').textContent = '비밀번호를 입력하세요.'; return; }
@@ -788,6 +797,12 @@ async function start() {
   $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1])}</span>${n[2]}</a>`).join('')).join('');
   $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>`).join('');
   $('#view').innerHTML = `<div class="sk" style="height:34px;width:220px;margin-bottom:22px"></div><div class="grid g-kpi">${'<div class="sk" style="height:92px"></div>'.repeat(6)}</div><div class="sk mt" style="height:120px"></div><div class="grid g-2 mt"><div class="sk" style="height:200px"></div><div class="sk" style="height:200px"></div></div>`;
+  const cached = cachedDB();
+  if (cached) {   // 저장해 둔 데이터로 바로 화면을 띄우고, 최신 데이터는 뒤에서 받아 바꿔 끼움
+    DB = cached.db; MEMO = {}; fillCohortSel(); $('#syncAt').textContent = '불러오는 중…'; route();
+    reload().then(() => { if (idle()) render(); flushQueue(); }).catch(e => { if (cfg().pw) { $('#syncAt').textContent = '연결 안 됨'; toast(e.message, true); } });
+    return;
+  }
   try { await reload(); } catch (e) { showLogin(e.message); return; }
   route(); flushQueue();
 }
@@ -2516,6 +2531,16 @@ async function restoreStu(id, btn) { if (await save('student', [{ '수강생ID':
 async function purgeStu(id) { if (await ask('영구 삭제', '이 수강생과 출석 기록이 시트에서 완전히 지워지고 되돌릴 수 없어요.', '영구 삭제', true)) { if (await removeRec('student', { '수강생ID': id })) render(); } }
 
 /* ═════════ 시작 ═════════ */
+/* 새 버전을 올렸는데 휴대폰이 예전 화면을 붙잡고 있으면 한 번 자동으로 새로 고침 */
+const BUILD = '2026-11-20a';
+(function checkBuild() {
+  fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+    const m = t.match(/const BUILD = '([^']+)'/);
+    if (!m || m[1] === BUILD || DIRTY || sessionStorage.getItem('dc_rl_' + m[1])) return;
+    sessionStorage.setItem('dc_rl_' + m[1], '1');
+    const u = new URL(location.href); u.searchParams.set('v', m[1]); location.replace(u.toString());
+  }).catch(() => { });
+})();
 (function init() { const c = cfg(); if (c.pw) start(); else showLogin(); })();
 </script>
 </body>
