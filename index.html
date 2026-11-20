@@ -513,7 +513,7 @@ const NAV = [
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
   ['분석', [['analysis', 'chart', '분석'], ['settings', 'gear', '설정']]]
 ];
-const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정']]]];
+const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['students', 'users', '수강생'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정']]]];
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
@@ -710,7 +710,7 @@ $('#lgPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('#lgBtn')
 
 async function start() {
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
-  const nav = isCo() ? CO_NAV : NAV, mnav = isCo() ? CO_NAV[0][1].map(n => [n[0], n[1], n[2].replace(' 체크', '')]) : MOBILE_NAV;
+  const nav = isCo() ? CO_NAV : NAV, mnav = isCo() ? CO_NAV[0][1].slice(0, 4).map(n => [n[0], n[1], n[2].replace(' 체크', '').replace(' 현황', '')]).concat([['more', 'menu', '더보기']]) : MOBILE_NAV;
   if (isCo()) { document.querySelector('.cohortPick').innerHTML = `<label>담당 기수</label><b style="display:block;font-size:15px;padding:2px 0">${esc(ROLE.cohort)}</b>`; $('#cohortSelM').style.display = 'none'; S.cohort = ROLE.cohort; }
   $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1])}</span>${n[2]}</a>`).join('')).join('');
   $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>`).join('');
@@ -723,7 +723,7 @@ window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); 
 function route() {
   const h = decodeURIComponent(location.hash.slice(1) || 'home').split('/');
   ROUTE = { page: h[0], arg: h[1], tab: h[2] };
-  if (isCo() && !['attend', 'weekly', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
+  if (isCo() && !['attend', 'students', 'weekly', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
   if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   closeAll(); vtip(null, '');
@@ -734,7 +734,7 @@ function render() {
   if (!DB) return;
   MEMO = {}; paintQueue();
   const p = ROUTE.page;
-  document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && !isCo() && !MOBILE_NAV.some(m => m[0] === p))));
+  document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && (isCo() ? CO_NAV[0][1].slice(4).some(m => m[0] === p) : !MOBILE_NAV.some(m => m[0] === p)))));
   $('#topTitle').textContent = (isCo() ? ROLE.cohort + ' · ' : '') + (TITLES[p] || '');
   const f = PAGES[p] || PAGES.home;
   try { $('#view').innerHTML = f(); (AFTER[p] || (() => { }))(); }
@@ -888,7 +888,7 @@ function birthFields(s) {
 }
 function staffList() { return `<datalist id="dlStaff">${staffNames().map(x => `<option value="${esc(x)}">`).join('')}</datalist>`; }
 function openMore() {
-  const items = NAV.flatMap(g => g[1]).filter(n => !MOBILE_NAV.some(m => m[0] === n[0]));
+  const items = isCo() ? CO_NAV[0][1].slice(4) : NAV.flatMap(g => g[1]).filter(n => !MOBILE_NAV.some(m => m[0] === n[0]));
   $('#sheet').innerHTML = '<div class="grab"></div>' + items.map(n => `<a href="#${n[0]}">${icon(n[1], 20)}${n[2]}</a>`).join('') + `<a href="javascript:manualSync()">${icon('sync', 20)}시트에서 새로 불러오기</a><a href="javascript:logout()">로그아웃</a>`;
   $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
@@ -1635,6 +1635,7 @@ function detailFields(id) {
 
 let SF = { scope: 'cur', st: '', ev: '', q: '' }, SEL = new Set();
 PAGES.students = () => {
+  if (isCo()) return coStudents();
   const n = curCohort();
   let list = live();
   if (SF.scope === 'cur' && n) list = list.filter(s => String(s['기수명']) === n);
@@ -1673,7 +1674,31 @@ function reasonPicker(cur) {
   return `<div class="reason">${list.map(r => { const x = g.find(y => y['사유'] === r) || {}; return `<label><input type="radio" name="rsn" data-k="탈락사유" value="${esc(r)}" ${r === cur ? 'checked' : ''}><div><b>${esc(r)}</b>${x['판별'] ? `<small>${esc(x['판별'])}</small>` : ''}</div></label>`; }).join('')}</div>`;
 }
 function stageRow(k, label, v) { return `<div class="stage"><b>${label}</b><input type="date" data-k="${k}" value="${esc(v || '')}"><button type="button" class="btn ghost sm" onclick="const i=this.previousElementSibling;i.value=i.value?'':'${todayStr()}'">${v ? '지우기' : '오늘'}</button></div>`; }
+/* ── 담당자 링크: 자기 기수 수강생 명단 (추가 · 기본 정보) ── */
+function coStudents() {
+  const n = ROLE.cohort, list = studentsOf(n).slice().sort((a, b) => String(a['담당전도사'] || '').localeCompare(String(b['담당전도사'] || '')) || String(a['이름']).localeCompare(String(b['이름'])));
+  return `<div class="ph"><div><h1>수강생</h1><p>${esc(n)} · ${list.filter(x => !x['탈락일']).length}명 · 여기서 등록하면 출석부에 바로 나와요</p></div><div class="acts"><button class="btn" onclick="bulkAdd()">명단 붙여넣기</button><button class="btn p" onclick="editStudent()">+ 새 수강생</button></div></div>
+  ${list.length ? `<div class="tw"><table><tr><th>이름</th><th>담당전도사</th><th>분반</th><th class="hm">입고일</th><th>단계</th><th class="c">출석률</th></tr>${list.map(s => `<tr class="click" onclick="editStudent(${attr(s['수강생ID'])})"><td><b>${esc(s['이름'])}</b></td><td>${esc(s['담당전도사'] || '-')}</td><td>${esc(s['분반'] || '-')}</td><td class="hm">${md(s['입고일'])}</td><td>${stageBadge(stageOf(s))}</td><td class="c">${pct(s['출석률'])}</td></tr>`).join('')}</table></div>`
+    : empty('아직 등록된 수강생이 없어요', '「+ 새 수강생」으로 한 명씩, 또는 「명단 붙여넣기」로 한꺼번에 넣으세요.', `<button class="btn p" onclick="editStudent()">+ 새 수강생</button>`)}`;
+}
+function coEditStudent(id) {
+  const s = id ? DB.student.find(x => x['수강생ID'] === id) || {} : { '입고일': todayStr() };
+  const bans = [...new Set(DB.student.map(x => x['분반']).filter(Boolean))], evs = [...new Set(DB.student.map(x => x['담당전도사']).concat([(cohortOf(ROLE.cohort) || {})['전도사1'], (cohortOf(ROLE.cohort) || {})['전도사2']]).filter(Boolean))];
+  openDrawer(id ? `${esc(s['이름'])}<small>${esc(ROLE.cohort)}</small>` : '새 수강생<small>' + esc(ROLE.cohort) + '</small>', `${id ? `<input type="hidden" data-k="수강생ID" value="${esc(id)}">` : ''}
+    <div class="form">${id ? `<label class="fld"><span>이름</span><input value="${esc(s['이름'])}" disabled></label>` : F('이름', '이름', '')}${F('성별', '성별', s['성별'], 'select', L('성별').length ? L('성별') : ['남', '여'])}
+      ${F('담당전도사', '담당전도사', s['담당전도사'], 'text', 'dlEv')}${F('분반', '분반', s['분반'], 'text', 'dlBan', { ph: '예: 1반' })}
+      ${id ? `<label class="fld"><span>입고일</span><input value="${esc(s['입고일'] || '')}" disabled></label>` : F('연락처', '연락처', '', 'tel', null, { ph: '010-0000-0000' }) + F('입고일', '입고일', s['입고일'], 'date')}</div>
+    <datalist id="dlEv">${evs.map(x => `<option value="${esc(x)}">`).join('')}</datalist><datalist id="dlBan">${bans.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+    ${id ? '<p class="muted">이름·입고일·연락처 수정과 탈락 처리는 신학부(관리자)에서 할 수 있어요.</p>' : '<p class="muted">연락처는 신학부로만 전달되고 이 화면에는 보이지 않아요.</p>'}`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="coSaveStudent(this)">저장</button>`);
+}
+async function coSaveStudent(btn) {
+  const v = vals(); if (!v['수강생ID'] && !v['이름']) return toast('이름을 입력하세요', true);
+  if (!v['수강생ID'] && DB.student.some(s => s['이름'] === v['이름']) && !await ask('같은 이름이 있어요', v['이름'] + '님이 이미 있습니다. 동명이인으로 추가할까요?', '추가')) return;
+  if (await save('student', [Object.assign({ '기수명': ROLE.cohort }, v)], v['수강생ID'] ? '저장했어요' : v['이름'] + '님을 등록했어요', btn)) { closeDrawer(); render(); }
+}
 function editStudent(id) {
+  if (isCo()) return coEditStudent(id);
   const s = id ? DB.student.find(x => x['수강생ID'] === id) : { '기수명': curCohort(), '입고일': todayStr() };
   const dropped = !!s['탈락일'];
   openDrawer(id ? `${esc(s['이름'])} ${stageBadge(stageOf(s))}<small>${esc(s['기수명'])}</small>` : '새 수강생', staffList() + `${id ? `<input type="hidden" data-k="수강생ID" value="${esc(id)}">` : ''}
