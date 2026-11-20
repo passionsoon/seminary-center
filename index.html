@@ -502,6 +502,23 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
 .rps .rt tfoot td.rbar{background:#1c2b4f linear-gradient(#41547f,#41547f) no-repeat 16px 50%/calc(100% - 26px) 8px!important}.rps .rt tfoot td.rbar i{background:#8fb1ff}
 .rps .ft{margin-top:12px;font-size:11.5px;color:#98a2b3;text-align:right}
 @media print{.rpwrap{overflow:visible;margin:0}.rps{box-shadow:none;width:100%;padding:0}.rps .rt th,.rps .kp6 .dk,.rps .rt tfoot td{-webkit-print-color-adjust:exact;print-color-adjust:exact}.rps *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* 출석 분포 */
+.tw2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}
+.tw2>div{background:var(--line2);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.tw2 span{font-size:12px;color:var(--sub);font-weight:600}.tw2 b{font-size:21px;font-weight:800;line-height:1.1}.tw2 small{font-size:11.5px;color:var(--sub)}
+.dist{display:flex;flex-direction:column;gap:6px}
+.dr{display:grid;grid-template-columns:auto 150px 1fr 48px 52px;gap:10px;align-items:center;font-size:13px}
+.dr .pat{display:flex;gap:3px;min-width:60px}.dr .pat i{width:14px;height:14px;border-radius:4px;display:block}
+.dr .pat i.실시간{background:var(--ok)}.dr .pat i.보강{background:var(--warn)}.dr .pat i.결석{background:var(--bad)}.dr .pat i.none{background:#d5dbe5}
+.dr .lb{font-weight:600}.dr .tr{height:14px;background:var(--line2);border-radius:6px;overflow:hidden}.dr .tr i{display:block;height:100%;border-radius:6px}
+.dr .tr i.ok{background:var(--ok)}.dr .tr i.warn{background:var(--warn)}.dr .tr i.bad{background:var(--bad)}.dr .tr i.none{background:#c3cad6}
+.dr b{text-align:right}.dr .pc{color:var(--sub);text-align:right;font-size:12px}.dr .nm{grid-column:2/-1;font-size:12px;color:var(--sub);margin-top:-4px}
+@media (max-width:760px){.tw2{grid-template-columns:1fr 1fr 1fr;gap:6px}.tw2>div{padding:8px}.tw2 b{font-size:17px}.tw2 span{font-size:11px}.dr{grid-template-columns:auto 1fr 40px;gap:6px}.dr .tr,.dr .pc{display:none}}
+.rps .kp6.k7{grid-template-columns:repeat(7,1fr)}.rps .kp6 b small{font-size:13px;font-weight:600}
+.rps .rt th.h3{background:#33497a}
+.rps .rdist{margin-top:18px;border:1px solid #dfe4ec;border-radius:4px;padding:14px 16px}.rps .rdh{font-weight:800;font-size:15px;margin-bottom:10px}.rps .rdh span{font-weight:500;font-size:12px;color:#7b879b;margin-left:6px}
+.rps .dr{font-size:13.5px;grid-template-columns:auto 170px 1fr 52px 56px}.rps .dr .tr{display:block}.rps .dr .pc{display:block}
 </style>
 </head>
 <body>
@@ -1351,7 +1368,7 @@ async function fuSave(id, makeup, btn) {
 }
 
 /* ═════════ 출석 보고서 (표 · 고화질 이미지) ═════════ */
-let RP = { per: 'week', from: '', to: '', grp: 'ev', all: 'any', title: '' };
+let RP = { per: 'week', from: '', to: '', grp: 'ev', all: 'real', title: '' };
 const BAND = v => v === '' ? '' : v >= .85 ? 'xg' : v >= .75 ? 'xb' : v >= .6 ? 'xo' : 'xr';
 function rpRange() {
   const t = todayStr(), mon = monOf(t);
@@ -1377,9 +1394,9 @@ function rpData(a, b) {
     d.rows.forEach(r => {
       const ev = r.st['담당전도사'] || '(담당 미지정)', ban = r.st['분반'] || '(분반 미지정)';
       const [g, it] = RP.grp === 'ban' ? [n, ban] : RP.grp === 'evban' ? [ev, ban] : RP.grp === 'cohort' ? ['전체', n] : [n, ev];
-      const key = g + '\u0001' + it, o = items[key] = items[key] || { g, it, cs: new Set(), reg: 0, att: 0, exp: 0, avgN: 0, all: 0 };
-      const at = r.real + r.mk, ok = RP.all === 'real' ? r.real === k : at === k;
-      o.cs.add(n); o.reg++; o.att += at; o.exp += k; o.avgN += at / k; if (ok) o.all++;
+      const key = g + '\u0001' + it, o = items[key] = items[key] || { g, it, cs: new Set(), reg: 0, att: 0, real: 0, exp: 0, avgN: 0, avgR: 0, all: 0, allR: 0, rows: [] };
+      const at = r.real + r.mk;
+      o.cs.add(n); o.reg++; o.att += at; o.real += r.real; o.exp += k; o.avgN += at / k; o.avgR += r.real / k; if (at === k) o.all++; if (r.real === k) o.allR++; o.rows.push(r);
     });
   });
   const groups = {}; Object.values(items).forEach(o => (groups[o.g] = groups[o.g] || []).push(o));
@@ -1389,38 +1406,40 @@ function rpData(a, b) {
 }
 PAGES.wreport = () => {
   const [a, b] = rpRange(), D = rpData(a, b), lbl = rpLabel(a, b);
+  const showCs = RP.grp === 'evban';
   const gl = { ev: ['기수', '담당전도사', '전도사 ', '명'], ban: ['기수', '분반', '', '개 반'], evban: ['담당전도사', '분반', '', '개 반'], cohort: ['', '기수', '', '개 기수'] }[RP.grp];
   const title = RP.title || `${lbl} 출석 현황`;
-  let all = { reg: 0, att: 0, exp: 0, avgN: 0, all: 0, cs: new Set() }, rows = '', no = 0;
-  const band = { xg: 0, xb: 0, xo: 0, xr: 0 };
+  let all = { reg: 0, att: 0, real: 0, exp: 0, avgN: 0, avgR: 0, all: 0, allR: 0, cs: new Set(), rows: [] }, rows = '', no = 0;
+  const band = { xg: 0, xb: 0, xo: 0, xr: 0 }, useR = RP.all === 'real';
   D.order.forEach(g => {
     const list = D.groups[g];
     list.forEach((o, i) => {
-      no++; ['reg', 'att', 'exp', 'avgN', 'all'].forEach(k => all[k] += o[k]); o.cs.forEach(x => all.cs.add(x));
-      const ar = o.exp ? o.att / o.exp : '', alr = o.reg ? o.all / o.reg : '', bd = BAND(alr); if (bd) band[bd]++;
-      rows += `<tr class="${i === 0 ? 'gs' : ''}"><td class="no">${no}</td>${i === 0 && gl[0] ? `<td class="grp" rowspan="${list.length}"><b>${esc(g)}</b><small>${gl[2]}${list.length}${gl[3]}</small></td>` : ''}<td class="it">${esc(o.it)}</td><td class="n">${o.cs.size}</td><td class="n">${o.reg}</td>
-        <td class="av ${BAND(ar)}">${pct(ar)}</td><td class="avn">${Math.round(o.avgN)}</td>
-        <td class="rbar"><i class="${bd}" style="width:${Math.round((alr || 0) * 100)}%"></i></td><td class="ar ${bd}">${pct(alr)}</td><td class="n">${o.all}</td></tr>`;
+      no++; ['reg', 'att', 'real', 'exp', 'avgN', 'avgR', 'all', 'allR'].forEach(k => all[k] += o[k]); o.cs.forEach(x => all.cs.add(x)); all.rows = all.rows.concat(o.rows);
+      const ar = o.exp ? o.att / o.exp : '', rr = o.exp ? o.real / o.exp : '', alp = o.reg ? o.all / o.reg : '', alr = o.reg ? o.allR / o.reg : '', main = useR ? alr : alp, bd = BAND(main); if (bd) band[bd]++;
+      rows += `<tr class="${i === 0 ? 'gs' : ''}"><td class="no">${no}</td>${i === 0 && gl[0] ? `<td class="grp" rowspan="${list.length}"><b>${esc(g)}</b><small>${gl[2]}${list.length}${gl[3]}</small></td>` : ''}<td class="it">${esc(o.it)}</td>${showCs ? `<td class="n">${o.cs.size}</td>` : ''}<td class="n">${o.reg}</td>
+        <td class="av ${BAND(rr)}">${pct(rr)}</td><td class="av ${BAND(ar)}">${pct(ar)}</td><td class="avn">${Math.round(o.avgN)}</td>
+        <td class="rbar"><i class="${bd}" style="width:${Math.round((main || 0) * 100)}%"></i></td><td class="ar ${BAND(alr)}">${pct(alr)}</td><td class="n">${o.allR}</td><td class="ar ${BAND(alp)}">${pct(alp)}</td><td class="n">${o.all}</td></tr>`;
     });
   });
-  const tar = all.exp ? all.att / all.exp : '', tal = all.reg ? all.all / all.reg : '';
+  const tar = all.exp ? all.att / all.exp : '', trr = all.exp ? all.real / all.exp : '', tal = all.reg ? all.all / all.reg : '', talR = all.reg ? all.allR / all.reg : '';
   const ctrl = `<div class="ph noprint"><div><h1>출석 보고서</h1><p>기간과 묶는 방법을 고르면 표가 자동으로 만들어져요 · 제목은 눌러서 고칠 수 있어요</p></div>
     <div class="acts"><button class="btn" onclick="window.print()">${icon('print', 16)}인쇄 · PDF</button><button class="btn p" onclick="rpPng(this)">${icon('upload', 16)}고화질 이미지 저장</button></div></div>
     <div class="card noprint rpctl"><div class="row"><span class="muted">기간</span><div class="chips">${[['week', '이번 주'], ['last', '지난주'], ['month', '이번 달'], ['all', '기수 전체'], ['custom', '직접']].map(x => `<button class="chip ${RP.per === x[0] ? 'on' : ''}" onclick="RP.per='${x[0]}';RP.title='';render()">${x[1]}</button>`).join('')}</div>
       ${RP.per === 'custom' ? `<input type="date" value="${a}" onchange="RP.from=this.value;RP.title='';render()"><span>~</span><input type="date" value="${b}" onchange="RP.to=this.value;RP.title='';render()">` : ''}</div>
       <div class="row mt"><span class="muted">묶기</span><div class="chips">${(isCo() ? [['ev', '전도사별'], ['ban', '분반별']] : [['ev', '기수 › 전도사'], ['ban', '기수 › 분반'], ['evban', '전도사 › 분반'], ['cohort', '기수별']]).map(x => `<button class="chip ${RP.grp === x[0] ? 'on' : ''}" onclick="RP.grp='${x[0]}';render()">${x[1]}</button>`).join('')}</div>
-      <span class="muted" style="margin-left:8px">ALL 출석</span><div class="chips">${[['any', '보강 포함'], ['real', '실시간만']].map(x => `<button class="chip ${RP.all === x[0] ? 'on' : ''}" onclick="RP.all='${x[0]}';render()">${x[1]}</button>`).join('')}</div></div>
-      <p class="muted" style="margin:8px 0 0;font-size:12.5px">평균출석 = 수업마다 출석한 인원의 평균 · ALL 출석 = 이 기간 수업에 한 번도 빠지지 않은 사람${RP.all === 'real' ? ' (모두 실시간)' : ' (보강 포함)'}</p></div>`;
+      <span class="muted" style="margin-left:8px">막대·색 기준</span><div class="chips">${[['real', 'ALL 실시간(대면)'], ['any', 'ALL 보강 포함']].map(x => `<button class="chip ${RP.all === x[0] ? 'on' : ''}" onclick="RP.all='${x[0]}';render()">${x[1]}</button>`).join('')}</div></div>
+      <p class="muted" style="margin:8px 0 0;font-size:12.5px">실시간(대면) 출석률 = 대면으로 나온 횟수 ÷ 수업 수 · 보강 포함 출석률 = (대면 + 보강) ÷ 수업 수 · ALL = 이 기간 수업에 한 번도 빠지지 않은 사람 (대면만으로 / 보강을 섞어서)</p></div>`;
   if (!no) return ctrl + empty('이 기간에 올라온 출석이 없어요', '기간을 바꿔 보세요.');
   return ctrl + `<div class="rpwrap"><div id="rpSheet" class="rps">
     <div class="rh"><div><div class="kk">ALL 출석 현황</div><h2 contenteditable="true" spellcheck="false" onblur="RP.title=this.innerText.trim()">${esc(title)}</h2></div>
-      <div class="lg"><span class="muted">ALL 출석률 기준</span><span><i class="xg"></i>85% 이상 <b>${band.xg}</b></span><span><i class="xb"></i>75~85% <b>${band.xb}</b></span><span><i class="xo"></i>60~75% <b>${band.xo}</b></span><span><i class="xr"></i>60% 미만 <b>${band.xr}</b></span></div></div>
-    <div class="kp6"><div><span>기수수</span><b>${all.cs.size}</b></div><div><span>재적</span><b>${all.reg}</b></div><div class="hl"><span>평균출석 인원</span><b>${Math.round(all.avgN)}</b></div><div class="hl"><span>평균출석 출석률</span><b>${pct(tar)}</b></div><div><span>ALL 출석 인원</span><b>${all.all}</b></div><div class="dk"><span>ALL 출석률</span><b>${pct(tal)}</b></div></div>
-    <table class="rt"><thead><tr><th rowspan="2" class="no">번호</th>${gl[0] ? `<th rowspan="2">${gl[0]}</th>` : ''}<th rowspan="2">${gl[1]}</th><th rowspan="2">기수수</th><th rowspan="2">재적</th><th colspan="2" class="h2">평균출석</th><th colspan="3">ALL 출석</th></tr>
-      <tr><th class="h2">출석률</th><th class="h2">인원</th><th colspan="2">출석률</th><th>인원</th></tr></thead>
+      <div class="lg"><span class="muted">${useR ? 'ALL 대면' : 'ALL 보강 포함'} 출석률 기준</span><span><i class="xg"></i>85% 이상 <b>${band.xg}</b></span><span><i class="xb"></i>75~85% <b>${band.xb}</b></span><span><i class="xo"></i>60~75% <b>${band.xo}</b></span><span><i class="xr"></i>60% 미만 <b>${band.xr}</b></span></div></div>
+    <div class="kp6 k7"><div><span>재적</span><b>${all.reg}</b></div><div><span>평균출석 인원</span><b>${Math.round(all.avgN)}</b></div><div class="hl"><span>대면 출석률</span><b>${pct(trr)}</b></div><div class="hl"><span>보강 포함 출석률</span><b>${pct(tar)}</b></div><div><span>ALL 대면 인원</span><b>${all.allR}</b></div><div class="${useR ? 'dk' : ''}"><span>ALL 대면 출석률</span><b>${pct(talR)}</b></div><div class="${useR ? '' : 'dk'}"><span>ALL 보강 포함</span><b>${pct(tal)}<small> ${all.all}명</small></b></div></div>
+    <table class="rt"><thead><tr><th rowspan="2" class="no">번호</th>${gl[0] ? `<th rowspan="2">${gl[0]}</th>` : ''}<th rowspan="2">${gl[1]}</th>${showCs ? '<th rowspan="2">기수수</th>' : ''}<th rowspan="2">재적</th><th colspan="3" class="h2">평균출석</th><th colspan="3">ALL 실시간(대면)</th><th colspan="2" class="h3">ALL 보강 포함</th></tr>
+      <tr><th class="h2">대면</th><th class="h2">보강 포함</th><th class="h2">인원</th><th colspan="2">출석률</th><th>인원</th><th class="h3">출석률</th><th class="h3">인원</th></tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr><td colspan="${gl[0] ? 3 : 2}">합계</td><td class="n">${all.cs.size}</td><td class="n">${all.reg}</td><td class="av">${pct(tar)}</td><td class="avn">${Math.round(all.avgN)}</td><td class="rbar"><i style="width:${Math.round((tal || 0) * 100)}%"></i></td><td class="ar">${pct(tal)}</td><td class="n">${all.all}</td></tr></tfoot></table>
-    <div class="ft">논산 신학부 · ${lbl} · ${todayStr()} 작성</div>
+      <tfoot><tr><td colspan="${(gl[0] ? 3 : 2) + (showCs ? 1 : 0)}">합계</td><td class="n">${all.reg}</td><td class="av">${pct(trr)}</td><td class="av">${pct(tar)}</td><td class="avn">${Math.round(all.avgN)}</td><td class="rbar"><i style="width:${Math.round(((useR ? talR : tal) || 0) * 100)}%"></i></td><td class="ar">${pct(talR)}</td><td class="n">${all.allR}</td><td class="ar">${pct(tal)}</td><td class="n">${all.all}</td></tr></tfoot></table>
+    ${RP.per !== 'all' ? `<div class="rdist"><div class="rdh">출석 분포 <span>이 기간 수업을 어떻게 나왔는지 (사람 수)</span></div>${distHTML(all.rows)}</div>` : ''}
+    <div class="ft">논산 신학부 · ${lbl} · 기수 ${all.cs.size}개 · ${todayStr()} 작성</div>
   </div></div>`;
 };
 async function rpPng(btn) {
@@ -1438,7 +1457,7 @@ async function rpPng(btn) {
 /* ═════════ 주간 현황 ═════════ */
 let WK = { start: '', scope: 'cur', per: 'week' };
 const monOf = d => addDays(d, -((dow(d) + 6) % 7));
-const CAT = { all: ['전부 실시간', 'ok'], mk: ['보강 포함', 'warn'], ab: ['결석 포함', 'bad'], part: ['일부 미기록', ''], none: ['기록 없음', ''] };
+const CAT = { all: ['전부 실시간(대면)', 'ok'], mk: ['보강 섞임', 'warn'], ab: ['결석 있음', 'bad'], part: ['일부 미기록', ''], none: ['기록 없음', ''] };
 /** 기간 안의 수업과 수강생별 출석 */
 function periodData(n, from, to) {
   const ses = summaryOf(n).filter(x => x['날짜'] >= from && x['날짜'] <= to), nos = ses.map(x => num(x['회차'])), am = attendMap(n);
@@ -1462,8 +1481,25 @@ const resTxt = r => !r.list.length ? '-' : r.cat === 'all' ? `실시간 ${r.real
 function patternBar(o) {
   const n = Math.max(1, o.n), seg = (v, col, l) => v ? `<i style="width:${v / n * 100}%;background:${col}" data-tip="${l} ${v}명 (${pct(v / n)})"></i>` : '';
   const rest = o.n - o.all - o.mkN - o.abN;
-  return `<div class="pbar">${seg(o.all, 'var(--ok)', '전부 실시간')}${seg(o.mkN, 'var(--warn)', '보강 포함')}${seg(o.abN, 'var(--bad)', '결석 포함')}${seg(rest, '#cfd6e2', '미기록')}</div>
-    <div class="lgd" style="margin-top:6px"><span><i class="sq" style="background:var(--ok)"></i>전부 실시간 <b>${o.all}</b></span><span><i class="sq" style="background:var(--warn)"></i>보강 포함 <b>${o.mkN}</b></span><span><i class="sq" style="background:var(--bad)"></i>결석 포함 <b>${o.abN}</b></span>${rest ? `<span><i class="sq" style="background:#cfd6e2"></i>미기록 <b>${rest}</b></span>` : ''}</div>`;
+  return `<div class="pbar">${seg(o.all, 'var(--ok)', '전부 실시간(대면)')}${seg(o.mkN, 'var(--warn)', '보강 섞임')}${seg(o.abN, 'var(--bad)', '결석 있음')}${seg(rest, '#cfd6e2', '미기록')}</div>
+    <div class="lgd" style="margin-top:6px"><span><i class="sq" style="background:var(--ok)"></i>전부 실시간(대면) <b>${o.all}</b></span><span><i class="sq" style="background:var(--warn)"></i>보강 섞임(결석 없음) <b>${o.mkN}</b></span><span><i class="sq" style="background:var(--bad)"></i>결석 있음 <b>${o.abN}</b></span>${rest ? `<span><i class="sq" style="background:#cfd6e2"></i>미기록 <b>${rest}</b></span>` : ''}</div>`;
+}
+/** 출석 분포: 실시간·보강·결석 조합별 인원 (예: 실시간 3 / 실시간 2·보강 1 / 실시간 2·결석 1 …) */
+function distOf(rows) {
+  const m = {}; rows.forEach(r => { if (!r.list || !r.list.length) return; const key = [r.real, r.mk, r.ab, r.none].join('-'); (m[key] = m[key] || { real: r.real, mk: r.mk, ab: r.ab, none: r.none, ppl: [] }).ppl.push(r.st['이름']); });
+  return Object.values(m).sort((a, b) => a.ab - b.ab || a.none - b.none || b.real - a.real || b.mk - a.mk);
+}
+const patLabel = d => [d.real ? '실시간 ' + d.real : '', d.mk ? '보강 ' + d.mk : '', d.ab ? '결석 ' + d.ab : '', d.none ? '미기록 ' + d.none : ''].filter(Boolean).join(' · ') || '-';
+const patTone = d => d.ab ? 'bad' : d.none && !d.real && !d.mk ? 'none' : d.mk ? 'warn' : d.none ? 'none' : 'ok';
+function distHTML(rows, opt) {
+  opt = opt || {}; const ds = distOf(rows), n = ds.reduce((a, d) => a + d.ppl.length, 0); if (!n) return '';
+  const mx = Math.max(...ds.map(d => d.ppl.length));
+  return `<div class="dist">${ds.map(d => { const t = patTone(d);
+    return `<div class="dr" data-tip="<b>${esc(patLabel(d))}</b> · ${d.ppl.length}명<br>${d.ppl.map(esc).join(', ')}"><span class="pat">${'<i class="실시간"></i>'.repeat(d.real)}${'<i class="보강"></i>'.repeat(d.mk)}${'<i class="결석"></i>'.repeat(d.ab)}${'<i class="none"></i>'.repeat(d.none)}</span><span class="lb">${esc(patLabel(d))}</span><div class="tr"><i class="${t}" style="width:${d.ppl.length / mx * 100}%"></i></div><b>${d.ppl.length}명</b><span class="pc">${pct(d.ppl.length / n)}</span>${opt.names ? `<span class="nm">${d.ppl.map(esc).join(', ')}</span>` : ''}</div>`; }).join('')}</div>`;
+}
+/** 실시간(대면) 출석률 · 보강 포함 출석률 두 개를 나란히 */
+function twoRates(o, po) {
+  return `<div class="tw2"><div><span>실시간(대면) 출석률</span><b>${pct(o.realR)}</b>${po ? dlt(o.realR, po.realR, 'p') : ''}<small>대면 ${o.real}회 / 수업 ${o.rec}회</small></div><div><span>보강 포함 출석률</span><b>${pct(o.rate)}</b>${po ? dlt(o.rate, po.rate, 'p') : ''}<small>대면 ${o.real} + 보강 ${o.mk}</small></div><div><span>결석률</span><b style="color:${o.ab ? 'var(--bad)' : ''}">${pct(o.abR)}</b>${po ? dlt(o.abR, po.abR, 'p').replace('dl up', 'dl tmp').replace('dl dn', 'dl up').replace('dl tmp', 'dl dn') : ''}<small>결석 ${o.ab}회</small></div></div>`;
 }
 function wkCohorts() { if (isCo()) return [cohortOf(ROLE.cohort) || { '기수명': ROLE.cohort }]; return WK.scope === 'all' ? cohorts().filter(c => c['상태'] !== '종강') : [cohortOf(curCohort()) || { '기수명': curCohort() }].filter(c => c['기수명']); }
 PAGES.weekly = () => {
@@ -1482,9 +1518,11 @@ PAGES.weekly = () => {
     const ord = { ab: 0, mk: 1, part: 2, none: 3, all: 4 }, rows = d.rows.slice().sort((a, b) => ord[a.cat] - ord[b.cat] || String(a.st['담당전도사'] || '').localeCompare(String(b.st['담당전도사'] || '')) || String(a.st['이름']).localeCompare(String(b.st['이름'])));
     return `<div class="card mt wk" style="--c:${col}">
       <div class="row"><i class="dot"></i><b style="font-size:17px">${esc(n)}</b><span class="b blue">${from === monOf(todayStr()) ? '이번 주' : '이 주'} 수업 ${d.nos.length}회</span><span class="sp"></span>
-        <div class="wkk"><span>주간 출석률</span><b>${pct(o.rate)}</b>${dlt(o.rate, po.rate, 'p')}</div><div class="wkk"><span>전부 실시간</span><b>${o.all}<small>/${o.n}명</small></b>${dlt(o.all, po.all, '명')}</div></div>
+        <div class="wkk"><span>전부 실시간(대면)</span><b>${o.all}<small>/${o.n}명</small></b>${dlt(o.all, po.all, '명')}</div></div>
       <div class="muted" style="margin:8px 0 12px">${d.ses.map(x => `${num(x['회차'])}회차 ${md(x['날짜'])}(${DOW[dow(x['날짜'])]})${d.titles[num(x['회차'])] ? ' ' + esc(d.titles[num(x['회차'])]) : ''}`).join(' · ')}</div>
+      ${twoRates(o, pd.nos.length ? po : null)}
       ${patternBar(o)}
+      <div class="sec" style="margin:16px 0 8px">출석 분포 <span class="muted" style="font-weight:500">수업 ${d.nos.length}번을 어떻게 나왔는지 · 막대에 마우스를 올리면 이름</span></div>${distHTML(d.rows)}
       <div class="tw mt" style="box-shadow:none"><table><tr><th>이름</th><th class="hm">담당전도사</th><th class="hm">분반</th>${d.nos.map(no => `<th class="c">${no}회<div style="font-weight:500;font-size:10px">${md(d.ses.find(x => num(x['회차']) === no)['날짜'])}</div></th>`).join('')}<th>한 주 결과</th></tr>
       ${rows.map(r => `<tr><td><b>${esc(r.st['이름'])}</b></td><td class="hm">${esc(r.st['담당전도사'] || '-')}</td><td class="hm">${esc(r.st['분반'] || '-')}</td>${r.list.map(v => `<td class="c" style="padding:6px"><span class="cell ${v || 'none'}" style="cursor:default">${v ? SYM[v] : '·'}</span></td>`).join('')}<td><span class="b ${CAT[r.cat] ? CAT[r.cat][1] : ''}">${esc(resTxt(r))}</span></td></tr>`).join('')}</table></div>
     </div>`;
@@ -1505,17 +1543,18 @@ function wkGroup(cs, from, to) {
     const rows = Object.keys(g).map(k => ({ k, o: sumRows(g[k]), p: pg[k] ? sumRows(pg[k]) : null })).filter(x => x.o.rec).sort((x, y) => y.o.rate - x.o.rate);
     if (!rows.length) return `<div class="card mt"><h3>${title}</h3><div class="muted">이 기간에 출석 기록이 없어요</div></div>`;
     const best = rows[0].o.rate, worst = rows[rows.length - 1].o.rate;
-    return `<div class="card mt"><h3>${title} <small>출석률 높은 순 · ${per === 'all' ? '기수 전체' : '지난 기간 대비 증감'}</small></h3><div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>${title.replace('별', '')}</th><th class="c">인원</th><th class="c">출석률</th><th class="c">실시간</th><th class="c">보강</th><th class="c">결석</th><th class="c">${per === 'week' ? '전부 실시간' : '결석 없는 사람'}</th><th style="min-width:160px">${per === 'week' ? '한 주 결과' : '실시간 · 보강 · 결석'}</th></tr>
+    return `<div class="card mt"><h3>${title} <small>출석률 높은 순 · ${per === 'all' ? '기수 전체' : '지난 기간 대비 증감'}</small></h3><div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>${title.replace('별', '')}</th><th class="c">인원</th><th class="c">보강 포함<br>출석률</th><th class="c">실시간(대면)<br>출석률</th><th class="c">보강</th><th class="c">결석</th><th class="c">${per === 'week' ? '전부 대면' : '결석 없는 사람'}</th><th style="min-width:160px">${per === 'week' ? '한 주 결과' : '실시간 · 보강 · 결석'}</th></tr>
       ${rows.map(x => { const o = x.o, clean = per === 'week' ? o.all : g[x.k].filter(r => !r.ab && (r.real + r.mk)).length;
         return `<tr><td><b>${esc(x.k)}</b>${rows.length > 1 && o.rate === worst && best - worst >= .05 ? ' <span class="b bad">가장 낮음</span>' : ''}</td><td class="c">${o.n}</td>
         <td class="c"><span class="hv ${TONE(o.rate, .85, .75)}">${pct(o.rate)}</span>${x.p && x.p.rec ? '<div>' + dlt(o.rate, x.p.rate, 'p') + '</div>' : ''}</td>
-        <td class="c">${pct(o.realR)}</td><td class="c">${pct(o.mkR)}</td><td class="c" style="color:${o.ab ? 'var(--bad)' : ''}">${pct(o.abR)}</td><td class="c"><b>${clean}</b><span class="muted">/${o.n}</span></td>
+        <td class="c"><span class="hv ${TONE(o.realR, .8, .65)}">${pct(o.realR)}</span>${x.p && x.p.rec ? '<div>' + dlt(o.realR, x.p.realR, 'p') + '</div>' : ''}</td><td class="c">${pct(o.mkR)}</td><td class="c" style="color:${o.ab ? 'var(--bad)' : ''}">${pct(o.abR)}</td><td class="c"><b>${clean}</b><span class="muted">/${o.n}</span></td>
         <td>${per === 'week' ? `<div class="pbar sm">${['all', 'mk', 'ab'].map(k => { const v = k === 'all' ? o.all : k === 'mk' ? o.mkN : o.abN; return v ? `<i style="width:${v / o.n * 100}%;background:var(--${k === 'all' ? 'ok' : k === 'mk' ? 'warn' : 'bad'})" data-tip="${CAT[k][0]} ${v}명"></i>` : ''; }).join('')}</div>` : `<div class="pbar sm"><i style="width:${(o.realR || 0) * 100}%;background:var(--ok)" data-tip="실시간 ${pct(o.realR)}"></i><i style="width:${(o.mkR || 0) * 100}%;background:var(--warn)" data-tip="보강 ${pct(o.mkR)}"></i><i style="width:${(o.abR || 0) * 100}%;background:var(--bad)" data-tip="결석 ${pct(o.abR)}"></i></div>`}</td></tr>`; }).join('')}</table></div></div>`;
   };
   return `<div class="chips" style="margin-bottom:4px">${[['week', '이번 주'], ['4w', '최근 4주'], ['all', '기수 전체']].map(x => `<button class="chip ${per === x[0] ? 'on' : ''}" onclick="WK.per='${x[0]}';render()">${x[1]}</button>`).join('')}<span class="muted" style="align-self:center;margin-left:6px">${per === 'all' ? '기수 시작부터 지금까지' : md(a) + ' ~ ' + md(b < today ? b : b)}</span></div>
     ${table('전도사별', r => r.st['담당전도사'] || '(담당 미지정)')}
     ${table('분반별', r => (multi ? r.co + ' · ' : '') + (r.st['분반'] || '(분반 미지정)'))}
     ${multi ? table('기수별', r => r.co) : ''}
+    ${per === 'week' && cur.length ? `<div class="card mt"><h3>출석 분포 <small>이 주 수업을 어떻게 나왔는지 · 전체 ${cur.length}명</small></h3>${distHTML(cur)}</div>` : ''}
     <p class="muted" style="margin-top:12px">분반은 수강생 정보에서 정해요. 전도사·분반이 비어 있으면 「미지정」으로 묶여요.</p>`;
 }
 /** 최근 8주: 기수별 주간 출석률 · 전부 실시간 비율 */
