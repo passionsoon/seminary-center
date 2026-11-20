@@ -475,6 +475,33 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
   .svy dl{grid-template-columns:1fr}
   input,select,textarea{font-size:16px}
 }
+
+/* 출석 보고서 */
+.rpctl .row{gap:8px}.rpctl input[type=date]{padding:6px 10px}
+.rpwrap{overflow-x:auto;margin-top:14px;-webkit-overflow-scrolling:touch}
+.rps{width:1000px;margin:0 auto;background:#fff;color:#14213d;padding:34px 30px 26px;border-radius:6px;box-shadow:var(--sh);font-family:"Pretendard Variable",Pretendard,sans-serif;letter-spacing:-.01em}
+.rps .rh{display:flex;align-items:flex-end;gap:16px;margin-bottom:16px}.rps .kk{color:#2f6bd8;font-size:13px;font-weight:700}
+.rps h2{margin:4px 0 0;font-size:27px;font-weight:800;outline:none;border-radius:6px}.rps h2:focus{background:#eef3ff}
+.rps .lg{margin-left:auto;display:flex;gap:12px;font-size:12.5px;align-items:center;flex-wrap:wrap}.rps .lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.rps .xg{--x:#1f9d6b}.rps .xb{--x:#2f6bd8}.rps .xo{--x:#e09a17}.rps .xr{--x:#d64545}.rps .lg i{background:var(--x)}
+.rps .kp6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+.rps .kp6>div{border:1px solid #dfe4ec;border-radius:4px;padding:12px 14px}.rps .kp6 span{display:block;font-size:12.5px;color:#55627a}.rps .kp6 b{font-size:25px;font-weight:800}
+.rps .kp6 .hl{background:#e8efff;border-color:#c9d8fb}.rps .kp6 .dk{background:#1c2b4f;border-color:#1c2b4f;color:#fff}.rps .kp6 .dk span{color:#c5d0e6}
+.rps .rt{width:100%;border-collapse:collapse;font-size:14px}
+.rps .rt th{position:static;background:#1c2b4f;color:#fff;font-weight:700;font-size:13px;text-align:center;padding:9px 8px;border:1px solid #2c3d66;white-space:nowrap}.rps .rt th.h2{background:#2a3d6c}
+.rps .rt td{border-bottom:1px solid #e6eaf1;padding:8px 10px;white-space:nowrap}.rps .rt tr.gs td{border-top:1.5px solid #c7cfdc}
+.rps .rt td.no{color:#9aa5b8;text-align:center;width:40px;font-size:12.5px}
+.rps .rt td.grp{text-align:center;background:#f6f8fb;border-right:1px solid #e6eaf1;min-width:130px}.rps .rt td.grp b{display:block;font-size:14.5px}.rps .rt td.grp small{color:#7b879b;font-size:11.5px}
+.rps .rt td.it{font-weight:600;padding-left:14px}
+.rps .rt td.n,.rps .rt td.avn{text-align:right}
+.rps .rt td.av{text-align:right;font-weight:700;background:#f2f6ff;color:var(--x,#14213d)}.rps .rt td.avn{background:#f2f6ff}
+.rps .rt td.rbar{width:110px;padding-left:16px}.rps .rt td.rbar i{display:block;height:8px;border-radius:2px;background:var(--x,#2f6bd8);box-shadow:inset 0 0 0 0}
+.rps .rt td.rbar{background:linear-gradient(#eef1f6,#eef1f6) no-repeat 16px 50%/calc(100% - 26px) 8px}
+.rps .rt td.ar{text-align:right;font-weight:700;color:var(--x,#14213d);width:80px}
+.rps .rt tfoot td{background:#1c2b4f!important;color:#fff!important;font-weight:800;border:0;padding:11px 10px;font-size:15px}.rps .rt tfoot td:first-child{text-align:center}
+.rps .rt tfoot td.rbar{background:#1c2b4f linear-gradient(#41547f,#41547f) no-repeat 16px 50%/calc(100% - 26px) 8px!important}.rps .rt tfoot td.rbar i{background:#8fb1ff}
+.rps .ft{margin-top:12px;font-size:11.5px;color:#98a2b3;text-align:right}
+@media print{.rpwrap{overflow:visible;margin:0}.rps{box-shadow:none;width:100%;padding:0}.rps .rt th,.rps .kp6 .dk,.rps .rt tfoot td{-webkit-print-color-adjust:exact;print-color-adjust:exact}.rps *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
 <body>
@@ -538,11 +565,11 @@ const IC = {
 };
 const icon = (k, sz) => `<svg class="i" width="${sz || 18}" height="${sz || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ''}</svg>`;
 const NAV = [
-  ['운영', [['home', 'home', '대시보드'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부']]],
+  ['운영', [['home', 'home', '대시보드'], ['weekly', 'week', '주간 현황'], ['wreport', 'print', '출석 보고서'], ['book', 'cal', '출석부']]],
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
   ['분석', [['analysis', 'chart', '분석'], ['settings', 'gear', '설정']]]
 ];
-const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['students', 'users', '수강생'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정']]]];
+const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['students', 'users', '수강생'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정'], ['wreport', 'print', '출석 보고서']]]];
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
@@ -752,13 +779,13 @@ window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); 
 function route() {
   const h = decodeURIComponent(location.hash.slice(1) || 'home').split('/');
   ROUTE = { page: h[0], arg: h[1], tab: h[2] };
-  if (isCo() && !['attend', 'students', 'weekly', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
+  if (isCo() && !['attend', 'students', 'weekly', 'wreport', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
   if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   closeAll(); vtip(null, '');
   render(); window.scrollTo(0, 0);
 }
-const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석', weekly: '주간 현황' };
+const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석', weekly: '주간 현황', wreport: '출석 보고서' };
 function render() {
   if (!DB) return;
   MEMO = {}; paintQueue();
@@ -1321,6 +1348,91 @@ async function fuSave(id, makeup, btn) {
   const sm = summaryOf(a['기수명']).find(x => num(x['회차']) === num(a['회차'])) || {};
   const r = await saveAttendance({ cohort: a['기수명'], session: num(a['회차']), date: a['날짜'], course: sm['과정'] || '', records: [rec] }, btn, { queue: true });
   if (r) { closeDrawer(); render(); if (!r.queued) toast(makeup ? a['이름'] + ' 보강 완료' : '연락 기록을 저장했어요'); }
+}
+
+/* ═════════ 출석 보고서 (표 · 고화질 이미지) ═════════ */
+let RP = { per: 'week', from: '', to: '', grp: 'ev', all: 'any', title: '' };
+const BAND = v => v === '' ? '' : v >= .85 ? 'xg' : v >= .75 ? 'xb' : v >= .6 ? 'xo' : 'xr';
+function rpRange() {
+  const t = todayStr(), mon = monOf(t);
+  if (RP.per === 'week') return [mon, addDays(mon, 6)];
+  if (RP.per === 'last') return [addDays(mon, -7), addDays(mon, -1)];
+  if (RP.per === 'month') return [t.slice(0, 8) + '01', t];
+  if (RP.per === 'all') return ['0000-00-00', '9999-12-31'];
+  return [RP.from || mon, RP.to || t];
+}
+function rpLabel(a, b) {
+  if (RP.per === 'all') return '기수 전체';
+  const wk = d => { const m = Number(d.slice(5, 7)), first = d.slice(0, 8) + '01', n = Math.floor((Number(d.slice(8)) + ((dow(first) + 6) % 7) - 1) / 7) + 1; return `${m}월 ${n}주차`; };
+  if (RP.per === 'week' || RP.per === 'last') return `${wk(a)} (${md(a)}~${md(b)})`;
+  if (RP.per === 'month') return `${Number(a.slice(5, 7))}월 (${md(a)}~${md(b)})`;
+  return `${md(a)} ~ ${md(b)}`;
+}
+/** 보고서 숫자: 그룹(기수/전도사) → 항목(전도사/분반) */
+function rpData(a, b) {
+  const cs = isCo() ? [cohortOf(ROLE.cohort) || { '기수명': ROLE.cohort }] : cohorts().filter(c => c['상태'] !== '종강' || RP.per === 'all');
+  const items = {};
+  cs.forEach(c => {
+    const n = String(c['기수명']), d = periodData(n, a, b), k = d.nos.length; if (!k) return;
+    d.rows.forEach(r => {
+      const ev = r.st['담당전도사'] || '(담당 미지정)', ban = r.st['분반'] || '(분반 미지정)';
+      const [g, it] = RP.grp === 'ban' ? [n, ban] : RP.grp === 'evban' ? [ev, ban] : RP.grp === 'cohort' ? ['전체', n] : [n, ev];
+      const key = g + '\u0001' + it, o = items[key] = items[key] || { g, it, cs: new Set(), reg: 0, att: 0, exp: 0, avgN: 0, all: 0 };
+      const at = r.real + r.mk, ok = RP.all === 'real' ? r.real === k : at === k;
+      o.cs.add(n); o.reg++; o.att += at; o.exp += k; o.avgN += at / k; if (ok) o.all++;
+    });
+  });
+  const groups = {}; Object.values(items).forEach(o => (groups[o.g] = groups[o.g] || []).push(o));
+  const order = Object.keys(groups).sort((x, y) => { const cx = cohortOf(x), cy = cohortOf(y); return cx && cy ? String(cx['개강일']).localeCompare(String(cy['개강일'])) : x.localeCompare(y); });
+  order.forEach(g => groups[g].sort((x, y) => y.reg - x.reg || x.it.localeCompare(y.it)));
+  return { order, groups, cs };
+}
+PAGES.wreport = () => {
+  const [a, b] = rpRange(), D = rpData(a, b), lbl = rpLabel(a, b);
+  const gl = { ev: ['기수', '담당전도사', '전도사 ', '명'], ban: ['기수', '분반', '', '개 반'], evban: ['담당전도사', '분반', '', '개 반'], cohort: ['', '기수', '', '개 기수'] }[RP.grp];
+  const title = RP.title || `${lbl} 출석 현황`;
+  let all = { reg: 0, att: 0, exp: 0, avgN: 0, all: 0, cs: new Set() }, rows = '', no = 0;
+  const band = { xg: 0, xb: 0, xo: 0, xr: 0 };
+  D.order.forEach(g => {
+    const list = D.groups[g];
+    list.forEach((o, i) => {
+      no++; ['reg', 'att', 'exp', 'avgN', 'all'].forEach(k => all[k] += o[k]); o.cs.forEach(x => all.cs.add(x));
+      const ar = o.exp ? o.att / o.exp : '', alr = o.reg ? o.all / o.reg : '', bd = BAND(alr); if (bd) band[bd]++;
+      rows += `<tr class="${i === 0 ? 'gs' : ''}"><td class="no">${no}</td>${i === 0 && gl[0] ? `<td class="grp" rowspan="${list.length}"><b>${esc(g)}</b><small>${gl[2]}${list.length}${gl[3]}</small></td>` : ''}<td class="it">${esc(o.it)}</td><td class="n">${o.cs.size}</td><td class="n">${o.reg}</td>
+        <td class="av ${BAND(ar)}">${pct(ar)}</td><td class="avn">${Math.round(o.avgN)}</td>
+        <td class="rbar"><i class="${bd}" style="width:${Math.round((alr || 0) * 100)}%"></i></td><td class="ar ${bd}">${pct(alr)}</td><td class="n">${o.all}</td></tr>`;
+    });
+  });
+  const tar = all.exp ? all.att / all.exp : '', tal = all.reg ? all.all / all.reg : '';
+  const ctrl = `<div class="ph noprint"><div><h1>출석 보고서</h1><p>기간과 묶는 방법을 고르면 표가 자동으로 만들어져요 · 제목은 눌러서 고칠 수 있어요</p></div>
+    <div class="acts"><button class="btn" onclick="window.print()">${icon('print', 16)}인쇄 · PDF</button><button class="btn p" onclick="rpPng(this)">${icon('upload', 16)}고화질 이미지 저장</button></div></div>
+    <div class="card noprint rpctl"><div class="row"><span class="muted">기간</span><div class="chips">${[['week', '이번 주'], ['last', '지난주'], ['month', '이번 달'], ['all', '기수 전체'], ['custom', '직접']].map(x => `<button class="chip ${RP.per === x[0] ? 'on' : ''}" onclick="RP.per='${x[0]}';RP.title='';render()">${x[1]}</button>`).join('')}</div>
+      ${RP.per === 'custom' ? `<input type="date" value="${a}" onchange="RP.from=this.value;RP.title='';render()"><span>~</span><input type="date" value="${b}" onchange="RP.to=this.value;RP.title='';render()">` : ''}</div>
+      <div class="row mt"><span class="muted">묶기</span><div class="chips">${(isCo() ? [['ev', '전도사별'], ['ban', '분반별']] : [['ev', '기수 › 전도사'], ['ban', '기수 › 분반'], ['evban', '전도사 › 분반'], ['cohort', '기수별']]).map(x => `<button class="chip ${RP.grp === x[0] ? 'on' : ''}" onclick="RP.grp='${x[0]}';render()">${x[1]}</button>`).join('')}</div>
+      <span class="muted" style="margin-left:8px">ALL 출석</span><div class="chips">${[['any', '보강 포함'], ['real', '실시간만']].map(x => `<button class="chip ${RP.all === x[0] ? 'on' : ''}" onclick="RP.all='${x[0]}';render()">${x[1]}</button>`).join('')}</div></div>
+      <p class="muted" style="margin:8px 0 0;font-size:12.5px">평균출석 = 수업마다 출석한 인원의 평균 · ALL 출석 = 이 기간 수업에 한 번도 빠지지 않은 사람${RP.all === 'real' ? ' (모두 실시간)' : ' (보강 포함)'}</p></div>`;
+  if (!no) return ctrl + empty('이 기간에 올라온 출석이 없어요', '기간을 바꿔 보세요.');
+  return ctrl + `<div class="rpwrap"><div id="rpSheet" class="rps">
+    <div class="rh"><div><div class="kk">ALL 출석 현황</div><h2 contenteditable="true" spellcheck="false" onblur="RP.title=this.innerText.trim()">${esc(title)}</h2></div>
+      <div class="lg"><span class="muted">ALL 출석률 기준</span><span><i class="xg"></i>85% 이상 <b>${band.xg}</b></span><span><i class="xb"></i>75~85% <b>${band.xb}</b></span><span><i class="xo"></i>60~75% <b>${band.xo}</b></span><span><i class="xr"></i>60% 미만 <b>${band.xr}</b></span></div></div>
+    <div class="kp6"><div><span>기수수</span><b>${all.cs.size}</b></div><div><span>재적</span><b>${all.reg}</b></div><div class="hl"><span>평균출석 인원</span><b>${Math.round(all.avgN)}</b></div><div class="hl"><span>평균출석 출석률</span><b>${pct(tar)}</b></div><div><span>ALL 출석 인원</span><b>${all.all}</b></div><div class="dk"><span>ALL 출석률</span><b>${pct(tal)}</b></div></div>
+    <table class="rt"><thead><tr><th rowspan="2" class="no">번호</th>${gl[0] ? `<th rowspan="2">${gl[0]}</th>` : ''}<th rowspan="2">${gl[1]}</th><th rowspan="2">기수수</th><th rowspan="2">재적</th><th colspan="2" class="h2">평균출석</th><th colspan="3">ALL 출석</th></tr>
+      <tr><th class="h2">출석률</th><th class="h2">인원</th><th colspan="2">출석률</th><th>인원</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td colspan="${gl[0] ? 3 : 2}">합계</td><td class="n">${all.cs.size}</td><td class="n">${all.reg}</td><td class="av">${pct(tar)}</td><td class="avn">${Math.round(all.avgN)}</td><td class="rbar"><i style="width:${Math.round((tal || 0) * 100)}%"></i></td><td class="ar">${pct(tal)}</td><td class="n">${all.all}</td></tr></tfoot></table>
+    <div class="ft">논산 신학부 · ${lbl} · ${todayStr()} 작성</div>
+  </div></div>`;
+};
+async function rpPng(btn) {
+  const el = $('#rpSheet'); if (!el) return toast('보고서가 아직 없어요', true);
+  busy(btn, true);
+  try {
+    if (!window.html2canvas) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('이미지 도구를 불러오지 못했어요. 인터넷 연결을 확인하세요.')); document.head.appendChild(sc); });
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const cv = await html2canvas(el, { scale: 3, backgroundColor: '#ffffff', useCORS: true, windowWidth: Math.max(1100, el.scrollWidth + 40) });
+    const name = (el.querySelector('h2').innerText.trim() || '출석 보고서').replace(/[\\/:*?"<>|]/g, '') + '.png';
+    cv.toBlob(bl => { const a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('고화질 이미지를 저장했어요 (' + cv.width + '×' + cv.height + ')'); }, 'image/png');
+  } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
 
 /* ═════════ 주간 현황 ═════════ */
