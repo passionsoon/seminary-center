@@ -212,7 +212,7 @@ td input.inl:focus,td select.inl:focus{border-color:var(--pri);background:#fff}
 .ccard .mini span{display:block;font-size:12px;color:var(--sub)}.ccard .mini b{font-size:17px}
 .alert{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--line2);color:var(--ink);font-weight:600;font-size:14px}
 .alert+.alert{margin-top:8px}
-.alert.warn{background:var(--warn-l)}.alert.bad{background:var(--bad-l)}.alert.blue{background:var(--pri-l)}
+.alert.warn{background:var(--warn-l)}.alert.bad{background:var(--bad-l)}.alert.blue{background:var(--pri-l)}.alert.ok{background:var(--ok-l,#e3f7ec);border-color:#bfe9cf;flex-wrap:wrap}
 .alert .go{margin-left:auto;color:var(--sub)}
 /* 조직도 */
 .org ul{padding-top:20px;position:relative;display:flex;justify-content:center;margin:0;padding-left:0}
@@ -304,6 +304,10 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .svy{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:8px}.svy summary{cursor:pointer;font-weight:700}.svy dl{margin:8px 0 0;display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13.5px}.svy dt{color:var(--ink2);font-weight:600}.svy dd{margin:0;white-space:normal;word-break:keep-all}@media(max-width:700px){.svy dl{grid-template-columns:1fr}.svy dd{margin-bottom:6px}}
 .athead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}.athead .no{background:var(--pri);color:#fff;font-weight:800;border-radius:8px;padding:3px 10px;font-size:14px}.athead b{font-size:17px}
 th .bt{font-weight:500;font-size:10px;color:var(--ink2);max-width:72px;margin:2px auto 0;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fx{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}.fx.end{-webkit-mask-image:none;mask-image:none}
+.bdstrip{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.bdstrip>b{font-size:14.5px;margin-right:4px}.bdstrip>b small{color:var(--sub);font-weight:500;font-size:12px;margin-left:4px}
+.bdc{display:inline-flex;align-items:baseline;gap:5px;padding:5px 11px;border-radius:999px;background:#fdecf3;color:#a3245e;font-weight:600;font-size:13.5px}.bdc small{font-weight:500;opacity:.8;font-size:12px}.bdc.st{background:#efeafd;color:#5b3fb5}
+.bdc.today{background:linear-gradient(135deg,#ff7aa8,#c2185b);color:#fff;box-shadow:0 4px 12px rgba(194,24,91,.3)}.bdc em{font-style:normal;font-size:11px;background:rgba(255,255,255,.25);padding:1px 6px;border-radius:6px}
 .cal .bd{font-size:11.5px;line-height:1.3;padding:2px 6px;border-radius:6px;background:#fdecf3;color:#a3245e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.cal .bd.st{background:#efeafd;color:#5b3fb5}
 .cal .dh{display:flex;align-items:center;gap:4px;min-width:0}.cal .hn{font-size:10.5px;font-weight:600;color:var(--bad);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal .cd.hol{background:#fff7f7}.cal .cd.hol.out{background:#fdf9f9}
@@ -639,6 +643,16 @@ function cohortBirthdays(n) {
   DB.staff.filter(s => names.has(String(s['이름'])) && s['상태'] !== '종료').forEach(s => { const b = birthMD(s); if (b) out.push(Object.assign({ name: s['이름'], kind: '사명자' }, b)); });
   return out;
 }
+/** 앞으로 며칠 안의 생일 (여러 기수에 겹치는 사명자는 한 번만) */
+function upcomingBdays(ns, days) {
+  const t = todayStr(), e = addDays(t, days), seen = new Set(), out = [];
+  ns.forEach(n => { const m = birthdayMap(n, t, e); Object.keys(m).forEach(d => m[d].forEach(b => { const k = b.name + '|' + d; if (seen.has(k)) return; seen.add(k); out.push({ d, b, n }); })); });
+  return out.sort((x, y) => x.d.localeCompare(y.d));
+}
+function bdStrip(list, showC, label) {
+  if (!list.length) return '';
+  return `<div class="bdstrip"><b>🎂 ${label || '이번 주 생일'}</b>${list.map(x => `<span class="bdc ${x.b.kind === '사명자' ? 'st' : ''} ${x.d === todayStr() ? 'today' : ''}" data-tip="${esc(x.b.name)} · ${x.b.kind}${showC ? ' · ' + esc(x.n) : ''}<br>${bdayLabel(x.b)}">${x.d === todayStr() ? '<em>오늘</em>' : ''}${esc(x.b.name)}<small>${md(x.d)}(${DOW[dow(x.d)]})${x.b.lunar ? ' 음력' : ''}</small></span>`).join('')}</div>`;
+}
 function birthdayMap(n, from, to) {
   const map = {}, ys = new Set([from.slice(0, 4), to.slice(0, 4)].map(Number));
   cohortBirthdays(n).forEach(b => ys.forEach(y => bdaysInYear(b, y).forEach(d => { if (d >= from && d <= to) (map[d] = map[d] || []).push(b); })));
@@ -825,10 +839,19 @@ function render() {
   document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && (isCo() ? CO_NAV[0][1].slice(4).some(m => m[0] === p) : !MOBILE_NAV.some(m => m[0] === p)))));
   $('#topTitle').textContent = (isCo() ? ROLE.cohort + ' · ' : '') + (TITLES[p] || '');
   const f = PAGES[p] || PAGES.home;
-  try { $('#view').innerHTML = f(); (AFTER[p] || (() => { }))(); }
+  try { $('#view').innerHTML = f(); (AFTER[p] || (() => { }))(); scrollHints(); }
   catch (e) { console.error(e); $('#view').innerHTML = `<div class="card">화면 오류: ${esc(e.message)}</div>`; }
 }
 const AFTER = {};
+/** 옆으로 넘기는 탭·칩: 더 있으면 끝을 흐리게, 선택된 것은 보이게 */
+function scrollHints() {
+  document.querySelectorAll('#view .tabs, #view .chips').forEach(el => {
+    if (el.scrollWidth <= el.clientWidth + 2) return;
+    const upd = () => el.classList.toggle('end', el.scrollLeft + el.clientWidth >= el.scrollWidth - 4);
+    el.classList.add('fx'); upd(); el.addEventListener('scroll', upd, { passive: true });
+    const on = el.querySelector('.on'); if (on && on.offsetLeft + on.offsetWidth > el.clientWidth) el.scrollLeft = on.offsetLeft - 24;
+  });
+}
 function go(h) { location.hash = h; }
 
 /* ═════════ 기수 선택 ═════════ */
@@ -1100,7 +1123,7 @@ PAGES.home = () => {
     const n = String(c['기수명']), e = encodeURIComponent(n);
     const ses = sessionsOf(n).find(s => s['날짜'] === today && s['상태'] !== '휴강');
     if (ses && !summaryOf(n).some(s => num(s['회차']) === num(ses['회차']))) alerts.push(['blue', `${esc(n)} · 오늘 ${ses['회차']}회차 출석이 아직 안 올라왔어요`, `attend/${e}/${ses['회차']}`]);
-    const ms = missedSessions(n); if (ms.length) alerts.push(['bad', `${esc(n)} · 지난 회차 ${ms.length}회 출석이 비어 있어요 (${ms.slice(0, 3).map(x => x['회차'] + '회차').join(', ')})`, `attend/${e}/${ms[0]['회차']}`]);
+    const ms = missedSessions(n); if (ms.length) alerts.push(['bad', `${esc(n)} · 지난 회차 ${ms.length}회 출석이 비어 있어요 (${ms.slice(0, 3).map(x => x['회차'] + '회차').join(', ')}${ms.length > 3 ? ` 외 ${ms.length - 3}회` : ''})`, `attend/${e}/${ms[0]['회차']}`]);
   });
   const kp = (tone, ic, l, v, u, d, href) => `<${href ? `a href="#${href}"` : 'div'} class="card kp ${tone}"><span class="ic">${icon(ic, 18)}</span><div class="l">${l}</div><div class="v">${v}<small>${u}</small></div><div class="d">${d || '&nbsp;'}</div></${href ? 'a' : 'div'}>`;
   return `<div class="ph"><div><h1>종합 현황</h1><p>${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })} · 모든 기수를 한눈에</p></div><div class="acts"><a class="btn" href="#analysis">${icon('trend', 16)}분석 보기</a></div></div>
@@ -1112,6 +1135,7 @@ PAGES.home = () => {
     ${kp(missAll ? 't-red' : 't-gray', 'cal', '출석 미입력', missAll, '회', missAll ? '지난 수업 중 비어 있음' : '빠짐없이 입력됨', '')}
   </div>
   ${alerts.length ? `<div class="card mt"><h3>오늘 확인할 일</h3>${alerts.map(a => `<a class="alert ${a[0]}" href="#${a[2]}">${a[1]}<span class="go">›</span></a>`).join('')}</div>` : ''}
+  ${(() => { const bl = upcomingBdays(active.map(c => c['기수명']), 13); return bl.length ? `<div class="card mt">${bdStrip(bl, true, '다가오는 생일 <small>2주 안</small>')}</div>` : ''; })()}
   <div class="row mt2" style="margin-bottom:12px"><h3 style="margin:0;font-size:17px">기수별 최근 수업</h3><span class="muted">수업 날 올린 출석 · 지난 수업 대비 증감</span><span class="sp"></span><a class="btn ghost sm" href="#cohorts">기수 관리 ›</a></div>
   <div class="grid g-2">${active.length ? active.map(nowCard).join('') : empty('진행중인 기수가 없습니다', '', `<button class="btn p" onclick="go('cohorts');setTimeout(()=>editCohort(),50)">+ 새 기수</button>`)}</div>
   <div class="dash2 mt2">
@@ -1286,7 +1310,9 @@ PAGES.attend = () => {
       drNote = `<div class="alert warn" style="margin-bottom:12px">저장하지 않은 체크를 불러왔어요 (${new Date(dr.at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })})<span class="sp"></span><button class="btn sm" onclick="clearDraft(${attr(n)},${sel});DIRTY=false;render()">버리기</button></div>`; }
     else clearDraft(n, sel);
   }
-  return drNote + `<div class="ph"><div><h1>출석 체크</h1><p>${esc(n)} · ${doneNos.has(sel) ? '이미 체크한 회차예요. 고치고 다시 저장하면 덮어써요.' : '「모두 실시간」을 누른 뒤 결석·보강만 바꾸세요.'}</p></div></div>
+  const bds = upcomingBdays([n], 6);
+  return savedCard(n, sel) + drNote + `<div class="ph"><div><h1>출석 체크</h1><p>${esc(n)} · ${doneNos.has(sel) ? '이미 체크한 회차예요. 고치고 다시 저장하면 덮어써요.' : '「모두 실시간」을 누른 뒤 결석·보강만 바꾸세요.'}</p></div></div>
+  ${bds.length ? `<div class="card" style="margin-bottom:14px;padding:12px 16px">${bdStrip(bds, false)}</div>` : ''}
   <div class="card"><div class="athead"><span class="no">${sel}회차</span><b>${esc(ses['진도내용'] || (sm.find(x => num(x['회차']) === sel) || {})['진도내용'] || '수업 제목 없음')}</b><span class="muted">${md(date)}(${DOW[dow(date)]})${ses['과정'] ? ' · ' + esc(ses['과정']) : ''}</span><span class="sp"></span>${pv ? `<span class="pvs">지난 수업 ${pv.ses}회차 ${md(pv.date)} · 출석 <b>${pv.real + pv.mk}</b>/${pv.tot} · 실시간 <b>${pv.real}</b></span>` : ''}</div>
     <div class="form" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
     <label class="fld"><span>회차</span><select id="atS" onchange="go('attend/'+encodeURIComponent(${attr(n)})+'/'+this.value)">${so}</select></label>
@@ -1319,12 +1345,20 @@ function saveDraft() { if (!AT.n) return; try { const d = $('#atD'); localStorag
 function clearDraft(n, s) { try { localStorage.removeItem(DKEY(n, s)); } catch (e) { } }
 function loadDraft(n, s) { try { return JSON.parse(localStorage.getItem(DKEY(n, s)) || 'null'); } catch (e) { return null; } }
 function atCount() { const v = Object.values(AT.list || {}), c = a => v.filter(x => x.status === a).length, el = $('#atCount'), p = v.some(x => x.status) ? AT.prev : null; if (el) el.innerHTML = `<span>실시간 <b>${c('실시간')}</b>${p ? ' ' + dlt(c('실시간'), p.real, '') : ''}</span><span>보강 <b>${c('보강')}</b></span><span>결석 <b>${c('결석')}</b></span>${c('') ? `<span style="color:#ffd43b">미체크 <b>${c('')}</b></span>` : ''}${p ? '<span class="pvh">지난 수업 대비</span>' : ''}`; }
+let LAST_SAVE = null;
+/** 방금 저장한 회차: 결과 요약 + 다음 할 일 */
+function savedCard(n, sel) {
+  const L = LAST_SAVE; if (!L || L.n !== n || L.sel !== sel || Date.now() - L.at > 10 * 60e3) return '';
+  const m = L.sm || {}, e = encodeURIComponent(n);
+  return `<div class="alert ok" style="margin-bottom:14px;align-items:center">✓ ${sel}회차 ${L.queued ? '기기에 보관 (연결되면 전송)' : '저장 완료'} · 실시간 ${m.real || 0} · 보강 ${m.makeup || 0} · 결석 ${m.absent || 0}
+    <span class="sp"></span>${m.absent ? `<a class="btn sm" href="#followup">결석 ${m.absent}명 연락하기 ›</a>` : ''}<a class="btn sm" href="#book/${e}">출석부 ›</a></div>`;
+}
 async function saveAtt(btn) {
   const ids = Object.keys(AT.list), miss = ids.filter(id => !AT.list[id].status), date = $('#atD').value;
   if (!date) return toast('날짜를 입력하세요', true);
   if (miss.length) return toast(`아직 체크 안 한 사람 ${miss.length}명: ${miss.slice(0, 3).map(id => AT.list[id].name).join(', ')}${miss.length > 3 ? ' 외' : ''}`, true);
   const r = await saveAttendance({ cohort: AT.n, session: AT.sel, date, course: $('#atCo').value, content: $('#atCt').value.trim(), records: ids.map(id => ({ studentId: id, name: AT.list[id].name, status: AT.list[id].status, makeupDate: AT.list[id].status === '보강' ? AT.list[id].makeupDate : '', note: AT.list[id].note, reason: AT.list[id].status === '결석' ? (AT.list[id].reason || '') : '' })) }, btn, { queue: true });
-  if (r) { DIRTY = false; clearDraft(AT.n, AT.sel); AT.date = ''; if (!r.queued) toast(`${AT.sel}회차 저장 · 실시간 ${r.summary.real} · 보강 ${r.summary.makeup} · 결석 ${r.summary.absent}`); const h = 'attend/' + encodeURIComponent(AT.n) + '/' + AT.sel; if (location.hash.slice(1) !== h) location.hash = h; else render(); }
+  if (r) { DIRTY = false; clearDraft(AT.n, AT.sel); AT.date = ''; LAST_SAVE = { n: AT.n, sel: AT.sel, at: Date.now(), sm: r.summary, queued: !!r.queued }; if (!r.queued) toast(`${AT.sel}회차 저장 · 실시간 ${r.summary.real} · 보강 ${r.summary.makeup} · 결석 ${r.summary.absent}`); const h = 'attend/' + encodeURIComponent(AT.n) + '/' + AT.sel; if (location.hash.slice(1) !== h) location.hash = h; else render(); }
 }
 
 /* ═════════ 결석·보강 관리 ═════════ */
@@ -1388,6 +1422,7 @@ const BAND = v => v === '' ? '' : v >= .85 ? 'xg' : v >= .75 ? 'xb' : v >= .6 ? 
 function rpRange() {
   const t = todayStr(), mon = monOf(t);
   if (RP.per === 'week') return [mon, addDays(mon, 6)];
+  if (RP.per === 'wk') return [RP.from, addDays(RP.from, 6)];
   if (RP.per === 'last') return [addDays(mon, -7), addDays(mon, -1)];
   if (RP.per === 'month') return [t.slice(0, 8) + '01', t];
   if (RP.per === 'all') return ['0000-00-00', '9999-12-31'];
@@ -1396,7 +1431,7 @@ function rpRange() {
 function rpLabel(a, b) {
   if (RP.per === 'all') return '기수 전체';
   const wk = d => { const m = Number(d.slice(5, 7)), first = d.slice(0, 8) + '01', n = Math.floor((Number(d.slice(8)) + ((dow(first) + 6) % 7) - 1) / 7) + 1; return `${m}월 ${n}주차`; };
-  if (RP.per === 'week' || RP.per === 'last') return `${wk(a)} (${md(a)}~${md(b)})`;
+  if (RP.per === 'week' || RP.per === 'last' || RP.per === 'wk') return `${wk(a)} (${md(a)}~${md(b)})`;
   if (RP.per === 'month') return `${Number(a.slice(5, 7))}월 (${md(a)}~${md(b)})`;
   return `${md(a)} ~ ${md(b)}`;
 }
@@ -1419,7 +1454,17 @@ function rpData(a, b) {
   order.forEach(g => groups[g].sort((x, y) => y.reg - x.reg || x.it.localeCompare(y.it)));
   return { order, groups, cs };
 }
+/** 출석이 올라온 가장 최근 주의 월요일 (보고서·주간 현황 기본값) */
+function lastDataMon() {
+  const cs = isCo() ? [ROLE.cohort] : cohorts().filter(c => c['상태'] !== '종강').map(c => c['기수명']);
+  const ds = cs.flatMap(n => summaryOf(n).map(x => x['날짜'])).filter(d => d && d <= todayStr()).sort();
+  return ds.length ? monOf(ds[ds.length - 1]) : '';
+}
 PAGES.wreport = () => {
+  if (!RP.init) {   // 처음 열 때 이번 주에 출석이 없으면 가장 최근 출석이 있는 주로
+    RP.init = 1; const lm = lastDataMon();
+    if (lm && lm < monOf(todayStr())) { RP.per = 'wk'; RP.from = lm; }
+  }
   const [a, b] = rpRange(), D = rpData(a, b), lbl = rpLabel(a, b);
   const showCs = RP.grp === 'evban';
   const gl = { ev: ['기수', '담당전도사', '전도사 ', '명'], ban: ['기수', '분반', '', '개 반'], evban: ['담당전도사', '분반', '', '개 반'], cohort: ['', '기수', '', '개 기수'] }[RP.grp];
@@ -1438,13 +1483,13 @@ PAGES.wreport = () => {
   });
   const tar = all.exp ? all.att / all.exp : '', trr = all.exp ? all.real / all.exp : '', tal = all.reg ? all.all / all.reg : '', talR = all.reg ? all.allR / all.reg : '';
   const ctrl = `<div class="ph noprint"><div><h1>출석 보고서</h1><p>기간과 묶는 방법을 고르면 표가 자동으로 만들어져요 · 제목은 눌러서 고칠 수 있어요</p></div>
-    <div class="acts"><button class="btn" onclick="window.print()">${icon('print', 16)}인쇄 · PDF</button><button class="btn p" onclick="rpPng(this)">${icon('upload', 16)}고화질 이미지 저장</button></div></div>
-    <div class="card noprint rpctl"><div class="row"><span class="muted">기간</span><div class="chips">${[['week', '이번 주'], ['last', '지난주'], ['month', '이번 달'], ['all', '기수 전체'], ['custom', '직접']].map(x => `<button class="chip ${RP.per === x[0] ? 'on' : ''}" onclick="RP.per='${x[0]}';RP.title='';render()">${x[1]}</button>`).join('')}</div>
+    <div class="acts"><button class="btn" onclick="window.print()">${icon('print', 16)}인쇄 · PDF</button>${canShareFile() ? `<button class="btn" onclick="rpPng(this,true)">${icon('link', 16)}카톡 등으로 공유</button>` : ''}<button class="btn p" onclick="rpPng(this)">${icon('upload', 16)}고화질 이미지 저장</button></div></div>
+    <div class="card noprint rpctl"><div class="row"><span class="muted">기간</span><div class="chips">${RP.per === 'wk' ? `<button class="chip" onclick="RP.from=addDays(RP.from,-7);RP.title='';render()" title="한 주 앞">‹</button><button class="chip on">${md(a)}~${md(b)} 주</button><button class="chip" onclick="RP.from=addDays(RP.from,7);if(RP.from>=monOf(todayStr()))RP.per='week';RP.title='';render()" title="한 주 뒤">›</button>` : ''}${[['week', '이번 주'], ['last', '지난주'], ['month', '이번 달'], ['all', '기수 전체'], ['custom', '직접']].map(x => `<button class="chip ${RP.per === x[0] ? 'on' : ''}" onclick="RP.per='${x[0]}';RP.title='';render()">${x[1]}</button>`).join('')}</div>
       ${RP.per === 'custom' ? `<input type="date" value="${a}" onchange="RP.from=this.value;RP.title='';render()"><span>~</span><input type="date" value="${b}" onchange="RP.to=this.value;RP.title='';render()">` : ''}</div>
       <div class="row mt"><span class="muted">묶기</span><div class="chips">${(isCo() ? [['ev', '전도사별'], ['ban', '분반별']] : [['ev', '기수 › 전도사'], ['ban', '기수 › 분반'], ['evban', '전도사 › 분반'], ['cohort', '기수별']]).map(x => `<button class="chip ${RP.grp === x[0] ? 'on' : ''}" onclick="RP.grp='${x[0]}';render()">${x[1]}</button>`).join('')}</div>
       <span class="muted" style="margin-left:8px">막대·색 기준</span><div class="chips">${[['real', 'ALL 실시간(대면)'], ['any', 'ALL 보강 포함']].map(x => `<button class="chip ${RP.all === x[0] ? 'on' : ''}" onclick="RP.all='${x[0]}';render()">${x[1]}</button>`).join('')}</div></div>
       <p class="muted" style="margin:8px 0 0;font-size:12.5px">실시간(대면) 출석률 = 대면으로 나온 횟수 ÷ 수업 수 · 보강 포함 출석률 = (대면 + 보강) ÷ 수업 수 · ALL = 이 기간 수업에 한 번도 빠지지 않은 사람 (대면만으로 / 보강을 섞어서)</p></div>`;
-  if (!no) return ctrl + empty('이 기간에 올라온 출석이 없어요', '기간을 바꿔 보세요.');
+  if (!no) { const lm = lastDataMon(); return ctrl + empty('이 기간에 올라온 출석이 없어요', lm ? '가장 최근에 출석이 올라온 주를 볼 수 있어요.' : '기간을 바꿔 보세요.', lm ? `<button class="btn p" onclick="RP.per='wk';RP.from='${lm}';RP.title='';render()">${md(lm)} 주 보기</button>` : ''); }
   return ctrl + `<div class="rpwrap"><div id="rpSheet" class="rps">
     <div class="rh"><div><div class="kk">ALL 출석 현황</div><h2 contenteditable="true" spellcheck="false" onblur="RP.title=this.innerText.trim()">${esc(title)}</h2></div>
       <div class="lg"><span class="muted">${useR ? 'ALL 대면' : 'ALL 보강 포함'} 출석률 기준</span><span><i class="xg"></i>85% 이상 <b>${band.xg}</b></span><span><i class="xb"></i>75~85% <b>${band.xb}</b></span><span><i class="xo"></i>60~75% <b>${band.xo}</b></span><span><i class="xr"></i>60% 미만 <b>${band.xr}</b></span></div></div>
@@ -1457,7 +1502,8 @@ PAGES.wreport = () => {
     <div class="ft">논산 신학부 · ${lbl} · 기수 ${all.cs.size}개 · ${todayStr()} 작성</div>
   </div></div>`;
 };
-async function rpPng(btn) {
+const canShareFile = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'a.png', { type: 'image/png' })] })); } catch (e) { return false; } };
+async function rpPng(btn, share) {
   const el = $('#rpSheet'); if (!el) return toast('보고서가 아직 없어요', true);
   busy(btn, true);
   try {
@@ -1465,6 +1511,11 @@ async function rpPng(btn) {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     const cv = await html2canvas(el, { scale: 3, backgroundColor: '#ffffff', useCORS: true, windowWidth: Math.max(1100, el.scrollWidth + 40) });
     const name = (el.querySelector('h2').innerText.trim() || '출석 보고서').replace(/[\\/:*?"<>|]/g, '') + '.png';
+    if (share) {   // 휴대폰: 카카오톡·문자 등으로 바로 보내기
+      const bl = await new Promise(ok => cv.toBlob(ok, 'image/png'));
+      try { await navigator.share({ files: [new File([bl], name, { type: 'image/png' })], title: name.replace('.png', '') }); } catch (e) { if (e.name !== 'AbortError') toast('공유하지 못했어요: ' + e.message, true); }
+      return;
+    }
     cv.toBlob(bl => { const a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('고화질 이미지를 저장했어요 (' + cv.width + '×' + cv.height + ')'); }, 'image/png');
   } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
@@ -2532,7 +2583,7 @@ async function purgeStu(id) { if (await ask('영구 삭제', '이 수강생과 �
 
 /* ═════════ 시작 ═════════ */
 /* 새 버전을 올렸는데 휴대폰이 예전 화면을 붙잡고 있으면 한 번 자동으로 새로 고침 */
-const BUILD = '2026-11-20a';
+const BUILD = '2026-11-22a';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
