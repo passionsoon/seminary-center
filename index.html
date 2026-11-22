@@ -309,6 +309,49 @@ th .bt{font-weight:500;font-size:10px;color:var(--ink2);max-width:72px;margin:2p
 .endl{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:10px;font-size:13.5px}
 .dday{display:inline-block;background:linear-gradient(135deg,#ff9f43,#ee5a24);color:#fff;font-size:12px;padding:1px 8px;border-radius:999px;margin-left:2px}
 .cal .ci.pre{background:#fff4e0;color:#8a5a00;border-left-color:#f0a020}
+/* 시각화 */
+.vz-bars{display:flex;flex-direction:column;gap:10px}
+.vz-r{display:grid;grid-template-columns:minmax(70px,140px) 1fr 66px;align-items:center;gap:12px}
+.vz-k{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vz-k small{color:var(--sub);font-weight:500;margin-left:6px;font-size:12px}
+.vz-t{position:relative;display:flex;height:22px;background:#eef2f7;border-radius:8px;overflow:hidden}
+.vz-t i{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:12px;font-weight:700;transition:width .4s;flex:none}
+.vz-t i span{white-space:nowrap}.vz-t.ov i{position:absolute;left:0;top:0;bottom:0}
+.vz-t em{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed rgba(15,23,42,.35);z-index:2}
+.vz-v{font-weight:800;font-size:15px;text-align:right;white-space:nowrap}.vz-v small{font-size:11px;color:var(--sub);font-weight:600}
+.vz-empty{padding:16px 0}
+.vlg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:12.5px;color:var(--sub)}.vlg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}.vlg i.ln{border-left:2px dashed #475569;width:0;border-radius:0}
+.vz-cols{display:flex;align-items:stretch;gap:6px;height:230px}.vz-c{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}.vz-c b{font-size:13px;font-weight:800}
+.vz-cb{flex:1;width:72%;max-width:46px;display:flex;align-items:flex-end;background:#eef2f7;border-radius:8px 8px 4px 4px;overflow:hidden;margin-top:4px}.vz-cb i{width:100%;border-radius:8px 8px 0 0}
+.vz-c span{font-size:12px;font-weight:600;margin-top:6px;white-space:nowrap}.vz-c small{font-size:11px;color:var(--sub);white-space:nowrap}
+.vz-flow{display:flex;align-items:flex-end;gap:4px}.vz-st{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0;text-align:center}
+.vz-sb{height:150px;width:74%;display:flex;align-items:flex-end;background:#f1f5f9;border-radius:10px;overflow:hidden}.vz-sb i{width:100%;border-radius:10px 10px 0 0}
+.vz-st b{font-size:20px;margin-top:6px;font-weight:800}.vz-st b small{font-size:12px;font-weight:600}.vz-st span{font-size:13px;font-weight:600;white-space:nowrap}.vz-st em{font-style:normal;font-size:11.5px;color:var(--sub)}
+.vz-ar{display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:center;min-width:46px;color:#64748b;margin-bottom:56px}.vz-ar b{font-size:13px}.vz-ar span{font-size:18px;line-height:1}.vz-ar.bad{color:#dc2626}.vz-ar small{font-size:10.5px;font-weight:700;white-space:nowrap}
+.vzo .vzk{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0 18px}.vzk>div{background:var(--line2);border-radius:12px;padding:10px 12px}.vzk span{display:block;font-size:12px;color:var(--sub)}.vzk b{font-size:21px;font-weight:800}
+.vzg{display:grid;grid-template-columns:1fr 1fr;gap:26px}.vzg h4{margin:0 0 12px;font-size:14px}.vzm{font-size:13px;margin:10px 0 0;color:var(--ink2);font-weight:600}
+@media(max-width:760px){.vzo .vzk{grid-template-columns:repeat(3,1fr)}.vzg{grid-template-columns:1fr}.vz-r{grid-template-columns:64px 1fr 50px;gap:8px}.vz-k{font-size:13px}.vz-v{font-size:13px}.vz-t i{font-size:10.5px}
+  .vz-flow{gap:0}.vz-st b{font-size:15px}.vz-st span{font-size:10.5px}.vz-st em{font-size:10px}.vz-ar{min-width:24px;margin-bottom:46px}.vz-ar b{font-size:10.5px}.vz-ar span{font-size:13px}.vz-ar small{display:none}.vz-sb{height:100px;width:82%}
+  .vz-cols{gap:2px;height:200px}.vz-c b{font-size:10.5px}.vz-c span{font-size:10px}.vz-c small{display:none}}
+/* 슬라이드 1280×720 */
+.sl-wrap{position:relative;margin-bottom:22px}
+.sld{width:1280px;height:720px;background:#fff;position:relative;transform-origin:0 0;padding:58px 72px 54px;box-sizing:border-box;display:flex;flex-direction:column;color:#0f172a;overflow:hidden;border-radius:14px;box-shadow:0 8px 30px rgba(15,23,42,.12);font-family:"Pretendard Variable",Pretendard,sans-serif}
+.sld::before{content:'';position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(90deg,#4f46e5,#2563eb,#0891b2,#16a34a)}
+.sl-h{display:flex;gap:18px;align-items:flex-start}.sl-no{flex:none;width:44px;height:44px;border-radius:12px;background:#2563eb;color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.sld h2{font-size:40px;margin:0;font-weight:800;letter-spacing:-.02em;line-height:1.15}.sl-h p{font-size:18px;color:#64748b;margin:8px 0 0}
+.sl-b{flex:1;margin-top:26px;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.sld .vz-bars.few{gap:30px}.sld .vz-bars.few .vz-t{height:62px;border-radius:14px}.sld .vz-bars.few .vz-k{font-size:28px}.sld .vz-bars.few .vz-v{font-size:38px}.sld .vz-bars.few .vz-t i{font-size:24px}.sld .vz-bars.few .vz-r{grid-template-columns:240px 1fr 150px}.sl-m{background:#f1f5ff;border-left:6px solid #2563eb;padding:14px 22px;border-radius:12px;font-size:21px;font-weight:700;margin-top:14px;line-height:1.4}
+.sl-f{position:absolute;bottom:18px;left:72px;right:72px;display:flex;justify-content:space-between;font-size:14px;color:#94a3b8}
+.sld [contenteditable]:focus{outline:2px dashed #93c5fd;outline-offset:4px}
+.sld .vz-bars{gap:13px}.sld .vz-r{grid-template-columns:210px 1fr 110px;gap:18px}.sld .vz-k{font-size:20px}.sld .vz-k small{font-size:15px}.sld .vz-t{height:32px;border-radius:10px}.sld .vz-t i{font-size:16px}.sld .vz-v{font-size:24px}.sld .vz-v small{font-size:15px}
+.sld .vlg{font-size:16px;margin-top:16px;gap:8px 22px}.sld .vlg i{width:16px;height:16px}
+.sld .vz-cols{height:390px;gap:10px}.sld .vz-c b{font-size:18px}.sld .vz-c span{font-size:16px}.sld .vz-c small{font-size:13px}.sld .vz-cb{max-width:64px}
+.sld .vz-sb{height:290px}.sld .vz-st b{font-size:34px}.sld .vz-st b small{font-size:18px}.sld .vz-st span{font-size:19px}.sld .vz-st em{font-size:15px}.sld .vz-ar{min-width:80px;margin-bottom:80px}.sld .vz-ar b{font-size:20px}.sld .vz-ar span{font-size:30px}.sld .vz-ar small{font-size:14px}
+.skp{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.sk{background:#f8fafc;border:1px solid #e2e8f0;border-radius:18px;padding:22px 28px}.sk span{display:block;font-size:19px;color:#64748b;font-weight:600}.sk b{display:block;font-size:54px;font-weight:800;letter-spacing:-.03em;margin-top:4px}.sk b small{font-size:24px;color:#64748b}.sk>small{font-size:17px;color:#64748b}
+.sl-2{display:grid;grid-template-columns:1fr 1fr;gap:44px}.sld .sl-2 .vz-bars.few .vz-r{grid-template-columns:130px 1fr 104px;gap:14px}.sld .sl-2 .vz-bars.few .vz-k{font-size:22px}.sld .sl-2 .vz-bars.few .vz-v{font-size:28px}.sld .sl-2 .vz-bars.few .vz-t{height:44px}.sld .sl-2 .vz-bars.few .vz-t i{font-size:17px}.sl-2 h4{font-size:22px;margin:0 0 14px}.sl-2 .vz-r{grid-template-columns:150px 1fr 90px}
+.sl-iss{display:grid;gap:12px}.sl-iss>div{padding:14px 20px;border-radius:14px;border-left:8px solid #f59e0b;background:#fffbeb}.sl-iss .bad{border-color:#dc2626;background:#fef2f2}.sl-iss b{display:block;font-size:21px}.sl-iss span{font-size:16px;color:#475569}
+.sld.cover{background:linear-gradient(135deg,#1e3a8a,#4f46e5 55%,#0891b2);color:#fff;justify-content:center;padding-left:110px}.sld.cover::before{display:none}.sld.cover .sl-h{flex-direction:column}.sld.cover h2{font-size:84px}.sld.cover .sl-h p{font-size:28px;color:rgba(255,255,255,.88);margin-top:18px}.sld.cover .sl-b{flex:none;margin-top:44px}.cv-d{font-size:24px;opacity:.9}.cv-o{font-size:30px;font-weight:800;margin-top:8px}.sld.cover .sl-f{color:rgba(255,255,255,.6)}
+#show{position:fixed;inset:0;background:#0b1020;z-index:3000;cursor:pointer}.sh-in{position:absolute;left:50%;top:50%;width:1280px;height:720px}.sh-in .sld{border-radius:0;box-shadow:none;transform:none!important}
+.sh-nav{position:absolute;bottom:14px;right:18px;display:flex;gap:8px;align-items:center;color:#cbd5e1;opacity:.35;transition:opacity .2s;font-size:14px}.sh-nav:hover{opacity:1}.sh-nav button{background:rgba(255,255,255,.14);border:0;color:#fff;width:38px;height:38px;border-radius:10px;font-size:18px;cursor:pointer}
 .fx{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}.fx.end{-webkit-mask-image:none;mask-image:none}
 .bdstrip{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.bdstrip>b{font-size:14.5px;margin-right:4px}.bdstrip>b small{color:var(--sub);font-weight:500;font-size:12px;margin-left:4px}
 .bdc{display:inline-flex;align-items:baseline;gap:5px;padding:5px 11px;border-radius:999px;background:#fdecf3;color:#a3245e;font-weight:600;font-size:13.5px}.bdc small{font-weight:500;opacity:.8;font-size:12px}.bdc.st{background:#efeafd;color:#5b3fb5}
@@ -577,6 +620,7 @@ const IC = {
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.2A5 5 0 0 1 21.5 19"/>',
   layers: '<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/>',
   org: '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M5 16v-4h14v4"/>',
+  slides: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M7 12l3-3 2 2 4-4"/>',
   chart: '<path d="M3 21h18"/><path d="M6 17v-6M11 17V5M16 17v-9M21 17v-3"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
@@ -593,9 +637,9 @@ const icon = (k, sz) => `<svg class="i" width="${sz || 18}" height="${sz || 18}"
 const NAV = [
   ['운영', [['home', 'home', '대시보드'], ['weekly', 'week', '주간 현황'], ['wreport', 'print', '출석 보고서'], ['book', 'cal', '출석부']]],
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
-  ['분석', [['analysis', 'chart', '분석'], ['settings', 'gear', '설정']]]
+  ['분석', [['analysis', 'chart', '분석'], ['present', 'slides', '발표 자료'], ['settings', 'gear', '설정']]]
 ];
-const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['students', 'users', '수강생'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정'], ['wreport', 'print', '출석 보고서']]]];
+const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['students', 'users', '수강생'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정'], ['wreport', 'print', '출석 보고서'], ['present', 'slides', '발표 자료']]]];
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
 const STAGES = ['센터(등록전)', '초등(등록)', '중등', '고등', '입교', '탈락'];
 const ATT = ['실시간', '보강', '결석'];
@@ -831,13 +875,13 @@ window.addEventListener('beforeunload', e => { if (DIRTY) { e.preventDefault(); 
 function route() {
   const h = decodeURIComponent(location.hash.slice(1) || 'home').split('/');
   ROUTE = { page: h[0], arg: h[1], tab: h[2] };
-  if (isCo() && !['attend', 'students', 'weekly', 'wreport', 'book', 'progress', 'followup', 'register'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
+  if (isCo() && !['attend', 'students', 'weekly', 'wreport', 'book', 'progress', 'followup', 'register', 'present'].includes(ROUTE.page)) ROUTE = { page: 'attend' };
   if (['attend', 'book', 'progress', 'register', 'followup', 'report'].includes(ROUTE.page) && ROUTE.arg && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   if (ROUTE.page === 'cohort' && cohortOf(ROUTE.arg)) setCohort(ROUTE.arg);
   closeAll(); vtip(null, '');
   render(); window.scrollTo(0, 0);
 }
-const TITLES = { followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석', weekly: '주간 현황', wreport: '출석 보고서' };
+const TITLES = { present: '발표 자료', followup: '결석·보강', settings: '설정', report: '보고서', home: '대시보드', attend: '출석 체크', book: '출석부', progress: '수업 일정', register: '등록 판정', students: '수강생', cohorts: '기수 관리', cohort: '기수', staff: '사명자·조직도', analysis: '분석', weekly: '주간 현황', wreport: '출석 보고서' };
 function render() {
   if (!DB) return;
   MEMO = {}; paintQueue();
@@ -2426,11 +2470,11 @@ function groupRate(cs, keyOf) {
   const m = {}; cs.forEach(c => summaryOf(c['기수명']).forEach(x => { const k = keyOf(x, c); if (!k) return; const g = m[k] = m[k] || { a: 0, t: 0, n: 0 }; g.a += num(x['실시간출석']) + num(x['보강출석']); g.t += num(x['재적인원']); g.n++; }));
   return Object.entries(m).filter(([, g]) => g.t).map(([k, g]) => ({ k, v: g.a / g.t, n: g.n }));
 }
-function rateBars(rows, opt) {
-  opt = opt || {}; if (!rows.length) return '<div class="muted">자료가 아직 없어요</div>';
-  const best = Math.max(...rows.map(r => r.v)), worst = Math.min(...rows.map(r => r.v));
-  return rows.map(r => `<div class="hb" data-tip="<b>${esc(r.k)}</b> · ${pct(r.v)}${r.n !== undefined ? ` · ${r.n}${opt.unit || '회'}` : ''}"><span class="nm">${esc(r.k)}</span><div class="tr"><i style="width:${Math.round(r.v * 100)}%;background:${rows.length > 1 && r.v === worst && best - worst >= .03 ? 'var(--bad)' : rows.length > 1 && r.v === best ? 'var(--ok)' : 'var(--pri)'}"></i></div><b>${pct(r.v)}</b></div>`).join('');
+function rateBars(rows, opt) {   // 색은 출석률 기준(양호·보통·주의·위험)으로 통일
+  opt = opt || {};
+  return vizBars(rows.map(r => ({ k: r.k, v: r.v, n: r.n })), { unit: opt.unit || '회' });
 }
+
 function countBars(arr, col) { const mx = Math.max(1, ...arr.map(x => x[1])); return arr.length ? arr.map(x => `<div class="hb"><span class="nm">${esc(x[0])}</span><div class="tr"><i style="width:${x[1] / mx * 100}%;background:${col || 'var(--pri)'}"></i></div><b>${x[1]}</b></div>`).join('') : '<div class="muted">자료가 아직 없어요</div>'; }
 function diagBody() {
   const act = cohorts().filter(c => c['상태'] !== '종강' && (summaryOf(c['기수명']).length || studentsOf(c['기수명']).length));
@@ -2453,14 +2497,14 @@ function diagBody() {
   const r1 = Object.entries(rsn).sort((a, b) => b[1] - a[1])[0]; if (r1 && r1[1] >= 3) iss.push([1, 'warn', `결석 사유 1위는 「${r1[0]}」 (${r1[1]}건)`, r1[0] === '(사유 미입력)' ? '결석할 때 사유를 꼭 적어 달라고 담당자에게 안내하세요' : '같은 사유가 반복되는 사람을 따로 챙겨 보세요', 'analysis/diag']);
   if (evr.length > 1) { const lo = evr[evr.length - 1], all = avg(evr.map(x => x.v)); if (all - lo.v >= .08) iss.push([1, 'warn', `담당전도사 ${lo.k} 학생들의 평균 출석률이 ${pct(lo.v)}로 평균보다 낮아요`, '담당 인원이 너무 많은지, 연락 주기가 적당한지 함께 살펴보세요', 'analysis/diag']); }
   iss.sort((a, b) => b[0] - a[0]);
-  return `<div class="card"><h3>지금 고쳐야 할 것 <small>${iss.length ? iss.length + '건 · 중요한 순' : ''}</small></h3>${iss.length ? iss.map(x => `<a class="iss ${x[1]}" href="#${x[4]}"><span class="ic">${icon(x[1] === 'bad' ? 'alert' : 'trend', 18)}</span><div><b>${esc(x[2])}</b><span>${esc(x[3])}</span></div><span class="go">›</span></a>`).join('') : '<div class="okmsg">✓ 눈에 띄는 문제가 없어요. 지금처럼 이어가면 돼요.</div>'}</div>
+  return vizOverview() + `<div class="card mt"><h3>지금 고쳐야 할 것 <small>${iss.length ? iss.length + '건 · 중요한 순' : ''}</small></h3>${iss.length ? iss.map(x => `<a class="iss ${x[1]}" href="#${x[4]}"><span class="ic">${icon(x[1] === 'bad' ? 'alert' : 'trend', 18)}</span><div><b>${esc(x[2])}</b><span>${esc(x[3])}</span></div><span class="go">›</span></a>`).join('') : '<div class="okmsg">✓ 눈에 띄는 문제가 없어요. 지금처럼 이어가면 돼요.</div>'}</div>
   <div class="row mt2" style="margin-bottom:10px"><h3 style="margin:0;font-size:17px">기수별 건강 지표</h3><span class="muted">초록 양호 · 노랑 주의 · 빨강 위험 · 줄을 누르면 기수로 이동</span></div>${tbl}
   <div class="dash2 mt">
     <div class="card"><h3>요일별 출석률 <small>어느 요일이 약한가</small></h3>${rateBars(wk)}</div>
     <div class="card"><h3>과정별 출석률 <small>어느 단계에서 느슨해지나</small></h3>${rateBars(crs)}</div>
     <div class="card"><h3>결석 사유</h3>${countBars(Object.entries(rsn).sort((a, b) => b[1] - a[1]).slice(0, 8), 'var(--bad)')}</div>
     <div class="card"><h3>담당전도사별 학생 출석률 <small>진행중 기수 · 2명 이상</small></h3>${rateBars(evr, { unit: '명' })}</div>
-  </div>
+  </div>${bandLegend()}
   <p class="muted" style="margin-top:14px">기준: 출석률 85% 이상 양호 · 75% 이하 위험 · 보강 비율 25% 넘으면 주의 · 센터 등록률은 등록 판정 회차(${SET().reg.n}회)가 지난 기수만 계산해요.</p>`;
 }
 /** 흐름·요인: 어디서 빠지고, 어떤 조건의 사람이 잘 남는가 */
@@ -2662,8 +2706,192 @@ async function restoreStu(id, btn) { if (await save('student', [{ '수강생ID':
 async function purgeStu(id) { if (await ask('영구 삭제', '이 수강생과 출석 기록이 시트에서 완전히 지워지고 되돌릴 수 없어요.', '영구 삭제', true)) { if (await removeRec('student', { '수강생ID': id })) render(); } }
 
 /* ═════════ 시작 ═════════ */
+/* ═════════ 시각화 공통: 색 기준 · 막대 · 흐름도 ═════════ */
+const BANDS = [[.85, '#16a34a', '85% 이상 양호'], [.75, '#2563eb', '75~85% 보통'], [.6, '#f59e0b', '60~75% 주의'], [0, '#dc2626', '60% 미만 위험']];
+const bandC = v => v === '' || v === undefined || v === null || isNaN(v) ? '#94a3b8' : BANDS.find(b => v >= b[0])[1];
+const bandLegend = () => `<div class="vlg">${BANDS.map(b => `<span><i style="background:${b[1]}"></i>${b[2]}</span>`).join('')}</div>`;
+const FLOWC = ['#4f46e5', '#2563eb', '#0891b2', '#0d9488', '#16a34a', '#65a30d'];
+/** 가로 막대: 색은 출석률 기준(양호·보통·주의·위험), 85% 기준선 */
+function vizBars(rows, opt) {
+  opt = opt || {}; if (!rows.length) return '<div class="muted vz-empty">자료가 아직 없어요</div>';
+  const max = opt.max || 1, fmt = opt.fmt || pct, tg = opt.target === undefined ? (opt.color ? null : .85) : opt.target;
+  return `<div class="vz-bars ${rows.length <= 3 ? 'few' : ''}">${rows.map(r => {
+    const w = Math.max(0, Math.min(100, (num(r.v) || 0) / max * 100)), c = r.c || opt.color || bandC(r.v);
+    return `<div class="vz-r" data-tip="<b>${esc(r.k)}</b> · ${fmt(r.v)}${r.n !== undefined ? ' · ' + r.n + (opt.unit || '') : ''}"><span class="vz-k">${esc(r.k)}${r.n !== undefined && opt.showN ? `<small>${r.n}${opt.unit || ''}</small>` : ''}</span><div class="vz-t">${tg ? `<em style="left:${tg / max * 100}%"></em>` : ''}<i style="width:${w}%;background:${c}"></i></div><b class="vz-v" style="color:${c}">${fmt(r.v)}</b></div>`;
+  }).join('')}</div>`;
+}
+/** 누적 막대: 실시간(초록) + 보강(주황) = 보강 포함 출석률 */
+function vizStack(rows) {
+  if (!rows.length) return '<div class="muted vz-empty">자료가 아직 없어요</div>';
+  return `<div class="vz-bars ${rows.length <= 3 ? 'few' : ''}">${rows.map(r => `<div class="vz-r" data-tip="<b>${esc(r.k)}</b><br>실시간 ${pct(r.a)} + 보강 ${pct(r.b)} = ${pct(r.v)}"><span class="vz-k">${esc(r.k)}</span><div class="vz-t"><em style="left:85%"></em><i style="width:${r.a * 100}%;background:#16a34a">${r.a >= .12 ? `<span>${pct(r.a)}</span>` : ''}</i><i style="width:${r.b * 100}%;background:#f59e0b">${r.b >= .08 ? `<span>${pct(r.b)}</span>` : ''}</i></div><b class="vz-v" style="color:${bandC(r.v)}">${pct(r.v)}</b></div>`).join('')}</div>
+    <div class="vlg"><span><i style="background:#16a34a"></i>실시간(대면)</span><span><i style="background:#f59e0b"></i>보강</span><span><i class="ln"></i>목표 85%</span></div>`;
+}
+/** 세로 막대: 회차별 출석률 */
+function vizCols(rows) {
+  if (!rows.length) return '<div class="muted vz-empty">자료가 아직 없어요</div>';
+  return `<div class="vz-cols">${rows.map(r => `<div class="vz-c" data-tip="<b>${esc(r.k)}</b> ${esc(r.sub || '')} · ${pct(r.v)}"><b style="color:${bandC(r.v)}">${Math.round(r.v * 100)}</b><div class="vz-cb"><i style="height:${Math.max(2, r.v * 100)}%;background:${bandC(r.v)}"></i></div><span>${esc(r.k)}</span>${r.sub ? `<small>${esc(r.sub)}</small>` : ''}</div>`).join('')}</div>`;
+}
+/** 단계 흐름도: 입고 → 등록 → 중등 → 고등 → 입교 (가장 많이 빠지는 구간은 빨강) */
+function vizFlow(steps) {
+  const top = steps.length ? steps[0][1] : 0; if (!top) return '<div class="muted vz-empty">수강생이 등록되면 그려져요</div>';
+  let worst = -1, wv = 2; steps.forEach((x, i) => { if (i && steps[i - 1][1] && (x[1] || i < 2)) { const r = x[1] / steps[i - 1][1]; if (r < wv) { wv = r; worst = i; } } });
+  return `<div class="vz-flow">${steps.map((x, i) => (i ? `<div class="vz-ar ${i === worst ? 'bad' : ''}"><b>${steps[i - 1][1] ? pct(x[1] / steps[i - 1][1]) : '-'}</b><span>➜</span>${i === worst ? '<small>가장 많이 빠짐</small>' : ''}</div>` : '') +
+    `<div class="vz-st"><div class="vz-sb"><i style="height:${Math.max(4, x[1] / top * 100)}%;background:${FLOWC[i % FLOWC.length]}"></i></div><b>${x[1]}<small>명</small></b><span>${esc(x[0])}</span><em>${i ? pct(x[1] / top) : '100%'}</em></div>`).join('')}</div>`;
+}
+/** 진행 막대: 종강 요건 수업일수 */
+function vizProg(rows) {
+  if (!rows.length) return '<div class="muted vz-empty">자료가 아직 없어요</div>';
+  return `<div class="vz-bars ${rows.length <= 3 ? 'few' : ''}">${rows.map(r => { const c = r.ok ? '#16a34a' : r.end && r.short ? '#dc2626' : '#2563eb'; return `<div class="vz-r"><span class="vz-k">${esc(r.k)}</span><div class="vz-t ov"><i style="width:${Math.min(100, (r.end ? r.planned : r.total) / r.min * 100)}%;background:${c};opacity:.22"></i><i style="width:${Math.min(100, r.done / r.min * 100)}%;background:${c}"></i></div><b class="vz-v" style="color:${c}">${r.done}<small>/${r.min}일</small></b></div>`; }).join('')}</div>
+    <div class="vlg"><span><i style="background:#2563eb"></i>지금까지 수업한 날</span><span><i style="background:#2563eb;opacity:.25"></i>종강일까지 예정</span><span><i style="background:#dc2626"></i>종강일까지 부족</span><span><i style="background:#16a34a"></i>충족</span></div>`;
+}
+
+/* ═════════ 분석 묶음 데이터 (분석 화면 · 발표 자료 공통) ═════════ */
+function deckData(cs) {
+  const t = todayStr(), cobj = cs.map(cohortOf).filter(Boolean);
+  let real = 0, mk = 0, tot = 0, nses = 0;
+  cs.forEach(n => summaryOf(n).forEach(x => { real += num(x['실시간출석']); mk += num(x['보강출석']); tot += num(x['재적인원']); nses++; }));
+  const studs = cs.flatMap(n => studentsOf(n));
+  const steps = cs.length ? funnelSteps(cs[0]).map(x => [x[0], 0]) : [];
+  cs.forEach(n => funnelSteps(n).forEach((x, i) => { if (steps[i]) steps[i][1] += x[1]; }));
+  const byC = cs.map(n => { let r = 0, m = 0, tt = 0; summaryOf(n).forEach(x => { r += num(x['실시간출석']); m += num(x['보강출석']); tt += num(x['재적인원']); }); return { k: n, a: tt ? r / tt : 0, b: tt ? m / tt : 0, v: tt ? (r + m) / tt : '', n: summaryOf(n).length }; }).filter(x => x.v !== '');
+  const ses = cs.length === 1 ? sesRates(cs[0]).slice(-14).map(x => ({ k: x.ses + '회', sub: md(x.date), v: x.r })) : [];
+  const recent = cs.map(n => { const h = health(n); return { k: n, v: h.rec, all: h.all, trend: h.trend }; }).filter(x => x.v !== '');
+  const grp = key => { const m = {}; studs.filter(s => !s['탈락일']).forEach(s => { if (s['출석률'] === '' || s['출석률'] === undefined) return; const k = s[key] || '(미지정)'; (m[k] = m[k] || []).push(num(s['출석률'])); }); return Object.entries(m).map(([k, a]) => ({ k, v: avg(a), n: a.length })).sort((a, b) => b.v - a.v); };
+  const wk = groupRate(cobj, x => x['날짜'] ? DOW[dow(x['날짜'])] + '요일' : '').sort((a, b) => '일월화수목금토'.indexOf(a.k[0]) - '일월화수목금토'.indexOf(b.k[0]));
+  const rsn = {}; DB.attend.filter(a => cs.includes(String(a['기수명'])) && a['출석'] === '결석').forEach(a => { const k = a['결석사유'] || '(사유 미입력)'; rsn[k] = (rsn[k] || 0) + 1; });
+  const pre = cs.reduce((a, n) => a + summaryOf(n, true).filter(x => isPreNo(x['회차'])).length, 0);
+  return {
+    cs, t, real: tot ? real / tot : '', any: tot ? (real + mk) / tot : '', mkShare: real + mk ? mk / (real + mk) : '', nses, pre,
+    roster: cs.reduce((a, n) => a + rosterAt(n, t).length, 0), inN: studs.length, reg: studs.filter(s => s['센터등록일']).length, drop: studs.filter(s => s['탈락일']).length,
+    steps, byC, ses, recent, ev: grp('담당전도사'), ban: grp('분반'), wk, reasons: Object.entries(rsn).sort((a, b) => b[1] - a[1]).slice(0, 7),
+    ends: cs.map(n => Object.assign({ k: n }, endReq(n))), iss: issues(cs.map(health))
+  };
+}
+/** 한 줄 요약(핵심 메시지) 자동 작성 */
+function deckMsgs(D) {
+  const m = {}, lo = a => a.reduce((x, y) => y.v < x.v ? y : x), hi = a => a.reduce((x, y) => y.v > x.v ? y : x);
+  m.kpi = D.any === '' ? '아직 올라온 출석이 없어요.' : `보강 포함 출석률 ${pct(D.any)}, 실시간(대면) ${pct(D.real)} — 출석 가운데 ${pct(D.mkShare)}가 보강이에요.`;
+  if (D.byC.length > 1) { const a = hi(D.byC), b = lo(D.byC); m.byC = `${a.k}가 ${pct(a.v)}로 가장 높고, ${b.k}는 ${pct(b.v)}로 ${Math.round((a.v - b.v) * 1000) / 10}%p 낮아요.`; }
+  else if (D.byC.length) m.byC = `실시간 ${pct(D.byC[0].a)} + 보강 ${pct(D.byC[0].b)} = ${pct(D.byC[0].v)}`;
+  if (D.ses.length >= 2) { const f = D.ses.slice(0, Math.min(4, D.ses.length)), l = D.ses.slice(-Math.min(4, D.ses.length)), av = a => avg(a.map(x => x.v)), d = av(l) - av(f); m.ses = `최근 ${l.length}회 평균 ${pct(av(l))} — ${Math.abs(d) < .005 ? `처음 ${f.length}회와 비슷해요` : `처음 ${f.length}회보다 ${d > 0 ? '▲' : '▼'} ${Math.abs(Math.round(d * 1000) / 10)}%p ${d > 0 ? '올랐어요' : '떨어졌어요'}`}.`; const w = lo(D.ses); if (w.v < .75) m.ses += ` 가장 낮은 회차는 ${w.k}(${w.sub}) ${pct(w.v)}.`; }
+  if (D.recent.length) { const b = lo(D.recent); m.recent = `최근 4회 출석률이 가장 낮은 기수는 ${b.k} (${pct(b.v)}).`; }
+  if (D.steps.length && D.steps[0][1]) { let wi = -1, wv = 2; D.steps.forEach((x, i) => { if (i && D.steps[i - 1][1] && (x[1] || i < 2)) { const r = x[1] / D.steps[i - 1][1]; if (r < wv) { wv = r; wi = i; } } }); m.flow = wi > 0 ? `「${D.steps[wi - 1][0]} → ${D.steps[wi][0]}」 구간에서 가장 많이 빠져요 (${pct(wv)}만 넘어감).` : ''; }
+  if (D.ev.length > 1) { const all = avg(D.ev.map(x => x.v)), b = lo(D.ev); m.ev = `전도사별 평균 ${pct(all)} · ${b.k} 담당 학생이 ${pct(b.v)}로 가장 낮아요.`; }
+  if (D.ban.length > 1) { const b = lo(D.ban), a = hi(D.ban); m.ban = `${a.k} ${pct(a.v)} · ${b.k} ${pct(b.v)} — 분반 간 차이 ${Math.round((a.v - b.v) * 1000) / 10}%p.`; }
+  if (D.wk.length > 1) { const b = lo(D.wk), a = hi(D.wk); m.wk = `${b.k} 수업이 ${pct(b.v)}로 가장 약해요 (${a.k} ${pct(a.v)}).`; }
+  if (D.reasons.length) m.rsn = `결석 사유 1위는 「${D.reasons[0][0]}」 ${D.reasons[0][1]}건.`;
+  const short = D.ends.filter(e => e.end && e.short); m.end = short.length ? `${short.map(e => e.k + ' ' + e.short + '일').join(', ')} 부족 — 종강일까지 수업일을 더 잡아야 해요.` : '종강일이 정해진 기수는 모두 수업일수 요건을 채울 일정이에요.';
+  return m;
+}
+
+/* ═════════ 발표 자료: 분석을 16:9 슬라이드로 · 전체 화면 · PDF · PowerPoint ═════════ */
+let PR = { scope: '', per: 'all' };
+function deckSlides(D, M, label) {
+  const S = [], date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  const kp = (l, v, s, c) => `<div class="sk"><span>${l}</span><b style="${c ? 'color:' + c : ''}">${v}</b>${s ? `<small>${s}</small>` : ''}</div>`;
+  S.push({ cls: 'cover', t: '출석·현황 보고', s: label, body: `<div class="cv-d">${date}</div><div class="cv-o">논산 신학부</div>` });
+  S.push({ t: '한눈에 보는 핵심 지표', s: label + ' · 지금까지 올라온 출석 기준', body: `<div class="skp">${kp('재적', D.roster + '<small>명</small>')}${kp('보강 포함 출석률', pct(D.any), '', bandC(D.any))}${kp('실시간(대면) 출석률', pct(D.real), '', bandC(D.real))}${kp('보강 비율', pct(D.mkShare), '출석 중 보강', D.mkShare > .25 ? '#f59e0b' : '')}${kp('센터 등록', D.reg + '<small>/' + D.inN + '명</small>', D.inN ? pct(D.reg / D.inN) : '')}${kp('탈락', D.drop + '<small>명</small>', D.inN ? pct(D.drop / D.inN) : '', D.drop ? '#dc2626' : '')}</div>${bandLegend()}`, m: M.kpi });
+  if (D.ses.length) S.push({ t: '회차별 출석률', s: `${D.cs[0]} · 최근 ${D.ses.length}회 · 색은 출석률 기준`, body: vizCols(D.ses) + bandLegend(), m: M.ses });
+  if (D.byC.length) S.push({ t: D.byC.length > 1 ? '기수별 출석률' : '실시간 · 보강 구성', s: '실시간(대면) + 보강 = 보강 포함 출석률', body: vizStack(D.byC), m: M.byC });
+  if (D.recent.length > 1) S.push({ t: '기수별 최근 4회 출석률', s: '지금 흐름이 약한 기수', body: vizBars(D.recent.slice().sort((a, b) => b.v - a.v)) + bandLegend(), m: M.recent });
+  if (D.steps.length && D.steps[0][1]) S.push({ t: '단계 흐름', s: '수카 입고 → 센터 등록 → 중등 → 고등 → 입교 · 화살표는 다음 단계로 넘어간 비율', body: vizFlow(D.steps), m: M.flow });
+  if (D.ev.length) S.push({ t: '담당전도사별 학생 출석률', s: '담당 학생 평균 (탈락 제외)', body: vizBars(D.ev.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.ev });
+  if (D.ban.length > 1 || (D.ban.length === 1 && D.ban[0].k !== '(미지정)')) S.push({ t: '분반별 학생 출석률', s: '분반 평균 (탈락 제외)', body: vizBars(D.ban.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.ban });
+  if (D.wk.length || D.reasons.length) S.push({ t: '요일 · 결석 사유', s: '어느 요일이 약하고, 왜 빠지는가', body: `<div class="sl-2"><div><h4>요일별 출석률</h4>${vizBars(D.wk)}</div><div><h4>결석 사유</h4>${vizBars(D.reasons.map(x => ({ k: x[0], v: x[1] })), { max: Math.max(1, ...D.reasons.map(x => x[1])), fmt: v => v + '건', color: '#dc2626', target: 0 })}</div></div>`, m: [M.wk, M.rsn].filter(Boolean).join(' ') });
+  if (D.ends.length) S.push({ t: '종강 요건 · 수업일수', s: `행정 개강일부터 강의 수업일수 ${D.ends[0].min}일 이상 (행사·휴강·사전 수업 제외)`, body: vizProg(D.ends), m: M.end });
+  if (D.iss.length) S.push({ t: '지금 챙길 것', s: '중요한 순', body: `<div class="sl-iss">${D.iss.slice(0, 6).map(x => `<div class="${x[1]}"><b>${esc(x[2])}</b><span>${esc(x[3])}</span></div>`).join('')}</div>` });
+  return S;
+}
+function slideHTML(s, i, total) {
+  return `<section class="sld ${s.cls || ''}" data-i="${i}"><div class="sl-h">${s.cls === 'cover' ? '' : `<span class="sl-no">${i + 1}</span>`}<div><h2 contenteditable="true" spellcheck="false">${esc(s.t)}</h2>${s.s ? `<p contenteditable="true" spellcheck="false">${esc(s.s)}</p>` : ''}</div></div>
+    <div class="sl-b">${s.body}</div>${s.m ? `<div class="sl-m" contenteditable="true" spellcheck="false">💡 ${esc(s.m)}</div>` : ''}<div class="sl-f">논산 신학부 운영센터<span>${i + 1} / ${total}</span></div></section>`;
+}
+PAGES.present = () => {
+  const act = isCo() ? [ROLE.cohort] : cohorts().filter(c => c['상태'] !== '종강').map(c => c['기수명']);
+  if (!PR.scope) PR.scope = isCo() ? ROLE.cohort : 'all';
+  const cs = PR.scope === 'all' ? act : [PR.scope].filter(n => cohortOf(n) || isCo());
+  if (!cs.length) return `<div class="ph"><div><h1>발표 자료</h1></div></div>` + empty('진행 중인 기수가 없어요', '기수를 만들고 출석이 쌓이면 자동으로 슬라이드가 만들어져요.');
+  const label = PR.scope === 'all' ? `진행 중 기수 ${cs.length}개 (${cs.join(' · ')})` : cs[0];
+  const D = deckData(cs), S = deckSlides(D, deckMsgs(D), label);
+  return `<div class="ph noprint"><div><h1>발표 자료</h1><p>분석을 슬라이드로 자동 정리했어요 · 제목과 💡 문장은 눌러서 고칠 수 있어요</p></div>
+    <div class="acts"><button class="btn p" onclick="showDeck(0)">▶ 발표 시작</button><button class="btn" onclick="deckPptx(this)">⬇ PowerPoint</button><button class="btn" onclick="deckPdf()">${icon('print', 16)}PDF</button><button class="btn" onclick="deckPng(this)">⬇ 이미지</button></div></div>
+    ${isCo() ? '' : `<div class="chips noprint" style="margin-bottom:14px"><button class="chip ${PR.scope === 'all' ? 'on' : ''}" onclick="PR.scope='all';render()">진행 중 전체</button>${act.map(n => `<button class="chip ${PR.scope === n ? 'on' : ''}" onclick="PR.scope=${attr(n)};render()">${esc(n)}</button>`).join('')}</div>`}
+    <div id="deck">${S.map((s, i) => `<div class="sl-wrap">${slideHTML(s, i, S.length)}</div>`).join('')}</div>`;
+};
+AFTER.present = () => { fitDeck(); };
+function fitDeck() { document.querySelectorAll('#deck .sl-wrap').forEach(w => { const k = Math.min(1, w.clientWidth / 1280); w.style.height = 720 * k + 'px'; w.firstElementChild.style.transform = `scale(${k})`; }); }
+window.addEventListener('resize', () => { if (ROUTE.page === 'present') fitDeck(); });
+/** 전체 화면 발표: ← → · 스페이스 · 클릭으로 넘기기, Esc로 끝 */
+let SHOW = null;
+function showDeck(i) {
+  const sl = [...document.querySelectorAll('#deck .sld')]; if (!sl.length) return;
+  let o = $('#show'); if (!o) { o = document.createElement('div'); o.id = 'show'; document.body.appendChild(o); }
+  SHOW = { i: Math.max(0, Math.min(i, sl.length - 1)), n: sl.length };
+  const draw = () => { const k = Math.min(innerWidth / 1280, innerHeight / 720); o.innerHTML = `<div class="sh-in" style="transform:translate(-50%,-50%) scale(${k})">${sl[SHOW.i].outerHTML.replace(/contenteditable="true"/g, '')}</div><div class="sh-nav"><button onclick="event.stopPropagation();moveShow(-1)">‹</button><span>${SHOW.i + 1} / ${SHOW.n}</span><button onclick="event.stopPropagation();moveShow(1)">›</button><button onclick="event.stopPropagation();endShow()">✕</button></div>`; };
+  SHOW.draw = draw; draw();
+  o.onclick = e => moveShow(e.clientX < innerWidth / 3 ? -1 : 1);
+  try { o.requestFullscreen && o.requestFullscreen(); } catch (e) { }
+}
+function moveShow(d) { if (!SHOW) return; SHOW.i = Math.max(0, Math.min(SHOW.n - 1, SHOW.i + d)); SHOW.draw(); }
+function endShow() { SHOW = null; const o = $('#show'); if (o) o.remove(); try { document.fullscreenElement && document.exitFullscreen(); } catch (e) { } }
+document.addEventListener('keydown', e => { if (!SHOW) return; if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); moveShow(1); } else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); moveShow(-1); } else if (e.key === 'Escape') endShow(); });
+document.addEventListener('fullscreenchange', () => { if (SHOW && !document.fullscreenElement) endShow(); });
+window.addEventListener('resize', () => { if (SHOW) SHOW.draw(); });
+/** 슬라이드를 원래 크기(1280×720)로 떼어 내 그림으로 만들기 */
+async function loadLib(src, test) { if (test()) return; await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => no(new Error('도구를 불러오지 못했어요. 인터넷 연결을 확인하세요.')); document.head.appendChild(sc); }); }
+async function slideImages(scale) {
+  await loadLib('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js', () => window.html2canvas);
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-20000px;top:0;width:1280px'; document.body.appendChild(box);
+  const out = [];
+  try {
+    for (const s of document.querySelectorAll('#deck .sld')) {
+      const c = s.cloneNode(true); c.style.transform = 'none'; box.innerHTML = ''; box.appendChild(c);
+      const cv = await html2canvas(c, { scale: scale || 2, backgroundColor: '#ffffff', width: 1280, height: 720, windowWidth: 1400 });
+      out.push({ url: cv.toDataURL('image/png'), title: (s.querySelector('h2') || {}).innerText || '', msg: ((s.querySelector('.sl-m') || {}).innerText || '').replace(/^💡\s*/, '') });
+    }
+  } finally { box.remove(); }
+  return out;
+}
+const deckName = () => ('신학부 발표자료 ' + todayStr()).replace(/[\\/:*?"<>|]/g, '');
+async function deckPptx(btn) {
+  busy(btn, true);
+  try {
+    await loadLib('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js', () => window.PptxGenJS);
+    const imgs = await slideImages(2), p = new PptxGenJS(); p.layout = 'LAYOUT_WIDE'; p.title = deckName();
+    imgs.forEach(im => { const s = p.addSlide(); s.addImage({ data: im.url, x: 0, y: 0, w: 13.333, h: 7.5 }); if (im.msg || im.title) s.addNotes([im.title, im.msg].filter(Boolean).join('\n')); });
+    await p.writeFile({ fileName: deckName() + '.pptx' });
+    toast(`PowerPoint로 저장했어요 (${imgs.length}장)`);
+  } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+async function deckPng(btn) {
+  busy(btn, true);
+  try { const imgs = await slideImages(2); for (let i = 0; i < imgs.length; i++) { const a = document.createElement('a'); a.href = imgs[i].url; a.download = `${deckName()} ${String(i + 1).padStart(2, '0')}.png`; a.click(); await new Promise(r => setTimeout(r, 350)); } toast(`슬라이드 ${imgs.length}장을 이미지로 저장했어요`); }
+  catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+/** PDF: 슬라이드만 따로 열어 한 장씩 인쇄 (대상에서 「PDF로 저장」) */
+function deckPdf() {
+  const css = [...document.querySelectorAll('style')].map(s => s.textContent).join('\n');
+  const w = window.open('', '_blank'); if (!w) return toast('팝업이 막혀 있어요. 이 사이트의 팝업을 허용해 주세요.', true);
+  const html = [...document.querySelectorAll('#deck .sld')].map(s => s.outerHTML.replace(/style="transform:[^"]*"/, '').replace(/contenteditable="true"/g, '')).join('');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${deckName()}</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"><style>${css}
+    @page{size:13.333in 7.5in;margin:0}html,body{margin:0;background:#fff}.sld{transform:none!important;page-break-after:always;break-after:page;box-shadow:none;border-radius:0}</style></head><body>${html}<script>setTimeout(()=>{print()},700)<\/script></body></html>`);
+  w.document.close();
+}
+
+/* 분석 화면 맨 위: 한눈에 보기 */
+function vizOverview() {
+  const act = cohorts().filter(c => c['상태'] !== '종강').map(c => c['기수명']); if (!act.length) return '';
+  const D = deckData(act), M = deckMsgs(D);
+  if (D.any === '' && !D.inN) return '';
+  const k = (l, v, c) => `<div><span>${l}</span><b style="${c ? 'color:' + c : ''}">${v}</b></div>`;
+  return `<div class="card vzo"><div class="row"><h3 style="margin:0">한눈에 보기 <small>진행 중 기수 ${act.length}개</small></h3><span class="sp"></span><a class="btn p sm" href="#present">📊 발표 자료로 만들기</a></div>
+    <div class="vzk">${k('재적', D.roster + '명')}${k('보강 포함 출석률', pct(D.any), bandC(D.any))}${k('실시간 출석률', pct(D.real), bandC(D.real))}${k('보강 비율', pct(D.mkShare), D.mkShare > .25 ? '#f59e0b' : '')}${k('센터 등록', D.reg + '/' + D.inN + '명')}${k('탈락', D.drop + '명', D.drop ? '#dc2626' : '')}</div>
+    <div class="vzg"><div><h4>기수별 출석 (실시간 + 보강)</h4>${vizStack(D.byC)}<p class="vzm">💡 ${esc(M.byC || M.kpi)}</p></div><div><h4>단계 흐름</h4>${vizFlow(D.steps)}${M.flow ? `<p class="vzm">💡 ${esc(M.flow)}</p>` : ''}</div></div>${bandLegend()}</div>`;
+}
+
 /* 새 버전을 올렸는데 휴대폰이 예전 화면을 붙잡고 있으면 한 번 자동으로 새로 고침 */
-const BUILD = '2026-11-22d';
+const BUILD = '2026-11-22e';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
