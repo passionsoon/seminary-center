@@ -304,6 +304,9 @@ a.kpi{display:block;color:inherit;transition:box-shadow .15s}a.kpi:hover{box-sha
 .svy{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-top:8px}.svy summary{cursor:pointer;font-weight:700}.svy dl{margin:8px 0 0;display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13.5px}.svy dt{color:var(--ink2);font-weight:600}.svy dd{margin:0;white-space:normal;word-break:keep-all}@media(max-width:700px){.svy dl{grid-template-columns:1fr}.svy dd{margin-bottom:6px}}
 .athead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}.athead .no{background:var(--pri);color:#fff;font-weight:800;border-radius:8px;padding:3px 10px;font-size:14px}.athead b{font-size:17px}
 th .bt{font-weight:500;font-size:10px;color:var(--ink2);max-width:72px;margin:2px auto 0;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.endn{display:flex;align-items:baseline;gap:6px;margin:12px 0 8px}.endn b{font-size:30px;letter-spacing:-.02em}.endn small{font-size:15px;color:var(--sub);font-weight:600}.endn .muted{margin-left:6px;font-size:13px}
+.endbar{position:relative;height:12px;border-radius:999px;background:var(--line2);overflow:hidden}.endbar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}.endbar .pl{background:repeating-linear-gradient(45deg,#c9d8ff,#c9d8ff 6px,#dfe8ff 6px,#dfe8ff 12px)}.endbar .dn{background:linear-gradient(90deg,#4f7cff,#2a5bd7)}
+.endl{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:10px;font-size:13.5px}
 .dday{display:inline-block;background:linear-gradient(135deg,#ff9f43,#ee5a24);color:#fff;font-size:12px;padding:1px 8px;border-radius:999px;margin-left:2px}
 .cal .ci.pre{background:#fff4e0;color:#8a5a00;border-left-color:#f0a020}
 .fx{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}.fx.end{-webkit-mask-image:none;mask-image:none}
@@ -886,7 +889,23 @@ const L = k => (DB.lists && DB.lists[k]) || [];
 function statOf(n) { return (DB.cohortStats || []).find(c => String(c['기수명']) === String(n)) || {}; }
 function studentsOf(c) { return DB.student.filter(s => String(s['기수명']) === String(c) && !s['보관일']); }
 const live = () => DB.student.filter(s => !s['보관일']);
-const SET = () => Object.assign({ reg: { n: 6, minReal: 5, maxMakeup: 1 }, risk: { streak: 2, recent: 4, rate: 0.5 } }, DB.settings || {});
+const SET = () => Object.assign({ reg: { n: 6, minReal: 5, maxMakeup: 1 }, risk: { streak: 2, recent: 4, rate: 0.5 }, end: { minDays: 96 } }, DB.settings || {});
+/** 종강 요건: 행정 개강일부터 강의 수업일수 (행사·휴강·사전 수업 제외, 같은 날 여러 강의는 하루) */
+function endReq(n) {
+  const c = cohortOf(n) || {}, start = c['개강일'] || '', end = c['종강일(입교)'] || '', min = num((SET().end || {}).minDays) || 96, t = todayStr();
+  const days = [...new Set(sessionsOf(n).filter(s => s['상태'] !== '휴강' && s['날짜'] && (!start || s['날짜'] >= start)).map(s => s['날짜']))].sort();
+  const done = days.filter(d => d <= t).length, planned = end ? days.filter(d => d <= end).length : days.length;
+  return { min, done, planned, total: days.length, end, start, nth: days[min - 1] || '', ok: done >= min, short: Math.max(0, min - planned) };
+}
+function endCard(n) {
+  const r = endReq(n), w = v => Math.min(100, Math.round(v / r.min * 100));
+  const stt = r.ok ? ['ok', '종강 가능'] : r.end && r.short ? ['bad', r.short + '일 부족'] : ['blue', '진행 중'];
+  return `<div class="card mt endc"><div class="row"><h3 style="margin:0">종강 요건 <small>행정 개강일${r.start ? '(' + md(r.start) + ')' : ''}부터 강의 수업일수 · 행사·휴강·사전 수업 제외</small></h3><span class="sp"></span><span class="b ${stt[0]}">${stt[1]}</span></div>
+    <div class="endn"><b>${r.done}</b><small>/ ${r.min}일</small><span class="muted">지금까지 수업한 날</span></div>
+    <div class="endbar"><i class="pl" style="width:${w(r.end ? r.planned : r.total)}%"></i><i class="dn" style="width:${w(r.done)}%"></i><em style="left:100%"></em></div>
+    <div class="endl">${r.end ? `<span>종강일 ${md(r.end)}까지 예정 <b>${r.planned}일</b> ${r.short ? `<span class="b bad">${r.short}일 부족 — 수업일을 더 잡아야 종강할 수 있어요</span>` : '<span class="b ok">충족</span>'}</span>` : `<span>일정에 잡힌 수업 <b>${r.total}일</b> <span class="muted">(종강일을 넣으면 종강일까지로 계산해요)</span></span>`}
+      ${r.nth ? `<span>${r.min}번째 수업일 <b>${md(r.nth)}(${DOW[dow(r.nth)]})</b>${r.ok ? '' : ' 예정'}</span>` : `<span class="muted">수업 일정이 아직 ${r.min}일이 안 돼요 — 「수업 일정」에서 더 넣어 주세요</span>`}</div></div>`;
+}
 /** 탈락 위험: 연속 결석 또는 최근 출석률 저조 → 위험, 최근 3회 안에 결석 → 주의 */
 function riskMap(c) {
   const k = 'risk|' + c; if (MEMO[k]) return MEMO[k];
@@ -1135,7 +1154,7 @@ function nowCard(c) {
     ${cur ? `<div class="ls">최근 수업 · <b>${cur.ses}회차</b> ${DOW_FULL(cur.date)}${ses['진도내용'] ? ' · ' + esc(ses['진도내용']) : ''}</div>
     <div class="big"><div><span>출석</span><b>${att}<small>/${cur.tot}명</small></b>${dlt(att, patt, '명')}</div><div><span>출석률</span><b>${pct(cur.r)}</b>${dlt(cur.r, prev ? prev.r : '', 'p')}</div><div><span>실시간</span><b>${cur.real}<small>명</small></b>${dlt(cur.real, prev ? prev.real : '', '명')}</div></div>`
     : preInfo(c)}
-    <div class="foot">${ms ? `<span class="b bad">출석 미입력 ${ms}회</span>` : ''}${rk ? `<span class="b bad">챙길 사람 ${rk}명</span>` : ''}${ab ? `<span class="b warn">결석 미연락 ${ab}명</span>` : ''}${!ms && !rk && !ab ? '<span class="b ok">특이사항 없음</span>' : ''}<span class="sp"></span>${nx ? `<span class="muted">다음 ${nx['회차']}회차 ${DOW_FULL(nx['날짜'])}</span>` : ''}</div>
+    <div class="foot">${(() => { const er = endReq(n); return `<span class="b ${er.ok ? 'ok' : er.end && er.short ? 'bad' : ''}" data-tip="종강 요건: 행정 개강일부터 강의 수업일수 ${er.min}일${er.end ? '<br>종강일까지 예정 ' + er.planned + '일' : ''}">수업일수 ${er.done}/${er.min}</span>`; })()}${ms ? `<span class="b bad">출석 미입력 ${ms}회</span>` : ''}${rk ? `<span class="b bad">챙길 사람 ${rk}명</span>` : ''}${ab ? `<span class="b warn">결석 미연락 ${ab}명</span>` : ''}${!ms && !rk && !ab ? '<span class="b ok">특이사항 없음</span>' : ''}<span class="sp"></span>${nx ? `<span class="muted">다음 ${nx['회차']}회차 ${DOW_FULL(nx['날짜'])}</span>` : ''}</div>
   </div>`;
 }
 PAGES.home = () => {
@@ -1151,6 +1170,7 @@ PAGES.home = () => {
     const n = String(c['기수명']), e = encodeURIComponent(n);
     const ses = sessionsOf(n).concat(preSessionsOf(n)).find(s => s['날짜'] === today && s['상태'] !== '휴강');
     if (ses && !summaryOf(n, true).some(s => num(s['회차']) === num(ses['회차']))) alerts.push(['blue', `${esc(n)} · 오늘 ${SL(ses['회차'])} 출석이 아직 안 올라왔어요`, `attend/${e}/${ses['회차']}`]);
+    const er = endReq(n); if (er.end && er.short && c['상태'] !== '종강') alerts.push(['bad', `${esc(n)} · 종강일(${md(er.end)})까지 수업일수 ${er.planned}일 — 종강 요건 ${er.min}일에 ${er.short}일 부족해요`, `cohort/${e}/overview`]);
     const ms = missedSessions(n); if (ms.length) alerts.push(['bad', `${esc(n)} · 지난 회차 ${ms.length}회 출석이 비어 있어요 (${ms.slice(0, 3).map(x => x['회차'] + '회차').join(', ')}${ms.length > 3 ? ` 외 ${ms.length - 3}회` : ''})`, `attend/${e}/${ms[0]['회차']}`]);
   });
   const kp = (tone, ic, l, v, u, d, href) => `<${href ? `a href="#${href}"` : 'div'} class="card kp ${tone}"><span class="ic">${icon(ic, 18)}</span><div class="l">${l}</div><div class="v">${v}<small>${u}</small></div><div class="d">${d || '&nbsp;'}</div></${href ? 'a' : 'div'}>`;
@@ -1196,7 +1216,7 @@ function editCohort(name) {
     ${F('상태', '상태', c['상태'], 'select', L('기수상태').length ? L('기수상태') : ['모집중', '진행중', '종강'])}
     ${F('개강일', '행정 개강일', c['개강일'], 'date', null, { hint: '이 날부터 1회차 · 출석률 · 등록 판정' })}${F('실제시작일', '실제 시작일', c['실제시작일'], 'date', null, { hint: '개강일보다 먼저 수업을 시작할 때 (그 사이 수업은 사전 수업)' })}${F('센터등록일', '센터 등록일', c['센터등록일'], 'date')}<div></div>
     ${F('중등진급일', '중등 진급일', c['중등진급일'], 'date')}${F('고등진급일', '고등 진급일', c['고등진급일'], 'date')}
-    ${F('종강일(입교)', '종강일(입교)', c['종강일(입교)'], 'date')}</div>
+    ${F('종강일(입교)', '종강일(입교)', c['종강일(입교)'], 'date', null, name ? { hint: (() => { const er = endReq(name); return `수업일수 ${er.done}/${er.min}일 · ${er.nth ? er.min + '번째 수업일 ' + md(er.nth) : '일정상 아직 ' + er.total + '일'}`; })() } : {})}</div>
     <div class="sec">담당</div><div class="form">${F('강사', '강사', c['강사'], 'text', 'dlStaff')}<div></div>${F('전도사1', '전도사 1', c['전도사1'], 'text', 'dlStaff')}${F('전도사2', '전도사 2', c['전도사2'], 'text', 'dlStaff')}</div>
     <div class="sec">메모</div>${F('비고', '', c['비고'], 'area')}
     <details class="mt2"><summary class="muted" style="cursor:pointer">명단 없는 과거 기수: 인원 직접 입력</summary><div class="form mt">${manual.map(k => F(k, k.replace('(수동)', ''), c[k], 'number')).join('')}</div></details>`,
@@ -1209,6 +1229,7 @@ async function saveCohort(isEdit, btn) {
   const from = isEdit ? String(isEdit) : '';
   const renamed = from && from !== v['기수명'];
   if ((!from || renamed) && cohortOf(v['기수명'])) return toast('이미 있는 기수명입니다', true);
+  if (from && v['상태'] === '종강' && (cohortOf(from) || {})['상태'] !== '종강') { const er = endReq(from); if (!er.ok && !(await ask('종강 요건 미달', `수업일수가 ${er.done}일이에요. 종강 요건 ${er.min}일에 ${er.min - er.done}일 모자라요.\n그래도 종강으로 바꿀까요?`, '종강으로 바꾸기', true))) return; }
   if (renamed) {
     if (!(await ask('기수 이름 바꾸기', `「${from}」 → 「${v['기수명']}」 — 수강생·진도·출석 기록과 담당자 비밀번호가 모두 새 이름으로 옮겨집니다. 담당자에게 보낸 링크는 새로 보내 주세요.`, '바꾸기'))) return;
     busy(btn, true);
@@ -1247,7 +1268,7 @@ PAGES.cohort = () => {
     const stu = studentsOf(n), cnt = st => stu.filter(x => stageOf(x) === st).length;
     const rates = [['입고→등록', s['입고→등록률']], ['등록→중등', s['등록→중등 진급률']], ['중등→고등', s['중등→고등 진급률']], ['고등→입교', s['고등→입교율']], ['종강률', s['종강률(등록→입교)']]];
     body = `<div class="grid g-kpi">${[['입고', stu.length || num(s['수카 입고'])], ['재적', rosterAt(n, todayStr()).length], ['센터 등록', stu.filter(x => x['센터등록일']).length || num(s['센터 등록(초등)'])], ['입교', cnt('입교') || num(s['입교(종강)'])], ['탈락', cnt('탈락') || num(s['탈락'])], ['출석률', pct(attRate(n))]].map(k => `<div class="card kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div></div>`).join('')}</div>
-    <div class="mt">${nowCard(c).replace(/onclick="go\('cohort\/[^']*'\)"/, '')}</div>
+    <div class="mt">${nowCard(c).replace(/onclick="go\('cohort\/[^']*'\)"/, '')}</div>${endCard(n)}
     <div class="grid g-2 mt">
       <div class="card"><h3>단계별 흐름 <small>어디서 빠지는지</small></h3>${funnelHTML(n)}
         <div class="muted mt">병목 구간 <b style="color:var(--bad)">${esc(s['병목 구간'] || '-')}</b> · 주요 탈락 ${esc(s['주요 탈락사유'] || '-')}</div></div>
@@ -1768,7 +1789,7 @@ function progressBody(n) {
   const ss = sessionsOf(n), ev = eventsOf(n), today = todayStr();
   const next = ss.find(s => s['날짜'] >= today && s['상태'] !== '휴강'), nextEv = ev.find(e => e['날짜'] >= today);
   const nextPre = preSessionsOf(n).find(s => s['날짜'] >= today && s['상태'] !== '휴강'), start = (cohortOf(n) || {})['개강일'];
-  const head = `<div class="card"><div class="row" style="gap:18px;flex-wrap:wrap">${next ? `<span>다음 강의 <b>${next['회차']}회차</b> · ${md(next['날짜'])}(${DOW[dow(next['날짜'])]}) ${esc(next['진도내용'] || '')}</span>` : '<span class="muted">예정된 강의가 없어요</span>'}${nextPre ? `<span>다음 사전 수업 <b style="color:#8a5a00">${SL(nextPre['회차'])}</b> · ${md(nextPre['날짜'])}(${DOW[dow(nextPre['날짜'])]})</span>` : ''}${start && today < start ? `<span class="muted">행정 개강 ${md(start)} · 그 전 수업은 사전 수업</span>` : ''}${nextEv ? `<span>다음 행사 <b style="color:#b07800">${esc(nextEv['진도내용'] || '행사')}</b> · ${md(nextEv['날짜'])}</span>` : ''}<span class="sp"></span><span class="lgd" style="margin:0"><span><i class="sq" style="background:var(--pri)"></i>강의</span><span><i class="sq" style="background:#f0a020"></i>사전 수업</span><span><i class="sq" style="background:#eda100"></i>행사</span><span><i class="sq" style="background:var(--line)"></i>휴강</span></span></div></div>`;
+  const head = `<div class="card"><div class="row" style="gap:18px;flex-wrap:wrap">${next ? `<span>다음 강의 <b>${next['회차']}회차</b> · ${md(next['날짜'])}(${DOW[dow(next['날짜'])]}) ${esc(next['진도내용'] || '')}</span>` : '<span class="muted">예정된 강의가 없어요</span>'}${nextPre ? `<span>다음 사전 수업 <b style="color:#8a5a00">${SL(nextPre['회차'])}</b> · ${md(nextPre['날짜'])}(${DOW[dow(nextPre['날짜'])]})</span>` : ''}${start && today < start ? `<span class="muted">행정 개강 ${md(start)} · 그 전 수업은 사전 수업</span>` : ''}${(() => { const er = endReq(n); return `<span data-tip="행정 개강일부터 강의 수업일수 (행사·휴강·사전 수업 제외)">수업일수 <b style="color:${er.ok ? 'var(--ok)' : er.end && er.short ? 'var(--bad)' : 'inherit'}">${er.done}/${er.min}일</b>${er.end ? ` · 종강일까지 예정 ${er.planned}일${er.short ? ` <b style="color:var(--bad)">(${er.short}일 부족)</b>` : ''}` : ''}</span>`; })()}${nextEv ? `<span>다음 행사 <b style="color:#b07800">${esc(nextEv['진도내용'] || '행사')}</b> · ${md(nextEv['날짜'])}</span>` : ''}<span class="sp"></span><span class="lgd" style="margin:0"><span><i class="sq" style="background:var(--pri)"></i>강의</span><span><i class="sq" style="background:#f0a020"></i>사전 수업</span><span><i class="sq" style="background:#eda100"></i>행사</span><span><i class="sq" style="background:var(--line)"></i>휴강</span></span></div></div>`;
   return head + (CAL.view === 'list' ? listBody(n) : calBody(n));
 }
 function calBody(n) {
@@ -2389,6 +2410,7 @@ function issues(hs) {
   const out = [], P = v => pct(v);
   hs.forEach(h => {
     const e = encodeURIComponent(h.n);
+    { const er = endReq(h.n); if (er.end && er.short) out.push([3, 'bad', `${h.n} · 종강일까지 수업일수 ${er.planned}일 (요건 ${er.min}일에 ${er.short}일 부족)`, '수업 일정에 강의일을 더 잡거나 종강일을 미뤄야 종강할 수 있어요', `cohort/${e}/progress`]); }
     if (h.miss) out.push([3, 'bad', `${h.n} · 지난 수업 ${h.miss}회의 출석이 입력되지 않았어요`, '담당자에게 링크로 올려 달라고 요청하세요', `attend/${e}`]);
     if (h.ses >= 3 && h.rec !== '' && h.rec < .75) out.push([3, 'bad', `${h.n} · 최근 4회 출석률 ${P(h.rec)}로 낮아요`, '결석이 잦은 사람부터 개별 상담·심방을 잡아 보세요', `book/${e}`]);
     if (h.trend !== '' && h.trend <= -.05) out.push([2, 'warn', `${h.n} · 출석률이 직전 4회보다 ${Math.round(-h.trend * 1000) / 10}%p 떨어졌어요`, '최근 수업 내용·시간대·행사 일정과 겹친 건 없는지 확인하세요', `cohort/${e}`]);
@@ -2593,7 +2615,8 @@ function settingsBody() {
   const S2 = SETS, T = S2.tg, act = cohorts().filter(c => c['상태'] !== '종강'), trash = DB.student.filter(s => s['보관일']);
   const num3 = (k, label, v, unit) => `<label class="fld"><span>${label}</span><div class="row" style="flex-wrap:nowrap"><input type="number" data-s="${k}" value="${esc(v)}" style="width:100%"><span class="muted">${unit}</span></div></label>`;
   const chk = (k, label) => `<label class="row" style="font-weight:500"><input type="checkbox" data-s="tg.${k}" ${T[k] ? 'checked' : ''}> ${label}</label>`;
-  return `<div class="card"><h3>센터 등록 판정 기준</h3><div class="setgrid">${num3('reg.n', '판정할 첫 회차 수', S2.reg.n, '회')}${num3('reg.minReal', '실시간 최소', S2.reg.minReal, '회')}${num3('reg.maxMakeup', '보강 최대', S2.reg.maxMakeup, '회')}</div></div>
+  return `<div class="card"><h3>종강 요건</h3><div class="setgrid">${num3('end.minDays', '최소 수업일수 (이상)', (S2.end || {}).minDays || 96, '일')}</div><p class="muted" style="margin:8px 0 0;font-size:12.5px">행정 개강일부터 센 강의 수업일 · 행사·휴강·사전 수업 제외 · 같은 날 강의가 여러 개면 하루로 셈</p></div>
+  <div class="card mt"><h3>센터 등록 판정 기준</h3><div class="setgrid">${num3('reg.n', '판정할 첫 회차 수', S2.reg.n, '회')}${num3('reg.minReal', '실시간 최소', S2.reg.minReal, '회')}${num3('reg.maxMakeup', '보강 최대', S2.reg.maxMakeup, '회')}</div></div>
   <div class="card"><h3>탈락 위험 기준</h3><div class="setgrid">${num3('risk.streak', '연속 결석(이상)', S2.risk.streak, '회')}${num3('risk.recent', '최근 몇 회', S2.risk.recent, '회')}${num3('risk.rate', '최근 출석률 미만', Math.round(S2.risk.rate * 100), '%')}</div><p class="muted" style="margin-bottom:0">둘 중 하나라도 해당하면 「위험」, 최근 3회 안에 결석이 있으면 「주의」로 표시해요.</p></div>
   <div class="card"><h3>텔레그램 알림 <small>매일 정해진 시각에 보냅니다</small></h3>
     <div class="form"><label class="fld full"><span>봇 토큰<em>@BotFather에서 받은 값</em></span><input type="password" data-s="tg.token" value="${esc(T.token)}" placeholder="123456:ABC..." autocomplete="off"></label>
@@ -2640,7 +2663,7 @@ async function purgeStu(id) { if (await ask('영구 삭제', '이 수강생과 �
 
 /* ═════════ 시작 ═════════ */
 /* 새 버전을 올렸는데 휴대폰이 예전 화면을 붙잡고 있으면 한 번 자동으로 새로 고침 */
-const BUILD = '2026-11-22c';
+const BUILD = '2026-11-22d';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
