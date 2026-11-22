@@ -334,6 +334,10 @@ th .bt{font-weight:500;font-size:10px;color:var(--ink2);max-width:72px;margin:2p
   .vz-cols{gap:2px;height:200px}.vz-c b{font-size:10.5px}.vz-c span{font-size:10px}.vz-c small{display:none}}
 /* 슬라이드 1280×720 */
 .sl-wrap{position:relative;margin-bottom:22px}
+.rtype{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.rtype button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;box-shadow:var(--sh);font:inherit;color:var(--ink)}
+.rtype button em{font-style:normal;width:24px;height:24px;border-radius:8px;background:var(--line2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:4px}.rtype button b{font-size:14.5px}.rtype button small{font-size:12px;color:var(--sub)}
+.rtype button.on{border-color:#2563eb;background:linear-gradient(135deg,#eff4ff,#fff);box-shadow:0 0 0 2px #2563eb inset}.rtype button.on em{background:#2563eb;color:#fff}
+@media(max-width:760px){.rtype{grid-template-columns:1fr 1fr}}
 .sld{width:1280px;height:720px;background:#fff;position:relative;transform-origin:0 0;padding:58px 72px 54px;box-sizing:border-box;display:flex;flex-direction:column;color:#0f172a;overflow:hidden;border-radius:14px;box-shadow:0 8px 30px rgba(15,23,42,.12);font-family:"Pretendard Variable",Pretendard,sans-serif}
 .sld::before{content:'';position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(90deg,#4f46e5,#2563eb,#0891b2,#16a34a)}
 .sl-h{display:flex;gap:18px;align-items:flex-start}.sl-no{flex:none;width:44px;height:44px;border-radius:12px;background:#2563eb;color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:2px}
@@ -2746,60 +2750,123 @@ function vizProg(rows) {
 }
 
 /* ═════════ 분석 묶음 데이터 (분석 화면 · 발표 자료 공통) ═════════ */
-function deckData(cs) {
-  const t = todayStr(), cobj = cs.map(cohortOf).filter(Boolean);
+/** 보고서 단계: 회차의 과정(센터·초등·중등·고등)으로 나눔 */
+const PH = {
+  p1: { t: '센터 개강 ~ 센터 등록', sh: '센터 과정', courses: ['센터'], pop: () => true },
+  p2: { t: '센터 등록 ~ 초등 종강', sh: '초등 과정', courses: ['초등'], pop: s => !!s['센터등록일'] },
+  p3: { t: '초등 종강 ~ 고등 종강', sh: '중등·고등 과정', courses: ['중등', '고등'], pop: s => !!s['중등진급일'] },
+  all: { t: '종합', sh: '전체 과정', courses: null, pop: () => true }
+};
+const dropStage = s => s['중등진급일'] ? 'p3' : s['센터등록일'] ? 'p2' : 'p1';
+function deckData(cs, ph) {
+  ph = ph || 'all'; const P = PH[ph], t = todayStr(), cobj = cs.map(cohortOf).filter(Boolean);
+  const inP = (n, x) => !P.courses || P.courses.includes(x['과정'] || courseAt(n, x['날짜']));
+  const sumsOf = n => summaryOf(n).filter(x => inP(n, x));
+  const rt = x => num(x['재적인원']) ? (num(x['실시간출석']) + num(x['보강출석'])) / num(x['재적인원']) : 0;
   let real = 0, mk = 0, tot = 0, nses = 0;
-  cs.forEach(n => summaryOf(n).forEach(x => { real += num(x['실시간출석']); mk += num(x['보강출석']); tot += num(x['재적인원']); nses++; }));
-  const studs = cs.flatMap(n => studentsOf(n));
+  cs.forEach(n => sumsOf(n).forEach(x => { real += num(x['실시간출석']); mk += num(x['보강출석']); tot += num(x['재적인원']); nses++; }));
+  const nos = {}; cs.forEach(n => nos[n] = new Set(sumsOf(n).map(x => num(x['회차']))));
+  const recs = DB.attend.filter(a => nos[a['기수명']] && nos[a['기수명']].has(num(a['회차'])));
+  const studs = cs.flatMap(n => studentsOf(n)), pop = studs.filter(P.pop);
+  const per = {}; recs.forEach(a => { const g = per[a['수강생ID']] = per[a['수강생ID']] || { n: 0, ok: 0, real: 0, ab: 0 }; g.n++; if (a['출석'] !== '결석') g.ok++; else g.ab++; if (a['출석'] === '실시간') g.real++; });
+  const rateOfS = s => ph === 'all' ? (s['출석률'] === '' || s['출석률'] === undefined ? '' : num(s['출석률'])) : per[s['수강생ID']] ? per[s['수강생ID']].ok / per[s['수강생ID']].n : '';
   const steps = cs.length ? funnelSteps(cs[0]).map(x => [x[0], 0]) : [];
   cs.forEach(n => funnelSteps(n).forEach((x, i) => { if (steps[i]) steps[i][1] += x[1]; }));
-  const byC = cs.map(n => { let r = 0, m = 0, tt = 0; summaryOf(n).forEach(x => { r += num(x['실시간출석']); m += num(x['보강출석']); tt += num(x['재적인원']); }); return { k: n, a: tt ? r / tt : 0, b: tt ? m / tt : 0, v: tt ? (r + m) / tt : '', n: summaryOf(n).length }; }).filter(x => x.v !== '');
-  const ses = cs.length === 1 ? sesRates(cs[0]).slice(-14).map(x => ({ k: x.ses + '회', sub: md(x.date), v: x.r })) : [];
-  const recent = cs.map(n => { const h = health(n); return { k: n, v: h.rec, all: h.all, trend: h.trend }; }).filter(x => x.v !== '');
-  const grp = key => { const m = {}; studs.filter(s => !s['탈락일']).forEach(s => { if (s['출석률'] === '' || s['출석률'] === undefined) return; const k = s[key] || '(미지정)'; (m[k] = m[k] || []).push(num(s['출석률'])); }); return Object.entries(m).map(([k, a]) => ({ k, v: avg(a), n: a.length })).sort((a, b) => b.v - a.v); };
-  const wk = groupRate(cobj, x => x['날짜'] ? DOW[dow(x['날짜'])] + '요일' : '').sort((a, b) => '일월화수목금토'.indexOf(a.k[0]) - '일월화수목금토'.indexOf(b.k[0]));
-  const rsn = {}; DB.attend.filter(a => cs.includes(String(a['기수명'])) && a['출석'] === '결석').forEach(a => { const k = a['결석사유'] || '(사유 미입력)'; rsn[k] = (rsn[k] || 0) + 1; });
-  const pre = cs.reduce((a, n) => a + summaryOf(n, true).filter(x => isPreNo(x['회차'])).length, 0);
+  const byC = cs.map(n => { let r = 0, m = 0, tt = 0; sumsOf(n).forEach(x => { r += num(x['실시간출석']); m += num(x['보강출석']); tt += num(x['재적인원']); }); return { k: n, a: tt ? r / tt : 0, b: tt ? m / tt : 0, v: tt ? (r + m) / tt : '', n: sumsOf(n).length }; }).filter(x => x.v !== '');
+  const ses = cs.length === 1 ? sumsOf(cs[0]).slice(-14).map(x => ({ k: x['회차'] + '회', sub: md(x['날짜']), v: rt(x) })) : [];
+  const recent = cs.map(n => { const l = sumsOf(n).slice(-4); let a = 0, b = 0; l.forEach(x => { a += num(x['실시간출석']) + num(x['보강출석']); b += num(x['재적인원']); }); return { k: n, v: b ? a / b : '' }; }).filter(x => x.v !== '');
+  const live = pop.filter(s => !s['탈락일']);
+  const grp = key => { const m = {}; live.forEach(s => { const v = rateOfS(s); if (v === '') return; const k = s[key] || '(미지정)'; (m[k] = m[k] || []).push(v); }); return Object.entries(m).map(([k, a]) => ({ k, v: avg(a), n: a.length })).sort((a, b) => b.v - a.v); };
+  const wk = groupRate(cobj, (x, c) => inP(c['기수명'], x) && x['날짜'] ? DOW[dow(x['날짜'])] + '요일' : '').sort((a, b) => '일월화수목금토'.indexOf(a.k[0]) - '일월화수목금토'.indexOf(b.k[0]));
+  const crs = groupRate(cobj, (x, c) => inP(c['기수명'], x) ? (x['과정'] || courseAt(c['기수명'], x['날짜'])) : '').sort((a, b) => ['센터', '초등', '중등', '고등'].indexOf(a.k) - ['센터', '초등', '중등', '고등'].indexOf(b.k));
+  const rsn = {}; recs.filter(a => a['출석'] === '결석').forEach(a => { const k = a['결석사유'] || '(사유 미입력)'; rsn[k] = (rsn[k] || 0) + 1; });
+  // 관심이 필요한 사람: 이 과정 출석률 85% 미만 (낮은 순)
+  const care = live.map(s => ({ s, v: rateOfS(s), g: per[s['수강생ID']] })).filter(x => x.v !== '' && x.v < .85).sort((a, b) => a.v - b.v)
+    .map(x => ({ k: x.s['이름'], sub: x.s['담당전도사'] || '', v: x.v, n: x.g ? x.g.ab : undefined }));
+  const regs = ph === 'p1' || ph === 'all' ? cs.flatMap(n => registerCandidates(n)) : [];
+  const drops = studs.filter(s => s['탈락일'] && (ph === 'all' || dropStage(s) === ph));
+  const cnt = k => studs.filter(s => s[k]).length;
   return {
-    cs, t, real: tot ? real / tot : '', any: tot ? (real + mk) / tot : '', mkShare: real + mk ? mk / (real + mk) : '', nses, pre,
-    roster: cs.reduce((a, n) => a + rosterAt(n, t).length, 0), inN: studs.length, reg: studs.filter(s => s['센터등록일']).length, drop: studs.filter(s => s['탈락일']).length,
-    steps, byC, ses, recent, ev: grp('담당전도사'), ban: grp('분반'), wk, reasons: Object.entries(rsn).sort((a, b) => b[1] - a[1]).slice(0, 7),
+    ph, P, cs, t, real: tot ? real / tot : '', any: tot ? (real + mk) / tot : '', mkShare: real + mk ? mk / (real + mk) : '', nses,
+    roster: cs.reduce((a, n) => a + rosterAt(n, t).length, 0), inN: studs.length, popN: pop.length, reg: cnt('센터등록일'), mid: cnt('중등진급일'), high: cnt('고등진급일'), fin: cnt('입교일'),
+    drop: drops.length, dropAll: studs.filter(s => s['탈락일']).length, dropRsn: Object.entries(drops.reduce((m, s) => { const k = s['탈락사유'] || '(미입력)'; m[k] = (m[k] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]),
+    steps, byC, ses, recent, ev: grp('담당전도사'), ban: grp('분반'), wk, crs, reasons: Object.entries(rsn).sort((a, b) => b[1] - a[1]).slice(0, 7), care,
+    regState: ['done', 'ok', 'wait', 'no'].map(k => [k, regs.filter(r => r.state === k).length]), regNo: regs.filter(r => r.state === 'no'),
+    evReg: (() => { const m = {}; studs.forEach(s => { const k = s['담당전도사'] || '(미지정)', g = m[k] = m[k] || { a: 0, r: 0 }; g.a++; if (s['센터등록일']) g.r++; }); return Object.entries(m).map(([k, g]) => ({ k, v: g.r / g.a, n: g.a })).sort((a, b) => b.v - a.v); })(),
     ends: cs.map(n => Object.assign({ k: n }, endReq(n))), iss: issues(cs.map(health))
   };
 }
 /** 한 줄 요약(핵심 메시지) 자동 작성 */
 function deckMsgs(D) {
-  const m = {}, lo = a => a.reduce((x, y) => y.v < x.v ? y : x), hi = a => a.reduce((x, y) => y.v > x.v ? y : x);
-  m.kpi = D.any === '' ? '아직 올라온 출석이 없어요.' : `보강 포함 출석률 ${pct(D.any)}, 실시간(대면) ${pct(D.real)} — 출석 가운데 ${pct(D.mkShare)}가 보강이에요.`;
-  if (D.byC.length > 1) { const a = hi(D.byC), b = lo(D.byC); m.byC = `${a.k}가 ${pct(a.v)}로 가장 높고, ${b.k}는 ${pct(b.v)}로 ${Math.round((a.v - b.v) * 1000) / 10}%p 낮아요.`; }
+  const m = {}, lo = a => a.reduce((x, y) => y.v < x.v ? y : x), hi = a => a.reduce((x, y) => y.v > x.v ? y : x), pp = v => Math.round(v * 1000) / 10 + '%p';
+  m.kpi = D.any === '' ? `${D.P.sh} 출석이 아직 올라오지 않았어요.` : `${D.P.sh} 보강 포함 출석률 ${pct(D.any)}, 실시간(대면) ${pct(D.real)} — 출석 가운데 ${pct(D.mkShare)}가 보강이에요.`;
+  if (D.byC.length > 1) { const a = hi(D.byC), b = lo(D.byC); m.byC = `${a.k}가 ${pct(a.v)}로 가장 높고, ${b.k}는 ${pct(b.v)}로 ${pp(a.v - b.v)} 낮아요.`; }
   else if (D.byC.length) m.byC = `실시간 ${pct(D.byC[0].a)} + 보강 ${pct(D.byC[0].b)} = ${pct(D.byC[0].v)}`;
-  if (D.ses.length >= 2) { const f = D.ses.slice(0, Math.min(4, D.ses.length)), l = D.ses.slice(-Math.min(4, D.ses.length)), av = a => avg(a.map(x => x.v)), d = av(l) - av(f); m.ses = `최근 ${l.length}회 평균 ${pct(av(l))} — ${Math.abs(d) < .005 ? `처음 ${f.length}회와 비슷해요` : `처음 ${f.length}회보다 ${d > 0 ? '▲' : '▼'} ${Math.abs(Math.round(d * 1000) / 10)}%p ${d > 0 ? '올랐어요' : '떨어졌어요'}`}.`; const w = lo(D.ses); if (w.v < .75) m.ses += ` 가장 낮은 회차는 ${w.k}(${w.sub}) ${pct(w.v)}.`; }
+  if (D.ses.length >= 2) { const f = D.ses.slice(0, Math.min(4, D.ses.length)), l = D.ses.slice(-Math.min(4, D.ses.length)), av = a => avg(a.map(x => x.v)), d = av(l) - av(f); m.ses = `최근 ${l.length}회 평균 ${pct(av(l))} — ${Math.abs(d) < .005 ? `처음 ${f.length}회와 비슷해요` : `처음 ${f.length}회보다 ${d > 0 ? '▲' : '▼'} ${pp(Math.abs(d))} ${d > 0 ? '올랐어요' : '떨어졌어요'}`}.`; const w = lo(D.ses); if (w.v < .75) m.ses += ` 가장 낮은 회차는 ${w.k}(${w.sub}) ${pct(w.v)}.`; }
   if (D.recent.length) { const b = lo(D.recent); m.recent = `최근 4회 출석률이 가장 낮은 기수는 ${b.k} (${pct(b.v)}).`; }
   if (D.steps.length && D.steps[0][1]) { let wi = -1, wv = 2; D.steps.forEach((x, i) => { if (i && D.steps[i - 1][1] && (x[1] || i < 2)) { const r = x[1] / D.steps[i - 1][1]; if (r < wv) { wv = r; wi = i; } } }); m.flow = wi > 0 ? `「${D.steps[wi - 1][0]} → ${D.steps[wi][0]}」 구간에서 가장 많이 빠져요 (${pct(wv)}만 넘어감).` : ''; }
   if (D.ev.length > 1) { const all = avg(D.ev.map(x => x.v)), b = lo(D.ev); m.ev = `전도사별 평균 ${pct(all)} · ${b.k} 담당 학생이 ${pct(b.v)}로 가장 낮아요.`; }
-  if (D.ban.length > 1) { const b = lo(D.ban), a = hi(D.ban); m.ban = `${a.k} ${pct(a.v)} · ${b.k} ${pct(b.v)} — 분반 간 차이 ${Math.round((a.v - b.v) * 1000) / 10}%p.`; }
+  if (D.ban.length > 1) { const b = lo(D.ban), a = hi(D.ban); m.ban = `${a.k} ${pct(a.v)} · ${b.k} ${pct(b.v)} — 분반 간 차이 ${pp(a.v - b.v)}.`; }
   if (D.wk.length > 1) { const b = lo(D.wk), a = hi(D.wk); m.wk = `${b.k} 수업이 ${pct(b.v)}로 가장 약해요 (${a.k} ${pct(a.v)}).`; }
   if (D.reasons.length) m.rsn = `결석 사유 1위는 「${D.reasons[0][0]}」 ${D.reasons[0][1]}건.`;
+  if (D.crs.length > 1) { const b = lo(D.crs), a = hi(D.crs); m.crs = `${a.k} ${pct(a.v)} → ${b.k} ${pct(b.v)}${a.k !== b.k ? ` · ${b.k}에서 ${pp(a.v - b.v)} 낮아요` : ''}.`; }
+  m.care = D.care.length ? `이 과정 출석률 85% 미만 ${D.care.length}명 — 가장 낮은 ${D.care.slice(0, 3).map(x => x.k).join(', ')}부터 연락해 보세요.` : '이 과정 출석률 85% 미만인 사람이 없어요.';
+  const rs = Object.fromEntries(D.regState); m.reg = `입고 ${D.inN}명 중 등록 ${rs.done}명${rs.ok ? ` · 등록 가능 ${rs.ok}명(처리 대기)` : ''}${rs.no ? ` · 요건 미달 ${rs.no}명` : ''}${rs.wait ? ` · 판정 진행 중 ${rs.wait}명` : ''}.`;
+  if (D.evReg.length > 1) { const b = lo(D.evReg); m.evReg = `전도사별 등록률 — ${b.k} ${pct(b.v)} (담당 ${b.n}명)가 가장 낮아요.`; }
+  m.drop = D.drop ? `이 과정에서 ${D.drop}명 탈락${D.dropRsn[0] ? ` · 사유 1위 「${D.dropRsn[0][0]}」 ${D.dropRsn[0][1]}명` : ''}.` : '이 과정에서 탈락한 사람이 없어요.';
   const short = D.ends.filter(e => e.end && e.short); m.end = short.length ? `${short.map(e => e.k + ' ' + e.short + '일').join(', ')} 부족 — 종강일까지 수업일을 더 잡아야 해요.` : '종강일이 정해진 기수는 모두 수업일수 요건을 채울 일정이에요.';
   return m;
 }
 
-/* ═════════ 발표 자료: 분석을 16:9 슬라이드로 · 전체 화면 · PDF · PowerPoint ═════════ */
-let PR = { scope: '', per: 'all' };
+/* ═════════ 발표 자료: 단계별 보고서(센터·초등·중고등·종합) → 슬라이드 · 전체 화면 · PDF · PowerPoint ═════════ */
+let PR = { scope: '', ph: 'all' };
 function deckSlides(D, M, label) {
-  const S = [], date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  const S = [], date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }), ph = D.ph, sh = D.P.sh;
   const kp = (l, v, s, c) => `<div class="sk"><span>${l}</span><b style="${c ? 'color:' + c : ''}">${v}</b>${s ? `<small>${s}</small>` : ''}</div>`;
-  S.push({ cls: 'cover', t: '출석·현황 보고', s: label, body: `<div class="cv-d">${date}</div><div class="cv-o">논산 신학부</div>` });
-  S.push({ t: '한눈에 보는 핵심 지표', s: label + ' · 지금까지 올라온 출석 기준', body: `<div class="skp">${kp('재적', D.roster + '<small>명</small>')}${kp('보강 포함 출석률', pct(D.any), '', bandC(D.any))}${kp('실시간(대면) 출석률', pct(D.real), '', bandC(D.real))}${kp('보강 비율', pct(D.mkShare), '출석 중 보강', D.mkShare > .25 ? '#f59e0b' : '')}${kp('센터 등록', D.reg + '<small>/' + D.inN + '명</small>', D.inN ? pct(D.reg / D.inN) : '')}${kp('탈락', D.drop + '<small>명</small>', D.inN ? pct(D.drop / D.inN) : '', D.drop ? '#dc2626' : '')}</div>${bandLegend()}`, m: M.kpi });
-  if (D.ses.length) S.push({ t: '회차별 출석률', s: `${D.cs[0]} · 최근 ${D.ses.length}회 · 색은 출석률 기준`, body: vizCols(D.ses) + bandLegend(), m: M.ses });
-  if (D.byC.length) S.push({ t: D.byC.length > 1 ? '기수별 출석률' : '실시간 · 보강 구성', s: '실시간(대면) + 보강 = 보강 포함 출석률', body: vizStack(D.byC), m: M.byC });
-  if (D.recent.length > 1) S.push({ t: '기수별 최근 4회 출석률', s: '지금 흐름이 약한 기수', body: vizBars(D.recent.slice().sort((a, b) => b.v - a.v)) + bandLegend(), m: M.recent });
-  if (D.steps.length && D.steps[0][1]) S.push({ t: '단계 흐름', s: '수카 입고 → 센터 등록 → 중등 → 고등 → 입교 · 화살표는 다음 단계로 넘어간 비율', body: vizFlow(D.steps), m: M.flow });
-  if (D.ev.length) S.push({ t: '담당전도사별 학생 출석률', s: '담당 학생 평균 (탈락 제외)', body: vizBars(D.ev.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.ev });
-  if (D.ban.length > 1 || (D.ban.length === 1 && D.ban[0].k !== '(미지정)')) S.push({ t: '분반별 학생 출석률', s: '분반 평균 (탈락 제외)', body: vizBars(D.ban.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.ban });
-  if (D.wk.length || D.reasons.length) S.push({ t: '요일 · 결석 사유', s: '어느 요일이 약하고, 왜 빠지는가', body: `<div class="sl-2"><div><h4>요일별 출석률</h4>${vizBars(D.wk)}</div><div><h4>결석 사유</h4>${vizBars(D.reasons.map(x => ({ k: x[0], v: x[1] })), { max: Math.max(1, ...D.reasons.map(x => x[1])), fmt: v => v + '건', color: '#dc2626', target: 0 })}</div></div>`, m: [M.wk, M.rsn].filter(Boolean).join(' ') });
-  if (D.ends.length) S.push({ t: '종강 요건 · 수업일수', s: `행정 개강일부터 강의 수업일수 ${D.ends[0].min}일 이상 (행사·휴강·사전 수업 제외)`, body: vizProg(D.ends), m: M.end });
-  if (D.iss.length) S.push({ t: '지금 챙길 것', s: '중요한 순', body: `<div class="sl-iss">${D.iss.slice(0, 6).map(x => `<div class="${x[1]}"><b>${esc(x[2])}</b><span>${esc(x[3])}</span></div>`).join('')}</div>` });
+  const pc = (a, b) => b ? pct(a / b) : '';
+  const careSlide = () => { if (D.care.length) S.push({ t: '관심이 필요한 수강생', s: `${sh} 출석률 85% 미만 · 낮은 순 (결석 횟수)`, body: vizBars(D.care.slice(0, 8).map(x => ({ k: x.k + (x.sub ? ' · ' + x.sub : ''), v: x.v, n: x.n })), { unit: '회 결석', showN: true }) + bandLegend(), m: M.care }); };
+  const attSlides = () => {
+    if (D.ses.length) S.push({ t: `회차별 출석률`, s: `${D.cs[0]} · ${sh} · 최근 ${D.ses.length}회`, body: vizCols(D.ses) + bandLegend(), m: M.ses });
+    if (D.byC.length) S.push({ t: D.byC.length > 1 ? '기수별 출석률' : '실시간 · 보강 구성', s: `${sh} · 실시간(대면) + 보강 = 보강 포함 출석률`, body: vizStack(D.byC), m: M.byC });
+  };
+  const peopleSlides = () => {
+    if (D.ev.length) S.push({ t: '담당전도사별 학생 출석률', s: `${sh} · 담당 학생 평균 (탈락 제외)`, body: vizBars(D.ev.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.ev });
+    if (D.ban.length > 1 || (D.ban.length === 1 && D.ban[0].k !== '(미지정)')) S.push({ t: '분반별 학생 출석률', s: `${sh} · 분반 평균 (탈락 제외)`, body: vizBars(D.ban.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.ban });
+  };
+  const whySlide = () => { if (D.wk.length || D.reasons.length) S.push({ t: '요일 · 결석 사유', s: `${sh} · 어느 요일이 약하고, 왜 빠지는가`, body: `<div class="sl-2"><div><h4>요일별 출석률</h4>${vizBars(D.wk)}</div><div><h4>결석 사유</h4>${vizBars(D.reasons.map(x => ({ k: x[0], v: x[1] })), { max: Math.max(1, ...D.reasons.map(x => x[1])), fmt: v => v + '건', color: '#dc2626', target: 0 })}</div></div>`, m: [M.wk, M.rsn].filter(Boolean).join(' ') }); };
+  const dropSlide = () => { if (D.drop) S.push({ t: '탈락 현황', s: `${sh} 중 탈락 ${D.drop}명 · 사유별`, body: vizBars(D.dropRsn.map(x => ({ k: x[0], v: x[1] })), { max: Math.max(1, ...D.dropRsn.map(x => x[1])), fmt: v => v + '명', color: '#dc2626', target: 0 }), m: M.drop }); };
+  S.push({ cls: 'cover', t: ph === 'all' ? '출석·현황 종합 보고' : D.P.t + ' 보고', s: label, body: `<div class="cv-d">${date}${ph === 'all' ? '' : ' · ' + sh}</div><div class="cv-o">논산 신학부</div>` });
+  if (ph === 'p1') {
+    const rs = Object.fromEntries(D.regState);
+    S.push({ t: '센터 과정 핵심 지표', s: label + ' · 센터 개강부터 센터 등록까지', body: `<div class="skp">${kp('입고', D.inN + '<small>명</small>')}${kp('센터 출석률 (보강 포함)', pct(D.any), '', bandC(D.any))}${kp('실시간(대면) 출석률', pct(D.real), '', bandC(D.real))}${kp('센터 등록', rs.done + '<small>명</small>', pc(rs.done, D.inN) + ' 등록률', bandC(D.inN ? rs.done / D.inN : ''))}${kp('등록 가능 · 미달', `${rs.ok}<small> · </small>${rs.no}`, '처리 대기 · 요건 미달', rs.no ? '#dc2626' : '')}${kp('등록 전 탈락', D.drop + '<small>명</small>', pc(D.drop, D.inN), D.drop ? '#dc2626' : '')}</div>${bandLegend()}`, m: M.kpi });
+    attSlides();
+    S.push({ t: '센터 등록 판정 결과', s: `첫 ${SET().reg.n}회 모두 출석 + 실시간 ${SET().reg.minReal}회 이상 (보강 ${SET().reg.maxMakeup}회까지)`, body: vizBars([['done', '등록 완료', '#16a34a'], ['ok', '등록 가능 (처리 대기)', '#2563eb'], ['wait', '판정 진행 중', '#94a3b8'], ['no', '요건 미달', '#dc2626']].map(([k, l, c]) => ({ k: l, v: rs[k], c })), { max: Math.max(1, D.inN - D.dropAll), fmt: v => v + '명', target: 0 }), m: M.reg });
+    if (D.regNo.length) S.push({ t: '요건 미달 · 확인이 필요한 사람', s: '보강·재판정 대상', body: `<div class="sl-iss">${D.regNo.slice(0, 7).map(r => `<div class="bad"><b>${esc(r.s['이름'])} <small style="font-weight:600;color:#64748b">${esc(r.s['담당전도사'] || '')}</small></b><span>${esc(r.why)} · 실시간 ${r.real} · 보강 ${r.mk} · 결석 ${r.ab}</span></div>`).join('')}</div>` });
+    if (D.evReg.length) S.push({ t: '담당전도사별 센터 등록률', s: '담당 학생 중 센터 등록한 비율', body: vizBars(D.evReg.slice(0, 8), { unit: '명', showN: true }) + bandLegend(), m: M.evReg });
+    whySlide(); dropSlide(); careSlide();
+  } else if (ph === 'p2') {
+    S.push({ t: '초등 과정 핵심 지표', s: label + ' · 센터 등록부터 초등 종강까지', body: `<div class="skp">${kp('초등 시작 (센터 등록)', D.popN + '<small>명</small>')}${kp('초등 출석률 (보강 포함)', pct(D.any), '', bandC(D.any))}${kp('실시간(대면) 출석률', pct(D.real), '', bandC(D.real))}${kp('보강 비율', pct(D.mkShare), '출석 중 보강', D.mkShare > .25 ? '#f59e0b' : '')}${kp('중등 진급', D.mid + '<small>명</small>', pc(D.mid, D.popN) + ' 진급률')}${kp('초등 중 탈락', D.drop + '<small>명</small>', pc(D.drop, D.popN), D.drop ? '#dc2626' : '')}</div>${bandLegend()}`, m: M.kpi });
+    attSlides();
+    S.push({ t: '초등 과정 흐름', s: '센터 등록 → 중등 진급 · 화살표는 넘어간 비율', body: vizFlow([['센터 등록', D.popN], ['초등 유지', D.popN - D.drop], ['중등 진급', D.mid]]), m: M.drop });
+    peopleSlides(); whySlide(); dropSlide(); careSlide();
+  } else if (ph === 'p3') {
+    S.push({ t: '중등·고등 과정 핵심 지표', s: label + ' · 초등 종강부터 고등 종강까지', body: `<div class="skp">${kp('중등 시작', D.popN + '<small>명</small>')}${kp('중·고등 출석률 (보강 포함)', pct(D.any), '', bandC(D.any))}${kp('실시간(대면) 출석률', pct(D.real), '', bandC(D.real))}${kp('고등 진급', D.high + '<small>명</small>', pc(D.high, D.popN) + ' 진급률')}${kp('입교', D.fin + '<small>명</small>', pc(D.fin, D.popN) + ' 입교율', D.fin ? '#16a34a' : '')}${kp('중등 이후 탈락', D.drop + '<small>명</small>', pc(D.drop, D.popN), D.drop ? '#dc2626' : '')}</div>${bandLegend()}`, m: M.kpi });
+    attSlides();
+    if (D.crs.length) S.push({ t: '과정별 출석률', s: '중등 → 고등 · 어느 단계에서 느슨해지나', body: vizBars(D.crs) + bandLegend(), m: M.crs });
+    S.push({ t: '중등 → 고등 → 입교 흐름', s: '화살표는 다음 단계로 넘어간 비율', body: vizFlow([['중등 진급', D.popN], ['고등 진급', D.high], ['입교', D.fin]]), m: M.drop });
+    peopleSlides(); whySlide();
+    if (D.ends.length) S.push({ t: '종강 요건 · 수업일수', s: `행정 개강일부터 강의 수업일수 ${D.ends[0].min}일 이상 (행사·휴강·사전 수업 제외)`, body: vizProg(D.ends), m: M.end });
+    dropSlide(); careSlide();
+  } else {
+    S.push({ t: '한눈에 보는 핵심 지표', s: label + ' · 지금까지 올라온 출석 기준', body: `<div class="skp">${kp('재적', D.roster + '<small>명</small>')}${kp('보강 포함 출석률', pct(D.any), '', bandC(D.any))}${kp('실시간(대면) 출석률', pct(D.real), '', bandC(D.real))}${kp('보강 비율', pct(D.mkShare), '출석 중 보강', D.mkShare > .25 ? '#f59e0b' : '')}${kp('센터 등록', D.reg + '<small>/' + D.inN + '명</small>', pc(D.reg, D.inN))}${kp('탈락', D.drop + '<small>명</small>', pc(D.drop, D.inN), D.drop ? '#dc2626' : '')}</div>${bandLegend()}`, m: M.kpi });
+    attSlides();
+    if (D.recent.length > 1) S.push({ t: '기수별 최근 4회 출석률', s: '지금 흐름이 약한 기수', body: vizBars(D.recent.slice().sort((a, b) => b.v - a.v)) + bandLegend(), m: M.recent });
+    if (D.steps.length && D.steps[0][1]) S.push({ t: '단계 흐름', s: '수카 입고 → 센터 등록 → 중등 → 고등 → 입교 · 화살표는 다음 단계로 넘어간 비율', body: vizFlow(D.steps), m: M.flow });
+    if (D.crs.length > 1) S.push({ t: '과정별 출석률', s: '센터 → 초등 → 중등 → 고등', body: vizBars(D.crs) + bandLegend(), m: M.crs });
+    peopleSlides(); whySlide();
+    if (D.ends.length) S.push({ t: '종강 요건 · 수업일수', s: `행정 개강일부터 강의 수업일수 ${D.ends[0].min}일 이상 (행사·휴강·사전 수업 제외)`, body: vizProg(D.ends), m: M.end });
+    if (D.iss.length) S.push({ t: '지금 챙길 것', s: '중요한 순', body: `<div class="sl-iss">${D.iss.slice(0, 6).map(x => `<div class="${x[1]}"><b>${esc(x[2])}</b><span>${esc(x[3])}</span></div>`).join('')}</div>` });
+  }
   return S;
 }
 function slideHTML(s, i, total) {
@@ -2812,9 +2879,10 @@ PAGES.present = () => {
   const cs = PR.scope === 'all' ? act : [PR.scope].filter(n => cohortOf(n) || isCo());
   if (!cs.length) return `<div class="ph"><div><h1>발표 자료</h1></div></div>` + empty('진행 중인 기수가 없어요', '기수를 만들고 출석이 쌓이면 자동으로 슬라이드가 만들어져요.');
   const label = PR.scope === 'all' ? `진행 중 기수 ${cs.length}개 (${cs.join(' · ')})` : cs[0];
-  const D = deckData(cs), S = deckSlides(D, deckMsgs(D), label);
+  const D = deckData(cs, PR.ph), S = deckSlides(D, deckMsgs(D), label);
   return `<div class="ph noprint"><div><h1>발표 자료</h1><p>분석을 슬라이드로 자동 정리했어요 · 제목과 💡 문장은 눌러서 고칠 수 있어요</p></div>
     <div class="acts"><button class="btn p" onclick="showDeck(0)">▶ 발표 시작</button><button class="btn" onclick="deckPptx(this)">⬇ PowerPoint</button><button class="btn" onclick="deckPdf()">${icon('print', 16)}PDF</button><button class="btn" onclick="deckPng(this)">⬇ 이미지</button></div></div>
+    <div class="rtype noprint">${[['p1', '1', '센터 개강 ~ 등록'], ['p2', '2', '센터 등록 ~ 초등 종강'], ['p3', '3', '초등 종강 ~ 고등 종강'], ['all', '4', '종합 보고서']].map(x => `<button class="${PR.ph === x[0] ? 'on' : ''}" onclick="PR.ph='${x[0]}';render()"><em>${x[1]}</em><b>${x[2]}</b><small>${x[0] === 'all' ? '전체 흐름 · 지금 챙길 것' : PH[x[0]].sh}</small></button>`).join('')}</div>
     ${isCo() ? '' : `<div class="chips noprint" style="margin-bottom:14px"><button class="chip ${PR.scope === 'all' ? 'on' : ''}" onclick="PR.scope='all';render()">진행 중 전체</button>${act.map(n => `<button class="chip ${PR.scope === n ? 'on' : ''}" onclick="PR.scope=${attr(n)};render()">${esc(n)}</button>`).join('')}</div>`}
     <div id="deck">${S.map((s, i) => `<div class="sl-wrap">${slideHTML(s, i, S.length)}</div>`).join('')}</div>`;
 };
@@ -2853,7 +2921,7 @@ async function slideImages(scale) {
   } finally { box.remove(); }
   return out;
 }
-const deckName = () => ('신학부 발표자료 ' + todayStr()).replace(/[\\/:*?"<>|]/g, '');
+const deckName = () => ('신학부 ' + (PR.ph === 'all' ? '종합 보고서' : PH[PR.ph].t.replace(/ ~ /g, '-') + ' 보고서') + ' ' + todayStr()).replace(/[\\/:*?"<>|]/g, '');
 async function deckPptx(btn) {
   busy(btn, true);
   try {
@@ -2891,7 +2959,7 @@ function vizOverview() {
 }
 
 /* 새 버전을 올렸는데 휴대폰이 예전 화면을 붙잡고 있으면 한 번 자동으로 새로 고침 */
-const BUILD = '2026-11-22e';
+const BUILD = '2026-11-22f';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
