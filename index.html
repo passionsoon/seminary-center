@@ -3295,7 +3295,7 @@ async function finImportSave(n, btn) {
     if (del.length) { await api('finRemove', { ids: del }); DB.fin = DB.fin.filter(r => !del.includes(r['거래ID'])); } toast(`${rows.length}건 가져왔어요 · 잔액 ${won(finCalc(n).bal)}`); FN.imp = null; closeDrawer(); render(); cacheDB(); }
   catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
-const BUILD = '2026-11-24c';
+const BUILD = '2026-11-24d';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
@@ -3308,7 +3308,8 @@ const BUILD = '2026-11-24c';
   // 예전 방식(비밀번호를 기기에 저장)으로 로그인돼 있던 기기: 토큰으로 바꾸고 비밀번호는 지움
   const old = localStorage.getItem(PWK) || sessionStorage.getItem(PWK);
   if (!authed() && old) { try { await loginWith(old, !!localStorage.getItem(PWK)); } catch (e) { [sessionStorage, localStorage].forEach(st => st.removeItem(PWK)); } }
-  try { if (localStorage.getItem(DBK()) && !JSON.parse(localStorage.getItem(DBK())).ct) localStorage.removeItem(DBK()); } catch (e) { }
+  // 이 기기에 남은 예전 비밀번호(다른 담당자 링크 포함)와 암호화 안 된 보관 데이터는 모두 지움
+  try { Object.keys(localStorage).forEach(k => { if (k.indexOf('dc_pw') === 0) localStorage.removeItem(k); else if (k.indexOf('dc_db|') === 0) { let ok = false; try { ok = !!JSON.parse(localStorage.getItem(k)).ct; } catch (e) { } if (!ok) localStorage.removeItem(k); } }); } catch (e) { }
   if (authed()) start(); else showLogin();
 })();
 </script>
