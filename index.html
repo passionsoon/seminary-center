@@ -609,7 +609,7 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
     <h1>논산 신학부 운영센터</h1>
     <p class="muted" style="margin:0 0 22px">기수·수강생·출석·진도를 관리하고, 기록은 구글 시트에 저장됩니다.</p>
     <label class="fld"><span>비밀번호</span><input id="lgPw" type="password" autocomplete="current-password" placeholder="비밀번호 입력"></label>
-    <label class="row muted" style="margin:12px 0 18px"><input type="checkbox" id="lgKeep" checked> 이 기기에서 로그인 유지</label>
+    <p class="muted" style="margin:12px 0 18px;font-size:13px">🔒 보안을 위해 브라우저를 닫으면 자동으로 로그아웃돼요.</p>
     <button class="btn p lg" style="width:100%" id="lgBtn">들어가기</button>
     <p id="lgErr" style="color:var(--bad);font-size:13px;min-height:18px"></p>
     <details><summary class="muted" style="cursor:pointer">연결 설정</summary>
@@ -750,9 +750,9 @@ function busy(btn, on) {
 }
 
 /* ═════════ API ═════════ */
-const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, tok: sessionStorage.getItem(TKK) || localStorage.getItem(TKK) || '' });
+const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, tok: sessionStorage.getItem(TKK) || '' });   // 로그인은 이 브라우저 창이 열려 있는 동안만
 const authed = () => !!cfg().tok;
-const kept = () => !!localStorage.getItem(TKK);
+const kept = () => authed();
 async function api(action, payload) {
   const c = cfg(); loading(true);
   try {
@@ -782,16 +782,16 @@ let cacheT = null;
 function cacheDB() { clearTimeout(cacheT); cacheT = setTimeout(cacheNow, 400); }
 async function cacheNow() {
   try {
-    if (!kept() || !window.crypto || !crypto.subtle) { localStorage.removeItem(DBK()); return; }
+    if (!kept() || !window.crypto || !crypto.subtle) { sessionStorage.removeItem(DBK()); return; }
     const key = await secKey(true), iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(DB))));
-    localStorage.setItem(DBK(), JSON.stringify({ v: 2, at: Date.now(), iv: b64(iv), ct: b64(ct) }));
-  } catch (e) { try { localStorage.removeItem(DBK()); } catch (x) { } }
+    sessionStorage.setItem(DBK(), JSON.stringify({ v: 2, at: Date.now(), iv: b64(iv), ct: b64(ct) }));
+  } catch (e) { try { sessionStorage.removeItem(DBK()); } catch (x) { } }
 }
 async function cachedDB() {
   try {
-    const o = JSON.parse(localStorage.getItem(DBK()) || 'null'); if (!o) return null;
-    if (o.v !== 2 || !kept() || Date.now() - o.at > 14 * 864e5) { localStorage.removeItem(DBK()); return null; }   // 예전(암호화 안 된) 보관본은 지움
+    const o = JSON.parse(sessionStorage.getItem(DBK()) || 'null'); if (!o) return null;
+    if (o.v !== 2 || !kept()) { sessionStorage.removeItem(DBK()); return null; }
     const key = await secKey(false); if (!key) return null;
     const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(o.iv) }, key, unb64(o.ct));
     return { at: o.at, db: JSON.parse(new TextDecoder().decode(pt)) };
@@ -904,15 +904,15 @@ function showLogin(msg) { if (LINK_C) { $('#login h1').textContent = LINK_C + ' 
 function logout(expired) {
   const t = cfg().tok; if (t && !expired) fetch(cfg().url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ token: t, action: 'logout' }) }).catch(() => { });
   [sessionStorage, localStorage].forEach(st => { st.removeItem(TKK); st.removeItem(PWK); });
-  try { localStorage.removeItem(DBK()); } catch (e) { } dropSecKey(); DB = null;
+  try { localStorage.removeItem(DBK()); sessionStorage.removeItem(DBK()); } catch (e) { } dropSecKey(); DB = null;
   showLogin(expired ? '로그인 시간이 지났어요. 비밀번호를 다시 입력해 주세요.' : '');
 }
 /** 로그인: 비밀번호는 한 번만 보내고 기기에는 토큰만 남김 */
-async function loginWith(pw, keep) {
+async function loginWith(pw) {
   [sessionStorage, localStorage].forEach(st => st.removeItem(TKK));
-  const j = await api('login', { key: pw, remember: keep });
+  const j = await api('login', { key: pw });
   if (!j.token) throw new Error('서버가 아직 새 로그인 방식으로 바뀌지 않았어요. 잠시 후 다시 해 주세요.');
-  (keep ? localStorage : sessionStorage).setItem(TKK, j.token);
+  sessionStorage.setItem(TKK, j.token);
   [sessionStorage, localStorage].forEach(st => st.removeItem(PWK));
 }
 $('#lgBtn').onclick = async () => {
@@ -920,7 +920,7 @@ $('#lgBtn').onclick = async () => {
   if (!pw) { $('#lgErr').textContent = '비밀번호를 입력하세요.'; return; }
   localStorage.setItem('dc_url', url);
   busy($('#lgBtn'), true);
-  try { await loginWith(pw, $('#lgKeep').checked); $('#lgPw').value = ''; await start(); }
+  try { await loginWith(pw); $('#lgPw').value = ''; await start(); }
   catch (e) { $('#lgErr').textContent = e.message === 'Failed to fetch' ? '서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.' : e.message; }
   finally { busy($('#lgBtn'), false); }
 };
@@ -3295,7 +3295,7 @@ async function finImportSave(n, btn) {
     if (del.length) { await api('finRemove', { ids: del }); DB.fin = DB.fin.filter(r => !del.includes(r['거래ID'])); } toast(`${rows.length}건 가져왔어요 · 잔액 ${won(finCalc(n).bal)}`); FN.imp = null; closeDrawer(); render(); cacheDB(); }
   catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
-const BUILD = '2026-11-24d';
+const BUILD = '2026-11-24e';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
@@ -3305,11 +3305,8 @@ const BUILD = '2026-11-24d';
   }).catch(() => { });
 })();
 (async function init() {
-  // 예전 방식(비밀번호를 기기에 저장)으로 로그인돼 있던 기기: 토큰으로 바꾸고 비밀번호는 지움
-  const old = localStorage.getItem(PWK) || sessionStorage.getItem(PWK);
-  if (!authed() && old) { try { await loginWith(old, !!localStorage.getItem(PWK)); } catch (e) { [sessionStorage, localStorage].forEach(st => st.removeItem(PWK)); } }
-  // 이 기기에 남은 예전 비밀번호(다른 담당자 링크 포함)와 암호화 안 된 보관 데이터는 모두 지움
-  try { Object.keys(localStorage).forEach(k => { if (k.indexOf('dc_pw') === 0) localStorage.removeItem(k); else if (k.indexOf('dc_db|') === 0) { let ok = false; try { ok = !!JSON.parse(localStorage.getItem(k)).ct; } catch (e) { } if (!ok) localStorage.removeItem(k); } }); } catch (e) { }
+  // 매번 비밀번호로 로그인: 이 기기에 오래 남는 로그인·비밀번호·보관 데이터는 모두 지움 (브라우저를 닫으면 로그아웃)
+  try { Object.keys(localStorage).forEach(k => { if (/^dc_(pw|tk|db\|)/.test(k)) localStorage.removeItem(k); }); Object.keys(sessionStorage).forEach(k => { if (k.indexOf('dc_pw') === 0) sessionStorage.removeItem(k); }); } catch (e) { }
   if (authed()) start(); else showLogin();
 })();
 </script>
