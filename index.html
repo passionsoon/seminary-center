@@ -677,7 +677,8 @@ let DB = null, ROUTE = { page: 'home' }, DIRTY = false, MEMO = {};
 const LINK_C = new URLSearchParams(location.search).get('c') || '';   // 기수 담당자 링크(?c=기수명)
 let ROLE = { type: LINK_C ? 'cohort' : 'admin', cohort: LINK_C };
 const isCo = () => ROLE.type === 'cohort';
-const PWK = LINK_C ? 'dc_pw_c_' + LINK_C : 'dc_pw';
+const PWK = LINK_C ? 'dc_pw_c_' + LINK_C : 'dc_pw';   // (예전) 비밀번호 보관 자리 — 이제는 쓰지 않고 지움
+const TKK = LINK_C ? 'dc_tk_c_' + LINK_C : 'dc_tk';   // 로그인 토큰: 비밀번호 대신 기기에 보관 (서버에서 언제든 끊을 수 있음)
 const S = { cohort: localStorage.getItem('dc_cohort') || '' };
 
 /* ═════════ 도우미 ═════════ */
@@ -749,12 +750,14 @@ function busy(btn, on) {
 }
 
 /* ═════════ API ═════════ */
-const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, pw: sessionStorage.getItem(PWK) || localStorage.getItem(PWK) || '' });
+const cfg = () => ({ url: localStorage.getItem('dc_url') || DEFAULT_API, tok: sessionStorage.getItem(TKK) || localStorage.getItem(TKK) || '' });
+const authed = () => !!cfg().tok;
+const kept = () => !!localStorage.getItem(TKK);
 async function api(action, payload) {
   const c = cfg(); loading(true);
   try {
     let res;
-    try { res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: c.pw, action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) }); }
+    try { res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign(c.tok && !(payload && payload.key) ? { token: c.tok } : {}, { action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) }); }
     catch (e) { const er = new Error('인터넷 연결이 불안정합니다. 잠시 후 다시 시도하세요.'); er.net = true; throw er; }
     const j = await res.json();
     if (!j.ok) { if (j.auth === false) logout(true); throw new Error(j.error || '오류가 났습니다'); }
@@ -764,8 +767,36 @@ async function api(action, payload) {
 async function reload(fresh) { const j = await api('all', fresh ? { fresh: true } : {}); DB = j.data; splitPre(); lastFull = Date.now(); MEMO = {}; $('#syncAt').textContent = '동기화 ' + j.at.slice(11, 16); fillCohortSel(); cacheDB(); }
 /** 마지막으로 받은 데이터를 이 기기에 보관 → 다음에 열 때 바로 보여 주고 뒤에서 새로 받음 (로그인 유지한 기기만) */
 const DBK = () => 'dc_db|' + (isCo() ? 'c|' + ROLE.cohort : 'admin');
-function cacheDB() { try { if (localStorage.getItem(PWK)) localStorage.setItem(DBK(), JSON.stringify({ at: Date.now(), db: DB })); else localStorage.removeItem(DBK()); } catch (e) { } }
-function cachedDB() { try { const o = JSON.parse(localStorage.getItem(DBK()) || 'null'); return o && Date.now() - o.at < 14 * 864e5 && localStorage.getItem(PWK) ? o : null; } catch (e) { return null; } }
+/* 기기 보관 데이터는 암호화(AES-256-GCM). 열쇠는 이 브라우저 안에서만 쓰이고 밖으로 꺼낼 수 없게(non-extractable) 보관 */
+const IDB = () => new Promise((ok, no) => { const r = indexedDB.open('dc_sec', 1); r.onupgradeneeded = () => r.result.createObjectStore('k'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+async function secKey(create) {
+  const db = await IDB(), k = DBK();
+  let key = await new Promise(ok => { const q = db.transaction('k').objectStore('k').get(k); q.onsuccess = () => ok(q.result || null); q.onerror = () => ok(null); });
+  if (!key && create) { key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); await new Promise(ok => { const t = db.transaction('k', 'readwrite'); t.objectStore('k').put(key, k); t.oncomplete = ok; t.onerror = ok; }); }
+  return key;
+}
+async function dropSecKey() { try { const db = await IDB(); await new Promise(ok => { const t = db.transaction('k', 'readwrite'); t.objectStore('k').delete(DBK()); t.oncomplete = ok; t.onerror = ok; }); } catch (e) { } }
+const b64 = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+let cacheT = null;
+function cacheDB() { clearTimeout(cacheT); cacheT = setTimeout(cacheNow, 400); }
+async function cacheNow() {
+  try {
+    if (!kept() || !window.crypto || !crypto.subtle) { localStorage.removeItem(DBK()); return; }
+    const key = await secKey(true), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(DB))));
+    localStorage.setItem(DBK(), JSON.stringify({ v: 2, at: Date.now(), iv: b64(iv), ct: b64(ct) }));
+  } catch (e) { try { localStorage.removeItem(DBK()); } catch (x) { } }
+}
+async function cachedDB() {
+  try {
+    const o = JSON.parse(localStorage.getItem(DBK()) || 'null'); if (!o) return null;
+    if (o.v !== 2 || !kept() || Date.now() - o.at > 14 * 864e5) { localStorage.removeItem(DBK()); return null; }   // 예전(암호화 안 된) 보관본은 지움
+    const key = await secKey(false); if (!key) return null;
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(o.iv) }, key, unb64(o.ct));
+    return { at: o.at, db: JSON.parse(new TextDecoder().decode(pt)) };
+  } catch (e) { return null; }
+}
 /** 회차가 다시 매겨진 뒤 출석·요약까지 새 번호로 받아옴 */
 async function reloadSoft() { try { await reload(); } catch (e) { } }
 let bgTimer = null, lastFull = Date.now();
@@ -782,7 +813,7 @@ setInterval(async () => {
   if (!DB || document.hidden || !idle() || Date.now() - lastFull < 5 * 60e3) return;
   try { await reload(); if (idle()) render(); } catch (e) { }
 }, 30e3);
-async function manualSync() { try { await reload(true); render(); toast('시트에서 새로 불러왔습니다'); } catch (e) { toast(e.message, true); } }
+async function manualSync() { try { await reload(); render(); toast('시트에서 새로 불러왔습니다'); } catch (e) { toast(e.message, true); } }
 function keyOf(t, o) { return KEYS[t].map(k => String(o[k] === undefined ? '' : o[k])).join('|'); }
 function applyRows(t, rows) {
   const list = DB[t], idx = {}; list.forEach((r, i) => idx[keyOf(t, r)] = i);
@@ -870,14 +901,26 @@ async function saveAttendance(payload, btn, opt) {
 
 /* ═════════ 로그인·라우팅 ═════════ */
 function showLogin(msg) { if (LINK_C) { $('#login h1').textContent = LINK_C + ' 출석 체크'; $('#login p.muted').textContent = '담당자용 화면입니다. 이 기수의 출석과 진도를 기록하면 중앙 데이터센터에 바로 저장됩니다.'; $('#lgPw').placeholder = '담당자 비밀번호'; } $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#lgUrl').value = cfg().url; $('#lgErr').textContent = msg || ''; setTimeout(() => $('#lgPw').focus(), 50); }
-function logout(expired) { sessionStorage.removeItem(PWK); localStorage.removeItem(PWK); try { localStorage.removeItem(DBK()); } catch (e) { } showLogin(expired ? '비밀번호를 다시 입력해 주세요.' : ''); }
+function logout(expired) {
+  const t = cfg().tok; if (t && !expired) fetch(cfg().url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ token: t, action: 'logout' }) }).catch(() => { });
+  [sessionStorage, localStorage].forEach(st => { st.removeItem(TKK); st.removeItem(PWK); });
+  try { localStorage.removeItem(DBK()); } catch (e) { } dropSecKey(); DB = null;
+  showLogin(expired ? '로그인 시간이 지났어요. 비밀번호를 다시 입력해 주세요.' : '');
+}
+/** 로그인: 비밀번호는 한 번만 보내고 기기에는 토큰만 남김 */
+async function loginWith(pw, keep) {
+  [sessionStorage, localStorage].forEach(st => st.removeItem(TKK));
+  const j = await api('login', { key: pw, remember: keep });
+  if (!j.token) throw new Error('서버가 아직 새 로그인 방식으로 바뀌지 않았어요. 잠시 후 다시 해 주세요.');
+  (keep ? localStorage : sessionStorage).setItem(TKK, j.token);
+  [sessionStorage, localStorage].forEach(st => st.removeItem(PWK));
+}
 $('#lgBtn').onclick = async () => {
   const url = $('#lgUrl').value.trim() || DEFAULT_API, pw = $('#lgPw').value;
   if (!pw) { $('#lgErr').textContent = '비밀번호를 입력하세요.'; return; }
-  localStorage.setItem('dc_url', url); sessionStorage.setItem(PWK, pw);
-  if ($('#lgKeep').checked) localStorage.setItem(PWK, pw); else localStorage.removeItem(PWK);
+  localStorage.setItem('dc_url', url);
   busy($('#lgBtn'), true);
-  try { await api('login'); await start(); }
+  try { await loginWith(pw, $('#lgKeep').checked); $('#lgPw').value = ''; await start(); }
   catch (e) { $('#lgErr').textContent = e.message === 'Failed to fetch' ? '서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.' : e.message; }
   finally { busy($('#lgBtn'), false); }
 };
@@ -890,10 +933,10 @@ async function start() {
   $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1])}</span>${n[2]}</a>`).join('')).join('');
   $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>`).join('');
   $('#view').innerHTML = `<div class="sk" style="height:34px;width:220px;margin-bottom:22px"></div><div class="grid g-kpi">${'<div class="sk" style="height:92px"></div>'.repeat(6)}</div><div class="sk mt" style="height:120px"></div><div class="grid g-2 mt"><div class="sk" style="height:200px"></div><div class="sk" style="height:200px"></div></div>`;
-  const cached = cachedDB();
+  const cached = await cachedDB();
   if (cached) {   // 저장해 둔 데이터로 바로 화면을 띄우고, 최신 데이터는 뒤에서 받아 바꿔 끼움
     DB = cached.db; splitPre(); MEMO = {}; fillCohortSel(); $('#syncAt').textContent = '불러오는 중…'; route();
-    reload().then(() => { if (idle()) render(); flushQueue(); }).catch(e => { if (cfg().pw) { $('#syncAt').textContent = '연결 안 됨'; toast(e.message, true); } });
+    reload().then(() => { if (idle()) render(); flushQueue(); }).catch(e => { if (authed()) { $('#syncAt').textContent = '연결 안 됨'; toast(e.message, true); } });
     return;
   }
   try { await reload(); } catch (e) { showLogin(e.message); return; }
@@ -3252,7 +3295,7 @@ async function finImportSave(n, btn) {
     if (del.length) { await api('finRemove', { ids: del }); DB.fin = DB.fin.filter(r => !del.includes(r['거래ID'])); } toast(`${rows.length}건 가져왔어요 · 잔액 ${won(finCalc(n).bal)}`); FN.imp = null; closeDrawer(); render(); cacheDB(); }
   catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
-const BUILD = '2026-11-24a';
+const BUILD = '2026-11-24c';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
@@ -3261,7 +3304,13 @@ const BUILD = '2026-11-24a';
     const u = new URL(location.href); u.searchParams.set('v', m[1]); location.replace(u.toString());
   }).catch(() => { });
 })();
-(function init() { const c = cfg(); if (c.pw) start(); else showLogin(); })();
+(async function init() {
+  // 예전 방식(비밀번호를 기기에 저장)으로 로그인돼 있던 기기: 토큰으로 바꾸고 비밀번호는 지움
+  const old = localStorage.getItem(PWK) || sessionStorage.getItem(PWK);
+  if (!authed() && old) { try { await loginWith(old, !!localStorage.getItem(PWK)); } catch (e) { [sessionStorage, localStorage].forEach(st => st.removeItem(PWK)); } }
+  try { if (localStorage.getItem(DBK()) && !JSON.parse(localStorage.getItem(DBK())).ct) localStorage.removeItem(DBK()); } catch (e) { }
+  if (authed()) start(); else showLogin();
+})();
 </script>
 </body>
 </html>
