@@ -634,6 +634,86 @@ table.ctr input[type=number]{width:96px;padding:5px 6px}
 .due-w{font-size:11.5px;font-weight:700;color:var(--sub);background:var(--line2);border-radius:8px;padding:4px 8px;text-align:center}
 .due-tg{font-size:13.5px;line-height:1.6}
 @media (max-width:760px){.due-r{grid-template-columns:1fr auto}.due-w{display:none}}
+/* ═════════ v5 테마: 행정 시스템처럼 단정하게 (Pretendard · 흰 바탕 · 얇은 선) ═════════ */
+:root{
+  --bg:#f8f9fa; --surface:#fff; --ink:#111827; --ink2:#374151; --sub:#6b7280; --line:#e5e7eb; --line2:#f3f4f6;
+  --pri:#2563eb; --pri-d:#1d4ed8; --pri-l:#eff6ff;
+  --ok:#059669; --ok-l:#ecfdf5; --warn:#d97706; --warn-d:#b45309; --warn-l:#fffbeb; --bad:#dc2626; --bad-l:#fef2f2;
+  --r:12px; --r-s:8px;
+  --sh:0 1px 2px rgba(17,24,39,.04); --sh-h:0 4px 14px rgba(17,24,39,.08); --sh2:0 20px 50px rgba(17,24,39,.18);
+}
+html,body{background:var(--bg)!important;font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);font-size:14.5px;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+.v,.ad-big,.ad-r b,td,.kpi .v,.pf-v{font-variant-numeric:tabular-nums}
+/* 사이드바 */
+#side{width:248px;background:#fff!important;border-right:1px solid var(--line);box-shadow:none!important;color:var(--ink);padding:16px 10px}
+.brand{padding:2px 8px 14px}
+.brand i{width:36px;height:36px;border-radius:10px;background:#1e3a8a!important;box-shadow:none!important;font-size:15px}
+.brand b{color:var(--ink)!important;font-size:15px;font-weight:800}.brand small{color:var(--sub)!important;font-size:11.5px}
+.cohortPick{background:#f9fafb!important;border:1px solid var(--line)!important;box-shadow:none!important;border-radius:10px;margin:0 2px 12px}
+.cohortPick label{color:var(--sub)!important}.cohortPick select{color:var(--ink)!important;font-size:14px}
+.navg{color:#9ca3af!important;font-size:11px;font-weight:700;letter-spacing:.02em;padding:14px 10px 6px;display:flex;align-items:center;gap:6px}
+#side nav a{color:var(--ink2)!important;padding:8px 10px;border-radius:9px;margin:1px 0;gap:10px;align-items:center;font-weight:600;font-size:14px;box-shadow:none!important;border:1px solid transparent}
+#side nav a .ic{width:30px;height:30px;border-radius:8px;background:#f3f4f6;color:#4b5563;flex:none}
+#side nav a .nt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+#side nav a .nt small{font-size:11px;color:#9ca3af;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#side nav a:hover{background:#f9fafb!important;color:var(--ink)!important}
+#side nav a.on{background:#eff6ff!important;border-color:#dbeafe;color:#1e40af!important}
+#side nav a.on .ic{background:#2563eb;color:#fff}
+#side nav a.on .nt small{color:#60a5fa}
+.sidefoot{border-top:1px solid var(--line)!important;color:var(--sub)!important}
+.sidefoot .btn.ghost{color:var(--ink2)!important}.sidefoot .btn.ghost:hover{background:#f3f4f6!important}
+main{max-width:1320px;padding:26px 30px 120px}
+@media (max-width:760px){#topbar{background:rgba(255,255,255,.95)!important}#bottombar{box-shadow:none!important;border-top:1px solid var(--line)!important}main{padding:14px 12px 110px}}
+/* 페이지 머리 */
+.ph{align-items:center;margin-bottom:18px;gap:14px}
+.ph>div:first-child{display:flex;align-items:center;gap:14px;min-width:0}
+.ph-ic{width:44px;height:44px;border-radius:12px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;flex:none;border:1px solid #dbeafe}
+.ph h1{font-size:23px!important;font-weight:800;letter-spacing:-.025em;background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;color:var(--ink)!important}
+.ph p{font-size:13.5px;color:var(--sub);margin-top:3px}
+@media (max-width:760px){.ph-ic{width:38px;height:38px}.ph h1{font-size:20px!important}}
+/* 카드 · 표 */
+.card,.tw{background:#fff!important;border:1px solid var(--line)!important;box-shadow:var(--sh)!important;border-radius:var(--r)}
+.card{padding:18px 20px}
+.card h3{font-size:15px!important;font-weight:800;letter-spacing:-.015em;color:var(--ink)}
+.card h3 small{font-weight:500;color:var(--sub);font-size:12.5px;margin-left:4px}
+a.card:hover,.ccard:hover{box-shadow:var(--sh-h)!important;border-color:#d1d5db!important}
+th{background:#f9fafb!important;color:#6b7280!important;font-size:12px;font-weight:700;letter-spacing:0}
+td{font-size:13.5px}
+tr.click:hover td{background:#f9fafb!important}
+/* 버튼 · 탭 · 칩 */
+.btn{border-radius:8px!important;border:1px solid var(--line);box-shadow:none!important;font-weight:700;font-size:13.5px;background:#fff;color:var(--ink2)}
+.btn:hover{background:#f9fafb}
+.btn.p{background:#2563eb!important;border-color:#2563eb!important;color:#fff;box-shadow:none!important}
+.btn.p:hover{background:#1d4ed8!important}
+.btn.d{color:#dc2626}
+.tabs{background:#fff!important;border:1px solid var(--line)!important;border-radius:10px!important;padding:3px!important;box-shadow:none!important}
+.tabs a{border-radius:7px!important;font-size:13.5px;font-weight:700;color:var(--ink2)}
+.tabs a.on{background:#1e293b!important;color:#fff!important;box-shadow:none!important}
+.chip{border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:13px;color:var(--ink2);box-shadow:none}
+.chip.on{background:#eef2ff!important;border-color:#c7d2fe!important;color:#4338ca!important;box-shadow:none!important}
+.b{border-radius:6px;font-weight:700;font-size:11.5px}
+input,select,textarea{border-radius:8px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#93c5fd!important;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.alert{border-radius:10px}
+/* 캡처 · 내보내기 버튼 */
+.cap-tools{position:absolute;top:12px;right:12px;display:flex;gap:4px;opacity:0;transition:opacity .15s;z-index:2}
+.card:hover>.cap-tools,.tw:hover>.cap-tools,.cap-tools:focus-within{opacity:1}
+.cap-tools button{border:1px solid var(--line);background:#fff;border-radius:7px;height:28px;padding:0 8px;font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer;display:flex;align-items:center;gap:4px}
+.cap-tools button:hover{background:#f3f4f6;color:var(--ink)}
+.card.has-cap,.tw.has-cap{position:relative}
+@media (hover:none){.cap-tools{opacity:.9}}
+.capturing .cap-tools,.capturing .no-cap{display:none!important}
+.capturing .fx,.capturing .tabs,.capturing .chips{-webkit-mask-image:none!important;mask-image:none!important;overflow:visible!important}
+.ad-r span{white-space:nowrap}
+@media (max-width:760px){.ad-r{flex-wrap:wrap;gap:2px 8px;font-size:12.5px}.ad-r b{font-size:16px}.ad-kh b{font-size:13px}}
+.cap-stamp{margin-top:18px;text-align:right;font-size:12px;color:#9ca3af;font-weight:600}
+.capturing .tabs{display:flex!important;width:max-content!important;max-width:none!important}
+.kp::after{display:none!important}
+.ad-g5>.card,.g-kpi>.card,.grid>.card,.g-2>.card{margin-top:0!important}
+#side nav{flex:1;min-height:0;overflow-y:auto;margin:0 -4px;padding:0 4px;scrollbar-width:thin}
+.sidefoot{flex:none}
+.cap-tools{top:-13px;right:14px;background:#fff;border-radius:9px;padding:2px;box-shadow:0 2px 8px rgba(17,24,39,.08)}
+
 </style>
 </head>
 <body>
@@ -698,6 +778,61 @@ const IC = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'
 };
 const icon = (k, sz) => `<svg class="i" width="${sz || 18}" height="${sz || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k] || ''}</svg>`;
+/* ═════════ 고화질 이미지 저장 · CSV 내보내기 (모든 화면 공통) ═════════ */
+const NAV_DESC = { home: '전체 기수 한눈에', weekly: '이번 주 출결 흐름', wreport: '보고용 출석표', book: '회차별 출석부', finance: '기수 통장 · 입출금', students: '명단 · 단계 · 상담', cohorts: '개강 · 등록 · 종강', staff: '강사 · 전도사 · 조직', admin: '핵심 지표 · 입력 비서', analysis: '추이 · 비교 · 성과', present: '발표용 슬라이드', settings: '기준 · 알림 · 자동 작업', attend: '오늘 출석 체크', followup: '결석자 연락 · 보강', progress: '진도 · 수업 일정', register: '센터 등록 판정' };
+async function h2c() { await loadLib('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js', () => window.html2canvas); if (document.fonts && document.fonts.ready) await document.fonts.ready; }
+const fileSafe = s => String(s || '').replace(/[\\/:*?"<>|\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+async function snapEl(el, name, btn) {
+  if (!el) return; if (btn) busy(btn, true);
+  document.body.classList.add('capturing');
+  try {
+    await h2c();
+    // 옆으로 넘치는 표·히트맵도 잘리지 않게: 넘치는 만큼 잠시 넓혔다가 되돌림
+    const sc = [...el.querySelectorAll('*')].filter(x => x.scrollWidth > x.clientWidth + 2 && /auto|scroll|hidden/.test(getComputedStyle(x).overflowX) && !x.closest('.cap-tools'));
+    const extra = sc.reduce((m, x) => Math.max(m, x.scrollWidth - x.clientWidth), 0), st0 = [el.style.width, el.style.maxWidth];
+    const saved = sc.map(x => [x, x.style.overflow]); sc.forEach(x => x.style.overflow = 'visible');
+    if (extra) { el.style.maxWidth = 'none'; el.style.width = (el.offsetWidth + extra + 8) + 'px'; }
+    const page = el.id === 'view', pad0 = el.style.padding, bg0 = el.style.background; let stamp = null;
+    if (page) { el.style.padding = '28px'; el.style.background = '#f8f9fa'; stamp = document.createElement('div'); stamp.className = 'cap-stamp'; stamp.textContent = '논산 신학부 운영센터 · ' + todayStr() + ' 기준'; el.appendChild(stamp); }
+    const w = Math.max(el.scrollWidth, el.offsetWidth);
+    const cv = await html2canvas(el, { scale: Math.min(3, Math.max(2, 2400 / Math.max(1, w))), backgroundColor: page ? '#f8f9fa' : '#ffffff', useCORS: true, width: w, windowWidth: Math.max(1280, w + 80), ignoreElements: n => n.classList && (n.classList.contains('cap-tools') || n.classList.contains('no-cap')) });
+    saved.forEach(([x, o]) => x.style.overflow = o); el.style.width = st0[0]; el.style.maxWidth = st0[1]; if (page) { el.style.padding = pad0; el.style.background = bg0; stamp.remove(); }
+    const file = fileSafe(name) + ' ' + todayStr() + '.png', bl = await new Promise(ok => cv.toBlob(ok, 'image/png'));
+    if (canShareFile() && matchMedia('(hover:none)').matches) { try { await navigator.share({ files: [new File([bl], file, { type: 'image/png' })], title: file }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = file; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast('고화질 이미지를 저장했어요 (' + cv.width + '×' + cv.height + ')');
+  } catch (e) { toast('이미지 저장 실패: ' + e.message, true); }
+  finally { document.body.classList.remove('capturing'); if (btn) busy(btn, false); }
+}
+function tableCsv(tb, name) {
+  const rows = [...tb.querySelectorAll('tr')].map(tr => [...tr.children].map(td => { const t = td.innerText.replace(/\s+/g, ' ').trim(); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }).join(','));
+  const bl = new Blob(['\ufeff' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a');
+  a.href = URL.createObjectURL(bl); a.download = fileSafe(name) + ' ' + todayStr() + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('CSV로 내보냈어요 (엑셀에서 열려요)');
+}
+const pageTitle = () => { const h = $('#view .ph h1'); return h ? h.innerText.trim() : '논산 신학부'; };
+const CAP_I = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+/** 그려진 화면에 머리 아이콘 · 카드별 [이미지][CSV] · 페이지 [화면 이미지] 붙이기 */
+function decorate() {
+  const v = $('#view'); if (!v) return;
+  const ph = v.querySelector('.ph');
+  if (ph) {
+    const nav = (isCo() ? CO_NAV : NAV).flatMap(g => g[1]).find(n => n[0] === ROUTE.page || (ROUTE.page === 'cohort' && n[0] === 'cohorts'));
+    const head = ph.firstElementChild; if (nav && head && !head.querySelector('.ph-ic')) { const i = document.createElement('span'); i.className = 'ph-ic'; i.innerHTML = icon(nav[1], 22); head.prepend(i); const t = document.createElement('div'); while (i.nextSibling) t.appendChild(i.nextSibling); head.appendChild(t); }
+    let acts = ph.querySelector('.acts'); if (!acts) { acts = document.createElement('div'); acts.className = 'acts'; ph.appendChild(acts); }
+    if (!['present', 'settings', 'attend', 'wreport'].includes(ROUTE.page) && !acts.querySelector('.cap-page')) { const b = document.createElement('button'); b.className = 'btn cap-page no-cap'; b.innerHTML = CAP_I + ' 화면 이미지'; b.title = '이 화면 전체를 고화질 이미지로 저장'; b.onclick = () => snapEl(v, pageTitle() + (() => { const t = v.querySelector('.tabs a.on'); return t ? ' - ' + t.innerText.replace(/[^\p{L}\p{N}·\s]/gu, '').trim() : (ROUTE.arg ? ' ' + decodeURIComponent(ROUTE.arg) : ''); })(), b); acts.appendChild(b); }
+  }
+  if (['present', 'settings'].includes(ROUTE.page)) return;
+  v.querySelectorAll('.card, .tw').forEach(c => {
+    if (c.closest('.cap-tools') || c.parentElement.closest('.card') || c.querySelector(':scope > .cap-tools')) return;
+    const h = c.querySelector(':scope > h3, :scope > .ad-kh b, :scope > .row h3'); const tb = c.querySelector('table');
+    if (!h && !tb) return; if (c.offsetHeight < 90) return;
+    const name = pageTitle() + ' - ' + (h ? [...h.childNodes].filter(n => !(n.tagName === 'SMALL')).map(n => n.textContent).join('').replace(/\s+/g, ' ').trim() : '표');
+    const t = document.createElement('div'); t.className = 'cap-tools';
+    const b1 = document.createElement('button'); b1.innerHTML = CAP_I + ' 이미지'; b1.title = '이 카드만 고화질 이미지로 저장'; b1.onclick = e => { e.preventDefault(); e.stopPropagation(); snapEl(c, name, null); }; t.appendChild(b1);
+    if (tb) { const b2 = document.createElement('button'); b2.textContent = 'CSV'; b2.title = '이 표를 엑셀용 CSV로 내보내기'; b2.onclick = e => { e.preventDefault(); e.stopPropagation(); tableCsv(tb, name); }; t.appendChild(b2); }
+    c.classList.add('has-cap'); c.appendChild(t);
+  });
+}
 const NAV = [
   ['운영', [['home', 'home', '대시보드'], ['weekly', 'week', '주간 현황'], ['wreport', 'print', '출석 보고서'], ['book', 'cal', '출석부'], ['finance', 'won', '기수 재정']]],
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
@@ -965,7 +1100,7 @@ async function start() {
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   const nav = isCo() ? CO_NAV : NAV, mnav = isCo() ? CO_NAV[0][1].slice(0, 4).map(n => [n[0], n[1], n[2].replace(' 체크', '').replace(' 현황', '')]).concat([['more', 'menu', '더보기']]) : MOBILE_NAV;
   if (isCo()) { document.querySelector('.cohortPick').innerHTML = `<label>담당 기수</label><b style="display:block;font-size:15px;padding:2px 0">${esc(ROLE.cohort)}</b>`; $('#cohortSelM').style.display = 'none'; S.cohort = ROLE.cohort; }
-  $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1])}</span>${n[2]}</a>`).join('')).join('');
+  $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 16)}</span><span class="nt">${n[2]}${NAV_DESC[n[0]] ? `<small>${NAV_DESC[n[0]]}</small>` : ''}</span></a>`).join('')).join('');
   $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>`).join('');
   $('#view').innerHTML = `<div class="sk" style="height:34px;width:220px;margin-bottom:22px"></div><div class="grid g-kpi">${'<div class="sk" style="height:92px"></div>'.repeat(6)}</div><div class="sk mt" style="height:120px"></div><div class="grid g-2 mt"><div class="sk" style="height:200px"></div><div class="sk" style="height:200px"></div></div>`;
   const cached = await cachedDB();
@@ -996,7 +1131,7 @@ function render() {
   document.querySelectorAll('[data-p]').forEach(a => a.classList.toggle('on', a.dataset.p === p || (p === 'cohort' && a.dataset.p === 'cohorts') || (a.dataset.p === 'more' && (isCo() ? CO_NAV[0][1].slice(4).some(m => m[0] === p) : !MOBILE_NAV.some(m => m[0] === p)))));
   $('#topTitle').textContent = (isCo() ? ROLE.cohort + ' · ' : '') + (TITLES[p] || '');
   const f = PAGES[p] || PAGES.home;
-  try { $('#view').innerHTML = f(); (AFTER[p] || (() => { }))(); scrollHints(); }
+  try { $('#view').innerHTML = f(); try { decorate(); } catch (e) { console.warn(e); } (AFTER[p] || (() => { }))(); scrollHints(); }
   catch (e) { console.error(e); $('#view').innerHTML = `<div class="card">화면 오류: ${esc(e.message)}</div>`; }
 }
 const AFTER = {};
@@ -3697,7 +3832,7 @@ PAGES.admin = () => {
   return `<div class="ph"><div><h1>종합 행정</h1><p>논산교회 신학부 핵심 지표 · 모든 숫자는 운영센터 기록에서 자동 집계</p></div></div><div class="tabs">${ADM_TABS.map(t => `<a href="#admin/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${['todo', 'seg', 'cert', 'load'].includes(tab) ? '' : adSel()}${f()}`;
 };
 
-const BUILD = '2026-11-26b';
+const BUILD = '2026-11-26d';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
