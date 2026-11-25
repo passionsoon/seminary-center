@@ -621,6 +621,15 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
 .sld .pf-eb{--pfl:272px;--pfr:250px}.sld .pf-eb .pf-r{grid-template-columns:260px 1fr 240px}.sld .pf-v{font-size:16px}.sld .pf-tr{height:20px}.sld .pf-dd i{width:20px;height:20px}.sld .pf-cb{height:330px}.sld .pf-cb b{font-size:22px}.sld .pf-cb span{font-size:15px}.sld .pf-cmp h5{font-size:17px}
 .sld .pf-sz h4{font-size:16px}.sld .pf-good b{font-size:22px}.sld.pf-end{background:linear-gradient(160deg,#16294d,#0f1d3a);color:#fff}.sld.pf-end .sl-h p,.sld.pf-end .sl-f{color:#c7d2e6}
 @media (max-width:760px){.pf-r{grid-template-columns:96px 1fr;}.pf-r .pf-badge,.pf-r .pf-v{grid-column:2}.pf-eb .pf-r{grid-template-columns:96px 1fr}.pf-tg{display:none}.pf-cmp{grid-template-columns:1fr}.pf-tiles{grid-template-columns:repeat(2,1fr)}}
+.ad-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px}.ad-bar select{width:auto}
+.ad-g5{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.ad-k{display:flex;flex-direction:column;gap:6px}.ad-kh{display:flex;justify-content:space-between;align-items:center;gap:6px}.ad-kh b{font-size:13.5px}.ad-kf{margin-top:auto;padding-top:8px;border-top:1px solid var(--line2);font-size:11.5px;color:var(--sub)}
+.ad-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:3px 0;font-size:13px}.ad-r b{font-size:17px}.ad-r small{font-size:11.5px;color:var(--sub);font-weight:600}.ad-big{font-size:30px;font-weight:800;line-height:1.1}.ad-big small{font-size:14px;margin-left:2px}
+.ad-defs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.ad-defs>div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}.ad-defs code{background:var(--line2);border-radius:6px;padding:3px 6px;font-size:12px;font-family:inherit;font-weight:700}.ad-defs small{color:var(--sub);font-size:11.5px}
+.ad-formula>b{font-size:15px}.ad-eq{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin-top:12px}.ad-eq>div{flex:1;min-width:130px;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden}.ad-eq span{font-size:12px;color:var(--sub);font-weight:700}.ad-eq strong{font-size:24px}.ad-eq small{font-size:11px;color:var(--sub)}.ad-eq i{position:absolute;left:0;bottom:0;height:4px;background:#2b6cb8}.ad-eq em{font-style:normal;font-size:22px;font-weight:800;align-self:center;color:var(--sub)}.ad-eq .res{background:#eef5ff;border-color:#bcd4f5}.ad-eq .res strong{color:#2b6cb8}
+.ad-fun>div{display:grid;grid-template-columns:120px 1fr 64px;gap:4px 12px;align-items:center;padding:6px 0}.ad-fun span{font-weight:700;font-size:13px}.ad-fun i{height:16px;border-radius:8px;display:block}.ad-fun b{font-size:16px;text-align:right}.ad-fun small{grid-column:2/4;color:var(--sub);font-size:11.5px}
+.hmap.hseg td{min-width:54px;position:relative}.seg-d{display:block;font-size:10px;font-weight:700;opacity:.85}
+table.ctr input[type=number]{width:96px;padding:5px 6px}
+@media (max-width:760px){.ad-g5{grid-template-columns:1fr 1fr}.ad-big{font-size:24px}.ad-eq>div{min-width:44%}.ad-fun>div{grid-template-columns:90px 1fr 50px}}
 </style>
 </head>
 <body>
@@ -688,7 +697,7 @@ const icon = (k, sz) => `<svg class="i" width="${sz || 18}" height="${sz || 18}"
 const NAV = [
   ['운영', [['home', 'home', '대시보드'], ['weekly', 'week', '주간 현황'], ['wreport', 'print', '출석 보고서'], ['book', 'cal', '출석부'], ['finance', 'won', '기수 재정']]],
   ['사람', [['students', 'users', '수강생'], ['cohorts', 'layers', '기수 관리'], ['staff', 'org', '사명자·조직도']]],
-  ['분석', [['analysis', 'chart', '분석'], ['present', 'slides', '발표 자료'], ['settings', 'gear', '설정']]]
+  ['분석', [['admin', 'trend', '종합 행정'], ['analysis', 'chart', '분석'], ['present', 'slides', '발표 자료'], ['settings', 'gear', '설정']]]
 ];
 const CO_NAV = [['담당 기수', [['attend', 'check', '출석 체크'], ['students', 'users', '수강생'], ['weekly', 'week', '주간 현황'], ['book', 'cal', '출석부'], ['followup', 'phone', '결석·보강'], ['progress', 'book', '수업 일정'], ['register', 'badge', '등록 판정'], ['wreport', 'print', '출석 보고서'], ['finance', 'won', '기수 재정'], ['present', 'slides', '발표 자료']]]];
 const MOBILE_NAV = [['home', 'home', '홈'], ['book', 'cal', '출석부'], ['students', 'users', '수강생'], ['cohorts', 'layers', '기수'], ['more', 'menu', '더보기']];
@@ -1357,6 +1366,7 @@ function editCohort(name) {
     ${F('중등진급일', '중등 진급일', c['중등진급일'], 'date')}${F('고등진급일', '고등 진급일', c['고등진급일'], 'date')}
     ${F('종강일(입교)', '종강일(입교)', c['종강일(입교)'], 'date', null, name ? { hint: (() => { const er = endReq(name); return `수업일수 ${er.done}/${er.min}일 · ${er.nth ? er.min + '번째 수업일 ' + md(er.nth) : '일정상 아직 ' + er.total + '일'}`; })() } : {})}</div>
     <div class="sec">담당</div><div class="form">${F('강사', '강사', c['강사'], 'text', 'dlStaff')}<div></div>${F('전도사1', '전도사 1', c['전도사1'], 'text', 'dlStaff')}${F('전도사2', '전도사 2', c['전도사2'], 'text', 'dlStaff')}</div>
+    <div class="sec">종합 행정 구분</div><div class="form">${F('과정구분', '과정 구분', c['과정구분'] || '정규', 'select', ['정규', '비정규'])}${F('분류', '분류', c['분류'] || '일반', 'select', ['일반', '학생회', '청년', '기타'])}${F('(수동)전도_복음방', '수강생 전도 · 복음방', c['(수동)전도_복음방'], 'number', null, { hint: '종강한 수강생이 전도해 복음방에 들어간 인원' })}${F('(수동)전도_센터', '수강생 전도 · 센터', c['(수동)전도_센터'], 'number', null, { hint: '센터까지 들어간 인원' })}</div>
     <div class="sec">메모</div>${F('비고', '', c['비고'], 'area')}
     <details class="mt2"><summary class="muted" style="cursor:pointer">명단 없는 과거 기수: 인원 직접 입력</summary><div class="form mt">${manual.map(k => F(k, mlabel[k] || k.replace('(수동)', ''), c[k], 'number', null, mhint[k] ? { hint: mhint[k] } : {})).join('')}</div></details>`,
     `${name ? `<button class="btn d" onclick="delCohort(${attr(name)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveCohort(${name ? attr(name) : 'false'},this)">저장</button>`);
@@ -2780,7 +2790,7 @@ function kpiSetCard(S2) {
   const f = (y, k, ph) => `<input type="number" step="any" data-ky="${y}.${k}" value="${esc((K.years[y] || {})[k] ?? '')}" placeholder="${ph || ''}" style="width:100%">`;
   return `<div class="card mt"><h3>성과 지표 <small>분석 → 성과 지표 · 발표 자료 → 월말 성과보고서</small></h3><div class="setgrid"><label class="fld"><span>종강률 목표</span><div class="row" style="flex-wrap:nowrap"><input type="number" data-kt="endTarget" value="${Math.round(K.endTarget * 1000) / 10}" style="width:100%"><span class="muted">%</span></div></label><label class="fld"><span>면접 대비 등록률 목표</span><div class="row" style="flex-wrap:nowrap"><input type="number" data-kt="regTarget" value="${Math.round(K.regTarget * 1000) / 10}" style="width:100%"><span class="muted">%</span></div></label></div>
     <div class="sec">연도별 외부 기준 · 명단 없는 해의 실적 <span class="muted" style="font-weight:500">비워 두면 기수 기록에서 자동 집계 · 적으면 그 값을 씀 (명단 없는 지난해 등)</span></div>
-    <div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>연도</th><th>교회 재적</th><th>지파 평균 종강률(%)</th><th>지파 재적 대비 입교율(%)</th><th>개강 기수</th><th>입고(면접)</th><th>센터 등록</th><th>종강 최종 인원</th><th>입교</th></tr>${ys.map(y => `<tr><td><b>신 ${y}년</b></td><td>${f(y, 'members', '명')}</td><td>${f(y, 'tribeEnd')}</td><td>${f(y, 'tribeMem')}</td><td>${f(y, 'opened')}</td><td>${f(y, 'interview')}</td><td>${f(y, 'reg')}</td><td>${f(y, 'final')}</td><td>${f(y, 'fin')}</td></tr>`).join('')}</table></div></div>`;
+    <div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>연도</th><th>전도재적</th><th>지파 평균 종강률(%)</th><th>지파 재적 대비 입교율(%)</th><th>개강 기수</th><th>입고(면접)</th><th>센터 등록</th><th>종강 최종 인원</th><th>입교</th></tr>${ys.map(y => `<tr><td><b>신 ${y}년</b></td><td>${f(y, 'members', '명')}</td><td>${f(y, 'tribeEnd')}</td><td>${f(y, 'tribeMem')}</td><td>${f(y, 'opened')}</td><td>${f(y, 'interview')}</td><td>${f(y, 'reg')}</td><td>${f(y, 'final')}</td><td>${f(y, 'fin')}</td></tr>`).join('')}</table></div></div>`;
 }
 function readSets() {
   const o = JSON.parse(JSON.stringify(SETS));
@@ -3484,7 +3494,180 @@ async function finImportSave(n, btn) {
     if (del.length) { await api('finRemove', { ids: del }); DB.fin = DB.fin.filter(r => !del.includes(r['거래ID'])); } toast(`${rows.length}건 가져왔어요 · 잔액 ${won(finCalc(n).bal)}`); FN.imp = null; closeDrawer(); render(); cacheDB(); }
   catch (e) { toast(e.message, true); } finally { busy(btn, false); }
 }
-const BUILD = '2026-11-25a';
+/* ═════════ 종합 행정: 교회 단위 핵심 지표 (개강등록·월말수강·종강·종합전도율·수료·구간출결·센터·사명자) ═════════ */
+const AD = { Y: 0, M: 0 };
+const ADM_TABS = [['home', '종합 현황'], ['evg', '종합 전도율'], ['oc', '개강·종강'], ['seg', '구간 출결'], ['cert', '수료 관리'], ['ctr', '센터 재정·시설'], ['load', '사명자 현황']];
+function adYM() { if (!AD.Y) { const d = new Date(); AD.Y = d.getFullYear(); AD.M = d.getMonth() + 1; } return AD.Y + '-' + pad(AD.M); }
+const monEnd = ym => { const [y, m] = ym.split('-').map(Number); return ymd(new Date(y, m, 0)); };
+/** 기수 한 개의 행정 숫자 (명단이 있으면 명단, 없으면 직접 입력) */
+function admCo(c) {
+  const x = cohortNums(c), m = k => num(c['(수동)' + k]);
+  return Object.assign(x, { regDate: String(c['센터등록일'] || '').slice(0, 10) || x.open, kind: c['과정구분'] || '정규', cls: c['분류'] || '일반', evB: m('전도_복음방'), evC: m('전도_센터') });
+}
+/** 기수의 그 달 마지막 수업: 실시간·보강·재적 */
+function lastInMonth(n, ym) { const s = summaryOf(n).filter(x => String(x['날짜']).slice(0, 7) === ym).sort((a, b) => String(a['날짜']).localeCompare(String(b['날짜']))).pop(); return s ? { real: num(s['실시간출석']), mk: num(s['보강출석']), tot: num(s['재적인원']), date: s['날짜'] } : null; }
+/** 서기 Y년 M월 기준 지표 */
+function admStat(Y, M) {
+  const ym = Y + '-' + pad(M), me = monEnd(ym), t = todayStr(), all = cohorts().map(admCo), K = KPI(), mem = num((K.years[SHIN(Y)] || {}).members) || '';
+  const inM = d => d && d.slice(0, 7) === ym, ytd = d => d && d.slice(0, 4) === String(Y) && d.slice(0, 7) <= ym;
+  const done = x => x.end && (x.end <= t || x.st === '종강');
+  const regM = all.filter(x => inM(x.regDate)), regY = all.filter(x => ytd(x.regDate));
+  const endM = all.filter(x => inM(x.end) && done(x)), endY = all.filter(x => ytd(x.end) && done(x));
+  const S = (a, k) => a.reduce((s, x) => s + num(x[k]), 0);
+  // 월말 수강: 올해 등록(당월 등록 제외) · 아직 종강 전인 기수의 그 달 마지막 수업
+  const live = all.filter(x => x.regDate && x.regDate.slice(0, 4) === String(Y) && x.regDate.slice(0, 7) < ym && !(x.end && x.end < ym + '-01'));
+  const lm = live.map(x => ({ x, s: lastInMonth(x.n, ym) })).filter(o => o.s);
+  const real = lm.reduce((s, o) => s + o.s.real, 0), roster = lm.reduce((s, o) => s + o.s.tot, 0), mk = lm.reduce((s, o) => s + o.s.mk, 0);
+  const extra = endM.filter(x => x.kind === '비정규' && x.cls !== '학생회').reduce((s, x) => s + x.fin, 0);
+  const r = (a, b) => b ? a / b : '';
+  const o = { Y, M, ym, mem, all, regM, regY, endM, endY, lm, real, mk, roster,
+    appM: S(regM, 'inN'), regNM: S(regM, 'reg'), appY: S(regY, 'inN'), regNY: S(regY, 'reg'),
+    finM: S(endM, 'fin'), finalM: S(endM, 'final'), finY: S(endY, 'fin'), finalY: S(endY, 'final'),
+    evM: S(endM, 'evB') + S(endM, 'evC'), evY: S(endY, 'evB') + S(endY, 'evC'), evBY: S(endY, 'evB'), evCY: S(endY, 'evC'), extra };
+  o.regRateM = r(o.regNM, o.appM); o.regRateY = r(o.regNY, o.appY); o.attRate = r(real, roster); o.endRateM = r(o.finM, o.finalM); o.endRateY = r(o.finY, o.finalY);
+  o.evRate = r(o.evY, o.finY); o.total = o.regNM + real + o.finY + extra; o.evgRate = mem ? o.total / mem : '';
+  o.memReg = mem ? o.regNY / mem : ''; o.memEnd = mem ? o.finY / mem : '';
+  return o;
+}
+const fx = (v, d) => v === '' || v === undefined ? '-' : (Math.round(v * Math.pow(10, d === undefined ? 1 : d) * 100) / Math.pow(10, d === undefined ? 1 : d)) + '%';
+function adSel() {
+  adYM(); const ys = new Set([new Date().getFullYear(), new Date().getFullYear() - 1]); cohorts().forEach(c => { const v = String(c['개강일'] || ''); if (/^\d{4}/.test(v)) ys.add(+v.slice(0, 4)); });
+  return `<div class="ad-bar"><span class="muted">기준</span><select onchange="AD.Y=+this.value;render()">${[...ys].sort((a, b) => b - a).map(y => `<option value="${y}" ${y === AD.Y ? 'selected' : ''}>${y}년 (신 ${SHIN(y)}년)</option>`).join('')}</select>
+    <button class="btn sm" onclick="AD.M--;if(AD.M<1){AD.M=12;AD.Y--}render()">‹</button><select onchange="AD.M=+this.value;render()">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${i + 1 === AD.M ? 'selected' : ''}>${i + 1}월</option>`).join('')}</select><button class="btn sm" onclick="AD.M++;if(AD.M>12){AD.M=1;AD.Y++}render()">›</button>
+    <span class="muted" style="margin-left:8px">전도재적 <b>${(() => { const m = num((KPI().years[SHIN(AD.Y)] || {}).members); return m ? m + '명' : '<a href="#settings">설정에서 입력</a>'; })()}</b></span></div>`;
+}
+const adCard = (title, badge, body, foot) => `<div class="card ad-k"><div class="ad-kh"><b>${title}</b>${badge ? `<span class="b ${badge[1] || 'blue'}">${badge[0]}</span>` : ''}</div>${body}${foot ? `<div class="ad-kf">${foot}</div>` : ''}</div>`;
+const adRow = (l, v, s, c) => `<div class="ad-r"><span>${l}</span><b style="${c ? 'color:' + c : ''}">${v}${s ? ` <small>${s}</small>` : ''}</b></div>`;
+function admDefs(list) { return `<details class="card mt fold"><summary><h3 style="display:inline;margin:0">산식 정의</h3> <span class="muted">무엇을 어떻게 세는지</span></summary><div class="ad-defs mt">${list.map(d => `<div><b>${d[0]}</b><code>${d[1]}</code><small>${d[2]}</small></div>`).join('')}</div></details>`; }
+const DEF = {
+  reg: ['개강등록률', '개강등록 ÷ 수강신청 × 100', '수강신청 = 입고(면접) · 개강등록 = 센터 등록 · 기수 센터등록일(없으면 개강일)이 그 달'],
+  att: ['월말 수강률', '실시간 출석 ÷ 현재 등록 × 100', '올해 등록한 기수(당월 등록 제외) 중 진행 중인 기수의 그 달 마지막 수업'],
+  end: ['종강률', '종강수 ÷ 최종 등록수 × 100', '종강수 = 입교 · 최종 등록 = 센터 등록 ± 이동·유급 · 올해 1월~기준 월 종강 기수'],
+  evg: ['종합전도율', '(당월 개강등록 + 월말 실시간 출석 + 누적 종강 + 추가실적) ÷ 전도재적 × 100', '추가실적 = 당월 종강한 비정규(학생회 제외) 기수의 종강수'],
+  ev: ['수강생전도율', '(복음방 + 센터 전도) ÷ 종강수 × 100', '종강한 수강생이 다시 전도한 인원 · 기수 정보에 입력'],
+  mreg: ['재적 대비 개강등록률', '누적 개강등록 ÷ 전도재적 × 100', '교회 재적 규모 대비 개강 생산성'],
+  mend: ['재적 대비 종강률', '누적 종강수 ÷ 전도재적 × 100', '교회 재적 규모 대비 종강 결실'],
+  cert: ['수료 가능자', '미수료자 − 미수료 탈락 − 수료 불가 − 수료 기준 미달', '수료 대기자 = 미수료자 − 미수료 탈락 · 수료 대상자 = 대기자 − 수료 불가'],
+  seg: ['구간 출석률 · 완주 유지율', '구간 출석 ÷ 재적 · 마지막 구간 ÷ 1구간', '1구간 = 등록일 이후 첫 주 · 이후 7일마다 한 구간'],
+  load: ['1인당 부하', '최근 주 출석 수강생(실시간+보강) ÷ 강사(전도사) 수', '강사 적정 15~25명 · 전도사 적정 11~18명 (설정에서 변경)']
+};
+/* ① 종합 현황 */
+function admHome() {
+  const o = admStat(AD.Y, AD.M), ce = KPI().cert || {}, pool = num(ce.wait) + num(ce.drop) + num(ce.done);
+  const warn = o.lm.map(x => ({ n: x.x.n, r: x.s.tot ? x.s.real / x.s.tot : 0 })).filter(x => x.r < .6).sort((a, b) => a.r - b.r);
+  return `<div class="ad-g5">${adCard('개강등록 및 등록률', ['등록', 'blue'], adRow('당월 개강등록', o.regNM + '명', '(' + fx(o.regRateM) + ')', PB) + adRow('누적 개강등록', o.regNY + '명', '(' + fx(o.regRateY) + ')', PB), '공식: 개강등록 ÷ 수강신청 (신청 당월 ' + o.appM + ' · 누적 ' + o.appY + ')')}
+    ${adCard('월말 수강률', o.attRate !== '' && o.attRate < .6 ? ['관리 필요', 'warn'] : ['실시간', 'ok'], `<div class="ad-big" style="color:${o.attRate === '' ? '#94a3b8' : bandC(o.attRate)}">${fx(o.attRate)}</div>`, `실시간 ${o.real} ÷ 현재 등록 ${o.roster} · ${o.lm.length}개 기수`)}
+    ${adCard('종강 현황', ['종강', 'ok'], adRow('당월 종강률', fx(o.endRateM), `(${o.finM}/${o.finalM})`, PB) + adRow('누적 종강률', fx(o.endRateY), `(${o.finY}/${o.finalY})`, o.endRateY !== '' && o.endRateY < KPI().endTarget ? PO : PB), '공식: 종강수 ÷ 최종 등록수')}
+    ${adCard('종합전도율', ['핵심', 'blue'], `<div class="ad-big" style="color:${PB}">${fx(o.evgRate, 2)}</div>`, o.mem ? `실적 ${o.total}명 ÷ 전도재적 ${o.mem}명` : '설정에서 전도재적을 입력하면 계산돼요')}
+    ${adCard('누적 수료 / 대기', null, adRow('수료', num(ce.done) + '명') + adRow('대기', num(ce.wait) + '명') + adRow('탈락', num(ce.drop) + '명', '', num(ce.drop) ? PO : ''), `수료 관리 모수 ${pool}명`)}</div>
+    <div class="card mt"><h3>중점 관리 경보 <small>${AD.M}월 월말 수강률 60% 미만 기수</small></h3>${warn.length ? `<div class="chips">${warn.map(w => `<span class="b bad">${esc(w.n)} · ${pct(w.r)}</span>`).join('')}</div>` : '<p class="muted" style="margin:0">해당 기수가 없어요 ✓</p>'}</div>
+    <div class="card mt"><h3>${AD.Y}년 1~${AD.M}월 기수별 현황</h3>${admTable(o)}</div>${admDefs([DEF.reg, DEF.att, DEF.end, DEF.evg, DEF.cert])}`;
+}
+function admTable(o) {
+  const rows = o.all.filter(x => (x.regDate && x.regDate.slice(0, 4) === String(o.Y)) || (x.end && x.end.slice(0, 4) === String(o.Y)) || x.st === '진행중');
+  if (!rows.length) return '<div class="muted vz-empty">이 해의 기수가 없어요</div>';
+  return `<div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>기수</th><th>구분</th><th class="c">등록월</th><th class="c">수강신청</th><th class="c">개강등록</th><th class="c">등록률</th><th class="c">최종 등록</th><th class="c">종강</th><th class="c">종강률</th><th class="c">수강생 전도</th><th class="c">${o.M}월 수강률</th></tr>${rows.map(x => { const lm = lastInMonth(x.n, o.ym), ended = x.end && (x.end <= todayStr() || x.st === '종강');
+    return `<tr><td><b>${esc(x.n)}</b></td><td><span class="b">${esc(x.kind)}${x.cls !== '일반' ? ' · ' + esc(x.cls) : ''}</span></td><td class="c">${x.regDate ? x.regDate.slice(2, 7).replace('-', '.') : '-'}</td><td class="c">${x.inN}</td><td class="c">${x.reg}</td><td class="c">${x.inN ? pct(x.reg / x.inN) : '-'}</td><td class="c">${ended ? x.final : '-'}</td><td class="c">${ended ? x.fin : '<span class="muted">진행중</span>'}</td><td class="c" style="color:${ended && x.final && x.fin / x.final >= KPI().endTarget ? PB : ''}">${ended && x.final ? pct(x.fin / x.final) : '-'}</td><td class="c">${ended ? (x.evB + x.evC) + '명' : '-'}</td><td class="c">${lm && lm.tot ? `<span style="color:${bandC(lm.real / lm.tot)};font-weight:700">${pct(lm.real / lm.tot)}</span>` : '-'}</td></tr>`; }).join('')}</table></div>`;
+}
+/* ② 종합 전도율 */
+function admEvg() {
+  const o = admStat(AD.Y, AD.M), tr = Array.from({ length: AD.M }, (_, i) => { const s = admStat(AD.Y, i + 1); return { k: (i + 1) + '월', v: s.evgRate, s }; });
+  const parts = [['① 당월 개강등록', o.regNM, '이 달 센터 등록한 인원'], ['② 월말 수강 실시간 출석', o.real, '진행 중 기수의 이 달 마지막 수업 실시간 출석'], ['③ 누적 종강수', o.finY, '1월~이 달 종강 기수의 입교 합계'], ['④ 추가실적', o.extra, '이 달 종강한 비정규(학생회 제외) 기수']];
+  const mx = Math.max(1, ...parts.map(p => p[1]));
+  return `<div class="card ad-formula"><b>종합전도율 = (① + ② + ③ + ④) ÷ 전도재적 × 100</b><div class="ad-eq">${parts.map(p => `<div><span>${p[0]}</span><strong>${p[1]}명</strong><small>${p[2]}</small><i style="width:${p[1] / mx * 100}%"></i></div>`).join('<em>+</em>')}<em>÷</em><div><span>전도재적</span><strong>${o.mem || '-'}명</strong><small>설정 → 성과 지표</small></div><em>=</em><div class="res"><span>종합전도율</span><strong>${fx(o.evgRate, 2)}</strong><small>합계 ${o.total}명</small></div></div></div>
+    <div class="card mt"><h3>${AD.Y}년 월별 종합전도율 <small>그 달 기준으로 다시 계산</small></h3>${tr.some(x => x.v !== '') ? (() => { const mx = Math.max(.0001, ...tr.map(x => x.v || 0)); return `<div class="vz-cols">${tr.map(x => `<div class="vz-c" data-tip="<b>${x.k}</b> ${x.s.total}명 · ${fx(x.v, 2)}"><b style="color:${PB}">${x.v === '' ? '-' : fx(x.v, 1)}</b><div class="vz-cb"><i style="height:${x.v === '' ? 0 : Math.max(2, x.v / mx * 100)}%;background:${x.k === AD.M + '월' ? PB : '#9bbbe3'}"></i></div><span>${x.k}</span><small>${x.s.total}명</small></div>`).join('')}</div>`; })() : '<div class="muted vz-empty">전도재적을 입력하면 그려져요</div>'}</div>
+    <div class="card mt"><h3>재적 대비 생산성</h3><div class="ad-g5">${adRow('재적 대비 개강등록률', fx(o.memReg, 2), `누적 ${o.regNY}명`, PB)}${adRow('재적 대비 종강률', fx(o.memEnd, 2), `누적 ${o.finY}명`, PB)}${adRow('재적 100명당 개강등록', o.mem ? (Math.round(o.regNY / o.mem * 10000) / 100) + '명' : '-')}${adRow('재적 100명당 종강', o.mem ? (Math.round(o.finY / o.mem * 10000) / 100) + '명' : '-')}</div></div>${admDefs([DEF.evg, DEF.mreg, DEF.mend])}`;
+}
+/* ③ 개강·종강 */
+function admOC() {
+  const o = admStat(AD.Y, AD.M);
+  const k = (t, b, v, sub, foot, c) => `<div class="card kpi"><div class="l">${t} <span class="b ${b[1]}">${b[0]}</span></div><div class="v" style="color:${c || 'var(--ink)'}">${v}</div><div class="muted" style="font-size:12.5px">${sub}</div><div class="ad-kf">${foot}</div></div>`;
+  return `<div class="ad-g5">${k('개강등록률', ['당월', 'blue'], fx(o.regRateM), `${o.regNM}명 / 신청 ${o.appM}명`, `미등록 ${o.appM - o.regNM}명 · 누적 ${fx(o.regRateY)}`, PB)}${k('종강률', ['당월', 'ok'], fx(o.endRateM), `${o.finM}명 / 최종 ${o.finalM}명`, `중도 이탈 ${o.finalM - o.finM}명 · 누적 ${fx(o.endRateY)}`, PB)}${k('수강생전도율', ['재생산', 'warn'], fx(o.evRate), `${o.evY}명 / 종강 ${o.finY}명`, `복음방 ${o.evBY} · 센터 ${o.evCY}`, PO)}${k('재적 대비 개강률', ['생산성', 'blue'], fx(o.memReg, 2), `${o.regNY}명 / 재적 ${o.mem || '-'}`, '재적 100명당 ' + (o.mem ? Math.round(o.regNY / o.mem * 10000) / 100 : '-') + '명')}${k('재적 대비 종강률', ['결실률', 'ok'], fx(o.memEnd, 2), `${o.finY}명 / 재적 ${o.mem || '-'}`, '재적 100명당 ' + (o.mem ? Math.round(o.finY / o.mem * 10000) / 100 : '-') + '명')}</div>
+    <div class="card mt"><h3>기수별 개강·종강 현황</h3>${admTable(o)}</div>${admDefs([DEF.reg, DEF.end, DEF.ev, DEF.mreg, DEF.mend])}`;
+}
+/* ④ 구간 출결 히트맵 */
+const SEG = { mode: 'real', scope: 'live' };
+function segRows(x) {
+  const anchor = x.regDate || x.open; if (!anchor) return null;
+  const a = new Date(anchor + 'T00:00:00'), by = {};
+  summaryOf(x.n).forEach(s => { const d = String(s['날짜']); if (!d || d < anchor) return; const k = Math.floor((new Date(d + 'T00:00:00') - a) / 864e5 / 7) + 1; if (k > 36) return; const g = by[k] = by[k] || { real: 0, mk: 0, tot: 0 }; g.real += num(s['실시간출석']); g.mk += num(s['보강출석']); g.tot += num(s['재적인원']); });
+  const ks = Object.keys(by).map(Number).sort((p, q) => p - q); if (!ks.length) return null;
+  const v = k => by[k] ? (SEG.mode === 'real' ? by[k].real : by[k].real + by[k].mk) / (by[k].tot || 1) : '';
+  return { ks, v, max: ks[ks.length - 1], first: v(ks[0]), last: v(ks[ks.length - 1]) };
+}
+function admSeg() {
+  const all = cohorts().map(admCo).filter(x => SEG.scope === 'all' || x.st === '진행중' || (x.end && x.end.slice(0, 4) === String(AD.Y)));
+  const R = all.map(x => ({ x, g: segRows(x) })).filter(o => o.g); const N = Math.max(4, ...R.map(o => o.g.max), 0);
+  const hc = v => v === '' ? '' : `style="background:${heatOf(v)[1]};color:${heatOf(v)[2]}"`;
+  return `<div class="row" style="gap:8px;margin-bottom:12px;flex-wrap:wrap"><div class="chips">${[['real', '실시간 출석률'], ['all', '전체 출석률(보강 포함)']].map(m => `<button class="chip ${SEG.mode === m[0] ? 'on' : ''}" onclick="SEG.mode='${m[0]}';render()">${m[1]}</button>`).join('')}</div><div class="chips">${[['live', '진행 중 · 올해 종강'], ['all', '모든 기수']].map(m => `<button class="chip ${SEG.scope === m[0] ? 'on' : ''}" onclick="SEG.scope='${m[0]}';render()">${m[1]}</button>`).join('')}</div></div>
+    ${R.length ? `<div class="card"><h3>기수 × 구간 출석률 <small>1구간 = 등록일 이후 첫 주</small></h3><div class="hm-w"><table class="hmap hseg"><thead><tr><th>기수</th><th>종강률</th><th>완주 유지율</th>${Array.from({ length: N }, (_, i) => `<th>${i + 1}구간</th>`).join('')}</tr></thead><tbody>${R.map(({ x, g }) => { const ended = x.end && (x.end <= todayStr() || x.st === '종강'), keep = g.first ? g.last / g.first : '';
+      return `<tr><th>${esc(x.n)}</th><td>${ended && x.final ? pct(x.fin / x.final) : '<span class="muted">진행중</span>'}</td><td style="color:${keep === '' ? '' : keep >= .9 ? PB : keep < .7 ? PO : ''};font-weight:800">${keep === '' ? '-' : pct(keep)}</td>${Array.from({ length: N }, (_, i) => { const v = g.v(i + 1), p = i ? g.v(i) : ''; return v === '' ? '<td class="hm-na">-</td>' : `<td ${hc(v)}>${pct(v)}${p !== '' && Math.abs(v - p) >= .05 ? `<small class="seg-d">${v > p ? '▲' : '▼'}${Math.round(Math.abs(v - p) * 100)}</small>` : ''}</td>`; }).join('')}</tr>`; }).join('')}</tbody></table></div>
+      <div class="vlg">${HEAT.map(h => `<span><i style="background:${h[1]}"></i>${h[3]}</span>`).join('')}<span>▲▼ = 앞 구간보다 5%p 이상 변화</span></div></div>` : empty('출석 기록이 있는 기수가 없어요', '출석을 체크하면 구간별로 쌓여요.')}${admDefs([DEF.seg])}`;
+}
+/* ⑤ 수료 관리 */
+function admCert() {
+  const c = Object.assign({ base: '', unf: 0, unfDrop: 0, no: 0, under: 0, goal: 0, done: 0, wait: 0, drop: 0 }, KPI().cert || {});
+  const wait = num(c.unf) - num(c.unfDrop), tgt = wait - num(c.no), ok = tgt - num(c.under), r = (a, b) => b ? pct(a / b) : '-';
+  const st = [['미수료자', num(c.unf), '종강 − 기수료', '#64748b'], ['수료 대기자', wait, '미수료자 − 미수료 탈락', PB], ['수료 대상자', tgt, `대기자 − 수료 불가 · 대기자 중 ${r(tgt, wait)}`, '#5b9be0'], ['★ 수료 가능자', ok, `대상자 − 기준 미달 · 대기자 중 ${r(ok, wait)} · 대상자 중 ${r(ok, tgt)}`, '#16a34a']];
+  const mx = Math.max(1, ...st.map(s => s[1]));
+  const f = (k, l, h) => `<label class="fld"><span>${l}${h ? `<em>${h}</em>` : ''}</span><input type="${k === 'base' ? 'date' : 'number'}" data-ce="${k}" value="${esc(c[k] ?? '')}"></label>`;
+  return `<div class="card"><h3>수료 단계 <small>${c.base ? esc(c.base) + ' 기준' : '입력한 값 기준'}</small></h3><div class="ad-fun">${st.map(s => `<div><span>${s[0]}</span><i style="width:${Math.max(2, s[1] / mx * 100)}%;background:${s[3]}"></i><b>${s[1]}명</b><small>${s[2]}</small></div>`).join('')}<div><span>🎯 수료 목표</span><i style="width:${Math.max(2, num(c.goal) / mx * 100)}%;background:${PO}"></i><b>${num(c.goal)}명</b><small>대기자 중 ${r(num(c.goal), wait)}</small></div></div></div>
+    <div class="card mt"><h3>수료 현황 입력 <small>수료DB · 바뀔 때마다 고쳐 주세요</small></h3><div class="form">${f('base', '기준일')}${f('unf', '미수료자', '종강했지만 아직 수료 전')}${f('unfDrop', '미수료 탈락자')}${f('no', '수료 불가자', '의지 없음')}${f('under', '수료 기준 미달자')}${f('goal', '수료 목표수')}${f('done', '누적 수료자')}${f('wait', '현 수료 대기자')}${f('drop', '누적 탈락자')}</div><div class="row mt" style="justify-content:flex-end"><button class="btn p" onclick="saveCert(this)">저장</button></div></div>${admDefs([DEF.cert])}`;
+}
+async function saveCert(btn) {
+  const c = {}; document.querySelectorAll('[data-ce]').forEach(el => { c[el.dataset.ce] = el.dataset.ce === 'base' ? el.value.trim() : num(el.value); });
+  await saveKpi({ cert: c }, btn, '수료 현황을 저장했어요');
+}
+async function saveKpi(kpi, btn, msg) {
+  busy(btn, true);
+  try { const r = await api('saveSettings', { settings: { kpi } }); if (SETS) SETS = r.settings; DB.settings = Object.assign({}, DB.settings, { kpi: r.settings.kpi }); toast(msg || '저장했어요'); render(); }
+  catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+/* ⑥ 센터 재정 · 시설 */
+function ctrList() { return (KPI().centers || []).map(c => Object.assign({ name: '', on: true, main: 1, ext: 0, face: 1, video: 0, open: 0, ledger: {} }, c)); }
+function ctrCalc(c, ym) {
+  const ks = Object.keys(c.ledger || {}).sort(); let bal = num(c.open), prev = num(c.open);
+  for (const k of ks) { if (k > ym) break; const l = c.ledger[k]; if (k === ym) prev = bal; bal += num(l.gift) + num(l.sup) - num(l.out); }
+  const l = (c.ledger || {})[ym] || {}; if (!ks.includes(ym)) prev = bal;
+  return { prev, gift: num(l.gift), sup: num(l.sup), out: num(l.out), pl: num(l.gift) + num(l.sup) - num(l.out), bal };
+}
+function admCtr() {
+  const ym = adYM(), cs = ctrList(), o = admStat(AD.Y, AD.M), rows = cs.map(c => Object.assign({ c }, ctrCalc(c, ym)));
+  const T = k => rows.reduce((s, r) => s + r[k], 0), co = cohorts().filter(c => c['상태'] !== '종강').reduce((s, c) => s + finCalc(c['기수명']).bal, 0);
+  const man = v => (Math.round(v / 1000) / 10).toLocaleString('ko-KR') + '만원';
+  return `<div class="ad-g5">${adCard('센터 재정 총 잔액', null, `<div class="ad-big">${man(T('bal'))}</div>`, `월입금 +${man(T('gift') + T('sup'))} · 월출금 −${man(T('out'))}`)}${adCard('월 입금 구조', null, adRow('헌금', man(T('gift')), T('gift') + T('sup') ? pct(T('gift') / (T('gift') + T('sup'))) : '') + adRow('후원·기타', man(T('sup'))), '헌금 ÷ 총입금')}${adCard('수강생 1인당 헌금', null, `<div class="ad-big">${o.real ? Math.round(T('gift') / o.real).toLocaleString('ko-KR') : 0}<small>원</small></div>`, `${AD.M}월 실시간 출석 ${o.real}명 기준`)}${adCard('부동산 · 교실', null, adRow('부동산', cs.reduce((s, c) => s + num(c.main) + num(c.ext), 0) + '개소', `본관 ${cs.reduce((s, c) => s + num(c.main), 0)} · 증설 ${cs.reduce((s, c) => s + num(c.ext), 0)}`) + adRow('교실', cs.reduce((s, c) => s + num(c.face) + num(c.video), 0) + '실', `대면 ${cs.reduce((s, c) => s + num(c.face), 0)} · 영상 ${cs.reduce((s, c) => s + num(c.video), 0)}`), `운영 ${cs.filter(c => c.on).length} · 미운영 ${cs.filter(c => !c.on).length}`)}${adCard('기수 통장 합계', null, `<div class="ad-big">${man(co)}</div>`, '진행 중 기수 통장 잔액 (기수 재정)')}</div>
+    <div class="card mt"><h3>센터별 ${AD.M}월 재정 · 시설 <small>금액은 원 단위로 입력</small></h3>${cs.length ? `<div class="tw" style="box-shadow:none"><table class="htbl ctr"><tr><th>센터</th><th>운영</th><th class="c">전월 이입</th><th class="c">헌금(+)</th><th class="c">후원·기타(+)</th><th class="c">월출금(−)</th><th class="c">당월 손익</th><th class="c">★ 잔액</th><th class="c">본관</th><th class="c">증설</th><th class="c">대면 교실</th><th class="c">영상 교실</th></tr>${rows.map((r, i) => `<tr><td><b>${esc(r.c.name)}</b></td><td><input type="checkbox" data-cf="${i}.on" ${r.c.on ? 'checked' : ''}></td><td class="c">${man(r.prev)}</td>${['gift', 'sup', 'out'].map(k => `<td><input type="number" data-cl="${i}.${k}" value="${r[k] || ''}" placeholder="0"></td>`).join('')}<td class="c" style="color:${r.pl < 0 ? PO : PB};font-weight:700">${r.pl >= 0 ? '+' : ''}${man(r.pl)}</td><td class="c"><b>${man(r.bal)}</b></td>${['main', 'ext', 'face', 'video'].map(k => `<td><input type="number" data-cf="${i}.${k}" value="${num(r.c[k])}" style="width:60px"></td>`).join('')}</tr>`).join('')}</table></div>` : '<p class="muted">센터를 추가해 주세요.</p>'}
+      <div class="row mt" style="flex-wrap:wrap;gap:8px"><input id="ctrNew" placeholder="새 센터 이름 (예: 논산센터)" style="width:200px"><input id="ctrOpen" type="number" placeholder="시작 잔액(원)" style="width:140px"><button class="btn sm" onclick="ctrAdd(this)">+ 센터 추가</button><span class="sp"></span><button class="btn p" onclick="ctrSave(this)">저장</button></div></div>${admDefs([['회계 잔액', '전월 이입 + 헌금 + 후원·기타 − 월출금', '센터별 달마다 입력 · 처음 잔액은 센터 추가할 때'], ['수강생 1인당 헌금', '헌금 ÷ 월말 실시간 출석 수강생', '수강생 헌금 효율']])}`;
+}
+async function ctrAdd(btn) { const n = $('#ctrNew').value.trim(); if (!n) return toast('센터 이름을 적어 주세요', true); const cs = ctrList(); if (cs.some(c => c.name === n)) return toast('이미 있는 이름이에요', true); cs.push({ name: n, on: true, main: 1, ext: 0, face: 1, video: 0, open: num($('#ctrOpen').value), ledger: {} }); await saveKpi({ centers: cs }, btn, '센터를 추가했어요'); }
+async function ctrSave(btn) {
+  const ym = adYM(), cs = ctrList();
+  document.querySelectorAll('[data-cl]').forEach(el => { const [i, f] = el.dataset.cl.split('.'); const c = cs[+i]; c.ledger = Object.assign({}, c.ledger); c.ledger[ym] = Object.assign({}, c.ledger[ym], { [f]: num(el.value) }); });
+  document.querySelectorAll('[data-cf]').forEach(el => { const [i, f] = el.dataset.cf.split('.'); cs[+i][f] = el.type === 'checkbox' ? el.checked : num(el.value); });
+  await saveKpi({ centers: cs }, btn, AD.M + '월 센터 재정을 저장했어요');
+}
+/* ⑦ 사명자 현황 */
+function admLoad() {
+  const K = KPI(), lim = Object.assign({ insLo: 15, insHi: 25, evLo: 11, evHi: 18 }, K.load || {});
+  const act = DB.staff.filter(s => !/종료|휴식/.test(s['상태'] || '')), has = (s, r) => rolesOf(s).includes(r) || String(s['직분'] || '').includes(r);
+  const cnt = r => act.filter(s => has(s, r)).length, ins = cnt('강사'), ev = cnt('전도사'), dir = cnt('원장'), pre = act.filter(s => /예비강사/.test(rolesOf(s).join(' ') + ' ' + (s['직분'] || ''))).length;
+  const live = cohorts().filter(c => c['상태'] === '진행중'), last = live.map(c => summaryOf(c['기수명']).slice(-1)[0]).filter(Boolean);
+  const att = last.reduce((s, x) => s + num(x['실시간출석']) + num(x['보강출석']), 0), reg = last.reduce((s, x) => s + num(x['재적인원']), 0), mem = num((K.years[SHIN(AD.Y || new Date().getFullYear())] || {}).members);
+  const per = (n, d) => d ? Math.round(n / d * 10) / 10 : '', st = (v, lo, hi) => v === '' ? ['-', ''] : v > hi ? ['과부하', 'bad'] : v > hi * .9 ? ['주의', 'warn'] : v >= lo ? ['적정', 'ok'] : ['여유', 'blue'];
+  const pi = per(att, ins), pe = per(att, ev), si = st(pi, lim.insLo, lim.insHi), se = st(pe, lim.evLo, lim.evHi);
+  const need = (n, d, hi) => d && n / d > hi ? Math.ceil(n / hi) - d : 0;
+  const roleRow = r => { const l = act.filter(s => has(s, r)); return `<div class="ad-r"><span>${r}</span><b>${l.length}명${mem ? ` <small>재적 ${pct(l.length / mem)}</small>` : ''}</b></div>`; };
+  return `<div class="ad-g5">${adCard('총 사명자', null, `<div class="ad-big">${act.length}<small>명</small></div>`, `원장 ${dir} · 강사 ${ins} · 전도사 ${ev} · 예비강사 ${pre}`)}${adCard('강사 1인당 출석 수강생', [si[0], si[1]], `<div class="ad-big">${pi === '' ? '-' : pi}<small>명</small></div>`, `출석 ${att}명 ÷ 강사 ${ins}명 · 적정 ${lim.insLo}~${lim.insHi}`)}${adCard('전도사 1인당 출석 수강생', [se[0], se[1]], `<div class="ad-big">${pe === '' ? '-' : pe}<small>명</small></div>`, `출석 ${att}명 ÷ 전도사 ${ev}명 · 적정 ${lim.evLo}~${lim.evHi}`)}${adCard('증원 필요', null, adRow('강사', '+' + need(att, ins, lim.insHi) + '명') + adRow('전도사', '+' + need(att, ev, lim.evHi) + '명'), '적정 상한을 넘는 만큼')}${adCard('출석 모수', null, `<div class="ad-big">${att}<small>명</small></div>`, `진행 중 ${live.length}개 기수 최근 수업 · 재적 ${reg}명 (${reg ? pct(att / reg) : '-'})`)}</div>
+    <div class="grid g-2 mt"><div class="card"><h3>직책별 인원</h3>${['원장', '강사', '전도사', '예비강사', '간사'].map(roleRow).join('')}<p class="muted" style="font-size:12px;margin:8px 0 0">사명자·조직도에서 직책을 고치면 바로 반영돼요 · 종료·휴식 상태는 빠져요</p></div>
+      <div class="card"><h3>적정 부하 기준</h3><div class="form">${[['insLo', '강사 최소'], ['insHi', '강사 최대'], ['evLo', '전도사 최소'], ['evHi', '전도사 최대']].map(([k, l]) => `<label class="fld"><span>${l}</span><input type="number" data-ld="${k}" value="${lim[k]}"></label>`).join('')}</div><div class="row mt" style="justify-content:flex-end"><button class="btn sm" onclick="saveLoad(this)">기준 저장</button></div></div></div>${admDefs([DEF.load])}`;
+}
+async function saveLoad(btn) { const l = {}; document.querySelectorAll('[data-ld]').forEach(el => l[el.dataset.ld] = num(el.value)); await saveKpi({ load: l }, btn, '부하 기준을 저장했어요'); }
+PAGES.admin = () => {
+  const tab = ADM_TABS.some(t => t[0] === ROUTE.arg) ? ROUTE.arg : 'home', f = { home: admHome, evg: admEvg, oc: admOC, seg: admSeg, cert: admCert, ctr: admCtr, load: admLoad }[tab];
+  return `<div class="ph"><div><h1>종합 행정</h1><p>논산교회 신학부 핵심 지표 · 모든 숫자는 운영센터 기록에서 자동 집계</p></div></div><div class="tabs">${ADM_TABS.map(t => `<a href="#admin/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${['seg', 'cert', 'load'].includes(tab) ? '' : adSel()}${f()}`;
+};
+
+const BUILD = '2026-11-26a';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
