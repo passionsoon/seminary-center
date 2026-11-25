@@ -630,6 +630,10 @@ details.fold[open]>summary::after{transform:rotate(180deg)}
 .hmap.hseg td{min-width:54px;position:relative}.seg-d{display:block;font-size:10px;font-weight:700;opacity:.85}
 table.ctr input[type=number]{width:96px;padding:5px 6px}
 @media (max-width:760px){.ad-g5{grid-template-columns:1fr 1fr}.ad-big{font-size:24px}.ad-eq>div{min-width:44%}.ad-fun>div{grid-template-columns:90px 1fr 50px}}
+.due-r{display:grid;grid-template-columns:110px 1fr auto;gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--line2);color:inherit;text-decoration:none}.due-r:first-of-type{border-top:0}.due-r:hover{background:var(--line2)}.due-r b{font-size:14px;display:block}.due-r small{color:var(--sub);font-size:12px}.due-r .go{color:var(--pri);font-weight:700;font-size:13px;white-space:nowrap}.due-r.u b{color:#b91c1c}
+.due-w{font-size:11.5px;font-weight:700;color:var(--sub);background:var(--line2);border-radius:8px;padding:4px 8px;text-align:center}
+.due-tg{font-size:13.5px;line-height:1.6}
+@media (max-width:760px){.due-r{grid-template-columns:1fr auto}.due-w{display:none}}
 </style>
 </head>
 <body>
@@ -1320,6 +1324,7 @@ PAGES.home = () => {
     const er = endReq(n); if (er.end && er.short && c['상태'] !== '종강') alerts.push(['bad', `${esc(n)} · 종강일(${md(er.end)})까지 수업일수 ${er.planned}일 — 종강 요건 ${er.min}일에 ${er.short}일 부족해요`, `cohort/${e}/overview`]);
     const ms = missedSessions(n); if (ms.length) alerts.push(['bad', `${esc(n)} · 지난 회차 ${ms.length}회 출석이 비어 있어요 (${ms.slice(0, 3).map(x => x['회차'] + '회차').join(', ')}${ms.length > 3 ? ` 외 ${ms.length - 3}회` : ''})`, `attend/${e}/${ms[0]['회차']}`]);
   });
+  if (DUE && DUE.items.length) alerts.unshift([DUE.items.some(i => i.urgent) ? 'bad' : 'blue', `📝 입력 비서 · 넣어야 할 데이터 ${DUE.items.length}가지${DUE.items.some(i => i.urgent) ? ` (급한 것 ${DUE.items.filter(i => i.urgent).length})` : ''}`, 'admin/todo']);
   const kp = (tone, ic, l, v, u, d, href) => `<${href ? `a href="#${href}"` : 'div'} class="card kp ${tone}"><span class="ic">${icon(ic, 18)}</span><div class="l">${l}</div><div class="v">${v}<small>${u}</small></div><div class="d">${d || '&nbsp;'}</div></${href ? 'a' : 'div'}>`;
   return `<div class="ph"><div><h1>종합 현황</h1><p>${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })} · 모든 기수를 한눈에</p></div><div class="acts"><a class="btn" href="#analysis">${icon('trend', 16)}분석 보기</a></div></div>
   <div class="grid g-kpi">
@@ -1339,7 +1344,7 @@ PAGES.home = () => {
   </div>
   <details class="card mt fold"><summary><h3 style="display:inline;margin:0">기수별 입력 현황</h3> <span class="muted">담당자 링크 · 마지막 입력 · 빠진 회차</span></summary><div class="mt">${inputTable()}</div></details>`;
 };
-AFTER.home = async () => { if (LINKS || isCo()) return; try { LINKS = (await api('cohortKeys')).keys || {}; if (ROUTE.page === 'home') render(); } catch (e) { } };
+AFTER.home = async () => { if (!isCo() && !DUE) loadDue().then(() => { if (ROUTE.page === 'home') render(); }).catch(() => { }); if (LINKS || isCo()) return; try { LINKS = (await api('cohortKeys')).keys || {}; if (ROUTE.page === 'home') render(); } catch (e) { } };
 function cohortCard(c) {
   const n = String(c['기수명']), s = statOf(n), p = progressOf(n), ar = attRate(n), stu = studentsOf(n);
   const reg = stu.filter(x => x['센터등록일']).length || num(s['센터 등록(초등)']);
@@ -1366,7 +1371,7 @@ function editCohort(name) {
     ${F('중등진급일', '중등 진급일', c['중등진급일'], 'date')}${F('고등진급일', '고등 진급일', c['고등진급일'], 'date')}
     ${F('종강일(입교)', '종강일(입교)', c['종강일(입교)'], 'date', null, name ? { hint: (() => { const er = endReq(name); return `수업일수 ${er.done}/${er.min}일 · ${er.nth ? er.min + '번째 수업일 ' + md(er.nth) : '일정상 아직 ' + er.total + '일'}`; })() } : {})}</div>
     <div class="sec">담당</div><div class="form">${F('강사', '강사', c['강사'], 'text', 'dlStaff')}<div></div>${F('전도사1', '전도사 1', c['전도사1'], 'text', 'dlStaff')}${F('전도사2', '전도사 2', c['전도사2'], 'text', 'dlStaff')}</div>
-    <div class="sec">종합 행정 구분</div><div class="form">${F('과정구분', '과정 구분', c['과정구분'] || '정규', 'select', ['정규', '비정규'])}${F('분류', '분류', c['분류'] || '일반', 'select', ['일반', '학생회', '청년', '기타'])}${F('(수동)전도_복음방', '수강생 전도 · 복음방', c['(수동)전도_복음방'], 'number', null, { hint: '종강한 수강생이 전도해 복음방에 들어간 인원' })}${F('(수동)전도_센터', '수강생 전도 · 센터', c['(수동)전도_센터'], 'number', null, { hint: '센터까지 들어간 인원' })}</div>
+    <div class="sec">종합 행정 구분</div><div class="form">${F('과정구분', '과정 구분', c['과정구분'] || (/^비/.test(name || '') ? '비정규' : '정규'), 'select', ['정규', '비정규'])}${F('분류', '분류', c['분류'] || '일반', 'select', ['일반', '학생회', '청년', '기타'])}${F('(수동)전도_복음방', '수강생 전도 · 복음방', c['(수동)전도_복음방'], 'number', null, { hint: '종강한 수강생이 전도해 복음방에 들어간 인원' })}${F('(수동)전도_센터', '수강생 전도 · 센터', c['(수동)전도_센터'], 'number', null, { hint: '센터까지 들어간 인원' })}</div>
     <div class="sec">메모</div>${F('비고', '', c['비고'], 'area')}
     <details class="mt2"><summary class="muted" style="cursor:pointer">명단 없는 과거 기수: 인원 직접 입력</summary><div class="form mt">${manual.map(k => F(k, mlabel[k] || k.replace('(수동)', ''), c[k], 'number', null, mhint[k] ? { hint: mhint[k] } : {})).join('')}</div></details>`,
     `${name ? `<button class="btn d" onclick="delCohort(${attr(name)})">삭제</button>` : ''}<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="saveCohort(${name ? attr(name) : 'false'},this)">저장</button>`);
@@ -2775,7 +2780,7 @@ function settingsBody() {
       <label class="fld"><span>관리자 채팅 ID</span><input data-s="tg.adminChat" value="${esc(T.adminChat)}" placeholder="예: 123456789"></label>
       <label class="fld"><span>알림 시각</span><select data-s="tg.hour">${Array.from({ length: 17 }, (_, i) => i + 7).map(h => `<option value="${h}" ${num(T.hour) === h ? 'selected' : ''}>${h}시</option>`).join('')}</select></label></div>
     ${act.length ? `<div class="sec">기수 담당자 채팅 ID <span class="muted" style="font-weight:500">비워 두면 관리자에게만</span></div><div class="form">${act.map(c => `<label class="fld"><span>${esc(c['기수명'])}</span><input data-cc="${esc(c['기수명'])}" value="${esc((T.cohortChats || {})[c['기수명']] || '')}"></label>`).join('')}</div>` : ''}
-    <div class="sec">보낼 내용</div><div style="display:grid;gap:6px">${chk('unchecked', '수업한 날 출석이 체크되지 않았을 때')}${chk('absent', '연속 결석자')}${chk('register', '센터 등록 가능 인원')}${chk('makeup', '연락하지 않은 결석')}${chk('weekly', '월요일 주간 요약')}</div>
+    <div class="sec">보낼 내용</div><div style="display:grid;gap:6px">${chk('unchecked', '수업한 날 출석이 체크되지 않았을 때')}${chk('absent', '연속 결석자')}${chk('register', '센터 등록 가능 인원')}${chk('makeup', '연락하지 않은 결석')}${chk('weekly', '월요일 주간 요약')}${chk('due', '📝 입력 비서 — 넣어야 할 데이터 (매일 급한 것 · 월요일·1일·말일 전체)')}</div>
     <div class="row mt"><button class="btn sm" onclick="tgChats(this)">채팅 ID 찾기</button><button class="btn sm" onclick="tgTest(this)">테스트 보내기</button></div><div id="tgList"></div>
     <p class="muted" style="margin-bottom:0">채팅 ID 찾는 법: 봇에게(또는 봇을 넣은 단체방에) 아무 말이나 보낸 뒤 「채팅 ID 찾기」를 누르세요.</p></div>
   <div class="card"><h3>자동 작업 <small>매일 출석률 다시 계산 · 백업 · 알림</small></h3>
@@ -3496,13 +3501,13 @@ async function finImportSave(n, btn) {
 }
 /* ═════════ 종합 행정: 교회 단위 핵심 지표 (개강등록·월말수강·종강·종합전도율·수료·구간출결·센터·사명자) ═════════ */
 const AD = { Y: 0, M: 0 };
-const ADM_TABS = [['home', '종합 현황'], ['evg', '종합 전도율'], ['oc', '개강·종강'], ['seg', '구간 출결'], ['cert', '수료 관리'], ['ctr', '센터 재정·시설'], ['load', '사명자 현황']];
+const ADM_TABS = [['todo', '📝 입력 비서'], ['home', '종합 현황'], ['evg', '종합 전도율'], ['oc', '개강·종강'], ['seg', '구간 출결'], ['cert', '수료 관리'], ['ctr', '센터 재정·시설'], ['load', '사명자 현황']];
 function adYM() { if (!AD.Y) { const d = new Date(); AD.Y = d.getFullYear(); AD.M = d.getMonth() + 1; } return AD.Y + '-' + pad(AD.M); }
 const monEnd = ym => { const [y, m] = ym.split('-').map(Number); return ymd(new Date(y, m, 0)); };
 /** 기수 한 개의 행정 숫자 (명단이 있으면 명단, 없으면 직접 입력) */
 function admCo(c) {
   const x = cohortNums(c), m = k => num(c['(수동)' + k]);
-  return Object.assign(x, { regDate: String(c['센터등록일'] || '').slice(0, 10) || x.open, kind: c['과정구분'] || '정규', cls: c['분류'] || '일반', evB: m('전도_복음방'), evC: m('전도_센터') });
+  return Object.assign(x, { regDate: String(c['센터등록일'] || '').slice(0, 10) || x.open, kind: c['과정구분'] || (/^비/.test(String(c['기수명'])) ? '비정규' : '정규'), cls: c['분류'] || '일반', evB: m('전도_복음방'), evC: m('전도_센터') });
 }
 /** 기수의 그 달 마지막 수업: 실시간·보강·재적 */
 function lastInMonth(n, ym) { const s = summaryOf(n).filter(x => String(x['날짜']).slice(0, 7) === ym).sort((a, b) => String(a['날짜']).localeCompare(String(b['날짜']))).pop(); return s ? { real: num(s['실시간출석']), mk: num(s['보강출석']), tot: num(s['재적인원']), date: s['날짜'] } : null; }
@@ -3662,12 +3667,37 @@ function admLoad() {
       <div class="card"><h3>적정 부하 기준</h3><div class="form">${[['insLo', '강사 최소'], ['insHi', '강사 최대'], ['evLo', '전도사 최소'], ['evHi', '전도사 최대']].map(([k, l]) => `<label class="fld"><span>${l}</span><input type="number" data-ld="${k}" value="${lim[k]}"></label>`).join('')}</div><div class="row mt" style="justify-content:flex-end"><button class="btn sm" onclick="saveLoad(this)">기준 저장</button></div></div></div>${admDefs([DEF.load])}`;
 }
 async function saveLoad(btn) { const l = {}; document.querySelectorAll('[data-ld]').forEach(el => l[el.dataset.ld] = num(el.value)); await saveKpi({ load: l }, btn, '부하 기준을 저장했어요'); }
+/* ⓪ 입력 비서: 공식 행정시스템 대신 손으로 넣는 데이터를 언제·무엇을 넣을지 점검 */
+let DUE = null, DUE_AT = 0;
+async function loadDue(force) {
+  if (!force && DUE && Date.now() - DUE_AT < 60e3) return DUE;
+  DUE = await api('dataDue'); DUE_AT = Date.now(); return DUE;
+}
+const DUE_IC = { '출석': '📋', '기수': '🎓', '재정': '💰', '수료': '🎖', '기준': '📌', '사명자': '👥' };
+function admTodo() {
+  if (!DUE) return '<div class="sk" style="height:260px"></div>';
+  const it = DUE.items, urg = it.filter(i => i.urgent), cats = {}; it.forEach(i => (cats[i.cat] = cats[i.cat] || []).push(i));
+  const T = (SETS && SETS.tg) || null;
+  const row = i => `<a class="due-r ${i.urgent ? 'u' : ''}" href="#${esc(i.link)}"><span class="due-w">${esc(i.when)}</span><div><b>${i.urgent ? '❗ ' : ''}${esc(i.co && i.cat !== '출석' ? i.title : (i.co ? i.co + ' · ' : '') + i.title)}</b>${i.detail ? `<small>${esc(i.detail)}</small>` : ''}</div><span class="go">입력 ›</span></a>`;
+  return `<div class="ad-g5">${adCard('넣어야 할 것', it.length ? ['점검 필요', 'warn'] : ['모두 완료', 'ok'], `<div class="ad-big" style="color:${it.length ? PO : PB}">${it.length}<small>가지</small></div>`, '입력하면 자동으로 목록에서 빠져요')}${adCard('급한 것', urg.length ? ['오늘', 'bad'] : null, `<div class="ad-big" style="color:${urg.length ? '#dc2626' : PB}">${urg.length}<small>가지</small></div>`, '출석 누락 · 상태 변경 · 기한 지난 것')}${adCard('텔레그램 비서', T ? (T.token && T.adminChat ? (T.due === false ? ['꺼짐', 'warn'] : ['켜짐', 'ok']) : ['설정 필요', 'warn']) : null, `<div class="due-tg">매일 <b>${T ? num(T.hour) || 21 : '-'}시</b> · 급한 것<br>월요일 · 1일 · 말일 · 전체 목록</div>`, `<a href="#settings">설정에서 바꾸기</a>`)}</div>
+    <div class="row mt" style="gap:8px;flex-wrap:wrap"><button class="btn p" onclick="sendDue(this)">📨 지금 텔레그램으로 보내기</button><button class="btn" onclick="loadDue(true).then(render)">다시 점검</button><span class="muted" style="font-size:12.5px">${esc(DUE.today)} 기준</span></div>
+    ${it.length ? Object.keys(cats).map(c => `<div class="card mt"><h3>${DUE_IC[c] || '•'} ${esc(c)} <small>${cats[c].length}가지</small></h3>${cats[c].map(row).join('')}</div>`).join('') : `<div class="card mt" style="text-align:center;padding:30px"><div style="font-size:34px">✅</div><b>지금 넣어야 할 데이터가 없어요</b><p class="muted" style="margin:4px 0 0">다음 점검 때 새로 생기면 알려 드릴게요</p></div>`}
+    <div class="card mt"><h3>입력 주기표 <small>공식 행정시스템 대신 우리가 손으로 넣는 것</small></h3><div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>언제</th><th>무엇을</th><th>누가</th></tr>${DUE.plan.map(p => `<tr><td><b>${esc(p[0])}</b></td><td>${esc(p[1])}</td><td class="muted">${esc(p[2])}</td></tr>`).join('')}</table></div>
+      <p class="muted" style="margin:10px 0 0;font-size:12.5px">비서는 날짜만 보고 알리는 게 아니라 <b>실제로 데이터가 들어왔는지</b>를 확인해요. 넣은 것은 다음 점검에서 빠지고, 안 넣은 것은 들어올 때까지 계속 알려요.</p></div>`;
+}
+async function sendDue(btn) { busy(btn, true); try { const r = await api('sendDue'); toast(r.sent ? '텔레그램으로 보냈어요' : '보낼 것이 없어요'); } catch (e) { toast(e.message, true); } finally { busy(btn, false); } }
+AFTER.admin = async () => {
+  if (!(ROUTE.arg === 'todo' || !ROUTE.arg)) return;
+  const need = !DUE || Date.now() - DUE_AT > 60e3, needS = !SETS;
+  if (!need && !needS) return;
+  try { await Promise.all([need ? loadDue(true) : 0, needS ? api('getSettings').then(a => { SETS = a.settings; }) : 0]); if (ROUTE.page === 'admin') render(); } catch (e) { toast(e.message, true); }
+};
 PAGES.admin = () => {
-  const tab = ADM_TABS.some(t => t[0] === ROUTE.arg) ? ROUTE.arg : 'home', f = { home: admHome, evg: admEvg, oc: admOC, seg: admSeg, cert: admCert, ctr: admCtr, load: admLoad }[tab];
-  return `<div class="ph"><div><h1>종합 행정</h1><p>논산교회 신학부 핵심 지표 · 모든 숫자는 운영센터 기록에서 자동 집계</p></div></div><div class="tabs">${ADM_TABS.map(t => `<a href="#admin/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${['seg', 'cert', 'load'].includes(tab) ? '' : adSel()}${f()}`;
+  const tab = ADM_TABS.some(t => t[0] === ROUTE.arg) ? ROUTE.arg : 'todo', f = { todo: admTodo, home: admHome, evg: admEvg, oc: admOC, seg: admSeg, cert: admCert, ctr: admCtr, load: admLoad }[tab];
+  return `<div class="ph"><div><h1>종합 행정</h1><p>논산교회 신학부 핵심 지표 · 모든 숫자는 운영센터 기록에서 자동 집계</p></div></div><div class="tabs">${ADM_TABS.map(t => `<a href="#admin/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${['todo', 'seg', 'cert', 'load'].includes(tab) ? '' : adSel()}${f()}`;
 };
 
-const BUILD = '2026-11-26a';
+const BUILD = '2026-11-26b';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
