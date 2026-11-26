@@ -730,22 +730,71 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#93c5fd!import
 .r4-tr{padding:10px 18px 16px;margin-top:auto}.r4-bars{display:flex;gap:4px;align-items:flex-end;height:96px}.r4-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}.r4-bars i{width:100%;max-width:22px;background:var(--c);border-radius:4px 4px 0 0;display:block}.r4-bars em{font-style:normal;font-size:9.5px;color:#6b7280;font-weight:700;white-space:nowrap}.r4-bars span{font-size:10.5px;color:#9ca3af;margin-top:3px}
 .r4-home{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}.r4-home a{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:var(--bg);border:1px solid var(--bd);color:inherit}.r4-home i{width:30px;height:30px;border-radius:50%;background:var(--c);color:#fff;font-style:normal;font-weight:800;display:grid;place-items:center;flex:none}.r4-home span{font-size:12.5px;font-weight:700;color:#374151;display:block}.r4-home b{font-size:22px;color:var(--c);font-weight:800}.r4-home small{font-size:11.5px;color:#6b7280;display:block}
 @media (max-width:980px){.r4-g{grid-template-columns:1fr}.r4-home{grid-template-columns:1fr}}
+
+/* 로그인 · 내 정보 */
+#login{background:linear-gradient(135deg,#eef2ff 0,#f8fafc 55%,#ecfeff 100%)!important}
+.lg-wrap{display:grid;grid-template-columns:1fr 420px;width:min(900px,100%);background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 24px 60px rgba(17,24,39,.10)}
+.lg-side{background:linear-gradient(160deg,#1e3a8a,#312e81);color:#e0e7ff;padding:34px 32px;display:flex;flex-direction:column;gap:18px}
+.lg-side .brand b{color:#fff!important}.lg-side .brand small{color:#c7d2fe!important}.lg-side .brand i{background:#fff!important;color:#1e3a8a}
+.lg-side h2{color:#fff;font-size:24px;line-height:1.35;margin:18px 0 0;letter-spacing:-.02em}
+.lg-side ul{margin:0;padding-left:18px;display:grid;gap:8px;font-size:14px}.lg-foot{margin-top:auto;color:#a5b4fc;font-size:12px}
+.lg-card{border:0!important;box-shadow:none!important;border-radius:0!important;padding:36px 34px!important;width:auto!important}
+.lg-card h1{font-size:24px!important;margin:0 0 6px!important;font-weight:800}
+.lg-links{display:flex;gap:8px;justify-content:center;font-size:13px;margin-top:8px;color:var(--sub)}.lg-links a{color:var(--pri);font-weight:600}
+.lg-agree{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}.lg-agree summary{cursor:pointer;list-style:none}.lg-agree div{margin-top:8px;color:#4b5563;font-size:12.5px;line-height:1.7}
+.lg-conn{margin-top:18px;border-top:1px solid var(--line2);padding-top:10px}
+@media (max-width:760px){.lg-wrap{grid-template-columns:1fr}.lg-side{padding:22px 22px 18px;gap:8px}.lg-side h2,.lg-side ul,.lg-foot{display:none}.lg-card{padding:24px 22px!important}}
+.mechip{flex:none;padding:8px 2px 0}.mechip-b{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;text-align:left}.mechip-b:hover{background:#f9fafb}
+.mechip .av{width:30px;height:30px;border-radius:50%;background:#1e3a8a;color:#fff;display:grid;place-items:center;font-weight:800;flex:none}.mechip .mt{display:flex;flex-direction:column;min-width:0;line-height:1.25}.mechip .mt b{font-size:13.5px}.mechip .mt small{font-size:11px;color:var(--sub)}.mechip .go{margin-left:auto;font-size:11.5px;color:var(--pri);font-weight:700;white-space:nowrap}
+.sec-ban{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.sec-ban .btn{margin-left:auto}
+.me-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.me-g>div{border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;flex-direction:column}.me-g span{font-size:11.5px;color:var(--sub);font-weight:600}.me-g b{font-size:14px}
+.tg-code{font-size:22px;font-weight:800;letter-spacing:.12em;background:#eef2ff;color:#3730a3;border-radius:10px;padding:10px 14px;margin:10px 0;text-align:center;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
 
 <div id="login" class="hidden">
-  <div class="card">
-    <div class="brand" style="padding:0"><i>신</i></div>
-    <h1>논산 신학부 운영센터</h1>
-    <p class="muted" style="margin:0 0 22px">기수·수강생·출석·진도를 관리하고, 기록은 구글 시트에 저장됩니다.</p>
-    <label class="fld"><span>비밀번호</span><input id="lgPw" type="password" autocomplete="current-password" placeholder="비밀번호 입력"></label>
-    <p class="muted" style="margin:12px 0 18px;font-size:13px">🔒 보안을 위해 브라우저를 닫으면 자동으로 로그아웃돼요.</p>
-    <button class="btn p lg" style="width:100%" id="lgBtn">들어가기</button>
-    <p id="lgErr" style="color:var(--bad);font-size:13px;min-height:18px"></p>
-    <details><summary class="muted" style="cursor:pointer">연결 설정</summary>
-      <label class="fld" style="margin-top:10px"><span>API 주소</span><input id="lgUrl"></label>
-    </details>
+  <div class="lg-wrap">
+    <div class="lg-side"><div class="brand" style="padding:0"><i>신</i><b>논산 신학부<small>운영센터</small></b></div>
+      <h2>신학부 데이터를<br>한곳에서 안전하게</h2>
+      <ul><li>개인 아이디로 로그인 · 역할별 권한</li><li>텔레그램 2단계 인증</li><li>모든 접속·변경 기록 보관</li><li>창을 닫으면 자동 로그아웃</li></ul>
+      <small class="lg-foot">🔒 기록은 구글 시트에 저장되고, 이 기기에는 비밀번호를 남기지 않아요.</small></div>
+    <div class="card lg-card">
+      <div id="lgMain">
+        <h1>로그인</h1>
+        <p class="muted lg-sub" style="margin:0 0 20px">발급받은 아이디와 비밀번호를 입력하세요.</p>
+        <label class="fld" id="lgIdBox"><span>아이디</span><input id="lgId" autocomplete="username" placeholder="아이디" autocapitalize="off" spellcheck="false"></label>
+        <label class="fld" style="margin-top:12px"><span>비밀번호</span><input id="lgPw" type="password" autocomplete="current-password" placeholder="비밀번호"></label>
+        <button class="btn p lg" style="width:100%;margin-top:18px" id="lgBtn">로그인</button>
+        <p id="lgErr" style="color:var(--bad);font-size:13px;min-height:18px;margin:10px 0 0"></p>
+        <div class="lg-links" id="lgLinks"><a href="javascript:lgShow('join')">초대 코드로 가입하기</a><span>·</span><a href="javascript:lgHelp()">아이디·비밀번호를 잊었어요</a></div>
+      </div>
+      <div id="lgOtp" class="hidden">
+        <h1>2단계 인증</h1>
+        <p class="muted" style="margin:0 0 18px">텔레그램으로 보낸 <b>6자리 인증번호</b>를 입력하세요. 5분 동안 쓸 수 있어요.</p>
+        <label class="fld"><span>인증번호</span><input id="lgCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="font-size:22px;letter-spacing:.3em;text-align:center"></label>
+        <button class="btn p lg" style="width:100%;margin-top:16px" id="lgOtpBtn">확인</button>
+        <p id="lgOtpErr" style="color:var(--bad);font-size:13px;min-height:18px;margin:10px 0 0"></p>
+        <div class="lg-links"><a href="javascript:lgShow('main')">← 처음으로</a></div>
+      </div>
+      <div id="lgJoin" class="hidden">
+        <h1>초대 코드로 가입</h1>
+        <p class="muted" style="margin:0 0 16px">신학부장에게 받은 초대 코드로 내 계정을 만들어요.</p>
+        <label class="fld"><span>초대 코드</span><input id="jnCode" placeholder="8자리 (예: K7QM2XPA)" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:.1em"></label>
+        <label class="fld" style="margin-top:10px"><span>이름</span><input id="jnName" placeholder="실명"></label>
+        <label class="fld" style="margin-top:10px"><span>아이디<em>영문 소문자·숫자 4~20자</em></span><input id="jnId" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+        <label class="fld" style="margin-top:10px"><span>비밀번호<em>영문+숫자 8자 이상</em></span><input id="jnPw" type="password" autocomplete="new-password"></label>
+        <label class="fld" style="margin-top:10px"><span>비밀번호 확인</span><input id="jnPw2" type="password" autocomplete="new-password"></label>
+        <details class="lg-agree"><summary><label><input type="checkbox" id="jnOk"> <b>개인정보 수집·이용에 동의합니다 (필수)</b></label></summary>
+          <div><b>수집 항목</b> 이름, 아이디, 접속 기록(시각·동작)<br><b>목적</b> 신학부 운영센터 이용자 확인, 권한 관리, 보안 점검<br><b>보유 기간</b> 계정을 지울 때까지 (접속 기록은 최근 3,000건)<br><b>지킬 것</b> 수강생·사명자 개인정보는 신학부 업무에만 쓰고, 화면 캡처·파일을 외부에 퍼뜨리지 않습니다.</div></details>
+        <button class="btn p lg" style="width:100%;margin-top:14px" id="jnBtn">가입하기</button>
+        <p id="jnErr" style="color:var(--bad);font-size:13px;min-height:18px;margin:10px 0 0"></p>
+        <div class="lg-links"><a href="javascript:lgShow('main')">← 로그인으로</a></div>
+      </div>
+      <details class="lg-conn"><summary class="muted" style="cursor:pointer;font-size:12px">연결 설정</summary>
+        <label class="fld" style="margin-top:10px"><span>API 주소</span><input id="lgUrl"></label>
+      </details>
+    </div>
   </div>
 </div>
 
@@ -754,7 +803,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#93c5fd!import
     <div class="brand"><i>신</i><b>논산 신학부<small>운영센터</small></b></div>
     <div class="cohortPick"><label>현재 기수</label><select id="cohortSel" onchange="pickCohort(this.value)"></select></div>
     <nav id="nav"></nav>
-    <div class="sidefoot"><span id="syncAt"></span><span class="sp"></span><button class="btn ghost sm" onclick="manualSync()" title="시트에서 새로 불러오기"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 3v4h4M4 13a8 8 0 0 0 14.6 4.5M20 21v-4h-4"/></svg></button><button class="btn ghost sm" onclick="logout()">로그아웃</button></div>
+    <div id="meChip" class="mechip"></div><div class="sidefoot"><span id="syncAt"></span><span class="sp"></span><button class="btn ghost sm" onclick="manualSync()" title="시트에서 새로 불러오기"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 3v4h4M4 13a8 8 0 0 0 14.6 4.5M20 21v-4h-4"/></svg></button><button class="btn ghost sm" onclick="logout()">로그아웃</button></div>
   </aside>
   <div style="flex:1;min-width:0">
     <div id="topbar"><b id="topTitle"></b><select id="cohortSelM" onchange="pickCohort(this.value)"></select></div>
@@ -830,6 +879,7 @@ const CAP_I = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" strok
 /** 그려진 화면에 머리 아이콘 · 카드별 [이미지][CSV] · 페이지 [화면 이미지] 붙이기 */
 function decorate() {
   const v = $('#view'); if (!v) return;
+  const bn = secBanner(); if (bn) v.insertAdjacentHTML('afterbegin', bn);
   const ph = v.querySelector('.ph');
   if (ph) {
     const nav = (isCo() ? CO_NAV : NAV).flatMap(g => g[1]).find(n => n[0] === ROUTE.page || (ROUTE.page === 'cohort' && n[0] === 'cohorts'));
@@ -862,6 +912,7 @@ const KEYS = { staff: ['고유번호'], cohort: ['기수명'], student: ['수강
 let DB = null, ROUTE = { page: 'home' }, DIRTY = false, MEMO = {};
 const LINK_C = new URLSearchParams(location.search).get('c') || '';   // 기수 담당자 링크(?c=기수명)
 let ROLE = { type: LINK_C ? 'cohort' : 'admin', cohort: LINK_C };
+try { const r0 = JSON.parse(sessionStorage.getItem('dc_role') || 'null'); if (r0 && !LINK_C && r0.type) ROLE = r0; } catch (e) { }
 const isCo = () => ROLE.type === 'cohort';
 const PWK = LINK_C ? 'dc_pw_c_' + LINK_C : 'dc_pw';   // (예전) 비밀번호 보관 자리 — 이제는 쓰지 않고 지움
 const TKK = LINK_C ? 'dc_tk_c_' + LINK_C : 'dc_tk';   // 로그인 토큰: 비밀번호 대신 기기에 보관 (서버에서 언제든 끊을 수 있음)
@@ -943,7 +994,7 @@ async function api(action, payload) {
   const c = cfg(); loading(true);
   try {
     let res;
-    try { res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign(c.tok && !(payload && payload.key) ? { token: c.tok } : {}, { action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) }); }
+    try { res = await fetch(c.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign(c.tok && action !== 'login' && action !== 'signup' ? { token: c.tok } : {}, { action }, payload || {}, isCo() ? { cohort: ROLE.cohort } : {})) }); }
     catch (e) { const er = new Error('인터넷 연결이 불안정합니다. 잠시 후 다시 시도하세요.'); er.net = true; throw er; }
     const j = await res.json();
     if (!j.ok) { if (j.auth === false) logout(true); throw new Error(j.error || '오류가 났습니다'); }
@@ -1085,37 +1136,187 @@ async function saveAttendance(payload, btn, opt) {
   finally { busy(btn, false); }
 }
 
+/* ═════════ 내 정보 · 계정 · 보안 (총회 행정 시스템처럼: 개인 아이디 · 역할 · 2단계 인증 · 접속 기록) ═════════ */
+let ME = null, USERS = null, AUDIT = null;
+async function loadMe() { try { ME = await api('me'); } catch (e) { ME = null; } paintMe(); if (ROUTE.page) render(); }
+function paintMe() {
+  const el = $('#meChip'); if (!el) return;
+  const nm = ROLE.name || (ROLE.type === 'cohort' ? ROLE.cohort + ' 담당' : '관리자'), lb = ROLE.link ? '기수 링크' : ROLE.uid ? ROLE_LABEL[ROLE.type] : '공용 비밀번호';
+  el.innerHTML = `<button class="mechip-b" onclick="openMe()"><span class="av">${esc(nm.slice(0, 1))}</span><span class="mt"><b>${esc(nm)}</b><small>${esc(lb)}${ME && ME.user && ME.user.otp ? ' · 🔐 2단계' : ''}</small></span><span class="go">내 정보 ›</span></button>`;
+}
+function secBanner() {
+  if (!ME) return '';
+  if (ME.needSetup) return `<div class="alert bad sec-ban">⚠ 지금은 <b>공용 비밀번호</b>로 들어왔어요. 개인정보 보호를 위해 <b>관리자 계정(아이디)</b>을 먼저 만들어 주세요. 만들면 공용 비밀번호로는 더 이상 들어올 수 없어요. <button class="btn sm p" onclick="openSetup()">관리자 계정 만들기</button></div>`;
+  if (ME.needOtp) return `<div class="alert warn sec-ban">🔐 관리자 설정에 따라 <b>텔레그램 2단계 인증</b>을 켜야 해요. <button class="btn sm" onclick="openMe()">지금 켜기</button></div>`;
+  if (ME.user && !ME.user.pwAt) return `<div class="alert warn sec-ban">🔑 임시 비밀번호로 들어왔어요. <b>내 정보</b>에서 비밀번호를 바꿔 주세요. <button class="btn sm" onclick="openMe()">바꾸기</button></div>`;
+  return '';
+}
+function openSetup() {
+  openDrawer('관리자 계정 만들기<small>처음 한 번</small>', `<p class="muted" style="margin-top:0">이제부터는 사람마다 아이디로 로그인해요. 먼저 신학부장님의 관리자 계정을 만들고, 서무·강사·전도사는 「설정 → 계정·보안」에서 <b>초대 코드</b>를 보내 가입하게 하면 돼요.</p>
+    <div class="form">${F('name', '이름', ROLE.name || '', 'text', null, { full: true })}${F('uid', '아이디', '', 'text', null, { hint: '영문 소문자·숫자 4~20자', full: true })}${F('key', '비밀번호', '', 'password', null, { hint: '영문+숫자 8자 이상' })}${F('key2', '비밀번호 확인', '', 'password')}</div>
+    <div class="alert warn mt">만들고 나면 지금 쓰던 <b>공용 비밀번호</b>는 더 이상 쓸 수 없어요. 기수 담당 링크(?c=)는 「계정·보안」에서 끌 수 있어요.</div>`,
+    `<span class="sp"></span><button class="btn" onclick="closeDrawer()">나중에</button><button class="btn p" onclick="doSetup(this)">만들기</button>`);
+}
+async function doSetup(btn) {
+  const v = vals(); if (v.key !== v.key2) return toast('비밀번호 확인이 맞지 않아요', true);
+  busy(btn, true);
+  try { const r = await api('setupFirst', { uid: String(v.uid || '').trim().toLowerCase(), name: v.name, key: v.key }); sessionStorage.setItem(TKK, r.token); applyRole({ type: 'admin', uid: r.user.id, name: r.user.name }); closeDrawer(); toast('관리자 계정을 만들었어요. 다음부터는 아이디로 로그인하세요.'); await loadMe(); }
+  catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+function openMe() {
+  const u = ME && ME.user;
+  if (!u) { openDrawer('내 정보', `<p>${ROLE.link ? '기수 담당 링크로 들어왔어요. 개인 계정이 필요하면 신학부장에게 초대 코드를 받아 가입해 주세요.' : '공용 비밀번호로 들어왔어요.'}</p>${ME && ME.needSetup ? '<button class="btn p" onclick="openSetup()">관리자 계정 만들기</button>' : ''}`, `<span class="sp"></span><button class="btn" onclick="logout()">로그아웃</button>`); return; }
+  openDrawer(esc(u.name) + '<small>내 정보</small>', `<div class="me-g"><div><span>아이디</span><b>${esc(u.id)}</b></div><div><span>역할</span><b>${esc(u.roleName)}</b></div>${u.cohorts.length ? `<div><span>담당 기수</span><b>${u.cohorts.map(esc).join(', ')}</b></div>` : ''}<div><span>최근 로그인</span><b>${esc(u.last || '-')}</b></div><div><span>비밀번호 변경</span><b>${esc(u.pwAt || '임시 비밀번호')}</b></div><div><span>개인정보 동의</span><b>${esc(u.consent || '-')}</b></div></div>
+    <div class="sec">🔐 텔레그램 2단계 인증</div>
+    ${u.otp ? `<div class="alert ok">켜져 있어요. 로그인할 때 텔레그램으로 6자리 인증번호가 와요.</div><button class="btn sm d mt" onclick="otpOff(this)">끄기 (텔레그램 연결 해제)</button>`
+      : `<p class="muted" style="margin:0 0 10px">켜 두면 비밀번호가 새도 내 텔레그램 없이는 들어올 수 없어요.</p><div id="tgLink"><button class="btn sm p" onclick="tgLink(this)">연결 번호 받기</button></div>`}
+    <div class="sec">🔑 비밀번호 바꾸기</div><div class="form">${F('old', '현재 비밀번호', '', 'password', null, { full: true })}${F('key', '새 비밀번호', '', 'password', null, { hint: '영문+숫자 8자 이상' })}${F('key2', '새 비밀번호 확인', '', 'password')}</div>
+    <div class="row mt" style="justify-content:flex-end"><button class="btn sm" onclick="changePw(this)">비밀번호 바꾸기</button></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">비밀번호를 바꾸면 다른 기기의 로그인은 모두 끊겨요. 창을 닫거나 ${num(((DB.settings || {}).sec || {}).idleMin) || 30}분 동안 사용하지 않으면 자동으로 로그아웃돼요.</p>`,
+    `<span class="sp"></span><button class="btn" onclick="logout()">로그아웃</button>`);
+}
+async function tgLink(btn) {
+  busy(btn, true);
+  try { const r = await api('tgLinkCode'); $('#tgLink').innerHTML = `<div class="alert blue">텔레그램에서 <b>@nonsan_seminary_input_bot</b> 대화방을 열고 아래처럼 보내 주세요. (10분 안에)<div class="tg-code">연결 ${r.code}</div>1분 안에 봇이 「연결했어요」라고 답하면 끝이에요.</div><button class="btn sm mt" onclick="loadMe().then(openMe)">연결됐는지 확인</button>`; }
+  catch (e) { toast(e.message, true); busy(btn, false); }
+}
+async function otpOff(btn) { if (!(await ask('2단계 인증 끄기', '텔레그램 연결을 풀고 비밀번호만으로 로그인하게 할까요?', '끄기', true))) return; busy(btn, true); try { await api('otpSet', { on: false }); await loadMe(); openMe(); toast('2단계 인증을 껐어요'); } catch (e) { toast(e.message, true); busy(btn, false); } }
+async function changePw(btn) {
+  const v = vals(); if (!v.old || !v.key) return toast('현재 비밀번호와 새 비밀번호를 입력하세요', true); if (v.key !== v.key2) return toast('새 비밀번호 확인이 맞지 않아요', true);
+  busy(btn, true); try { const r = await api('changePw', { old: v.old, key: v.key }); sessionStorage.setItem(TKK, r.token); toast('비밀번호를 바꿨어요. 다른 기기의 로그인은 끊겼어요.'); await loadMe(); openMe(); } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+async function pickMyCohort(v) { ROLE.cohort = v; sessionStorage.setItem('dc_co', v); saveRole(); S.cohort = v; DB = null; $('#syncAt').textContent = '불러오는 중…'; try { await reload(true); route(); } catch (e) { toast(e.message, true); } }
+
+/* 설정 → 계정·보안 (관리자) */
+function secCard() {
+  if (ROLE.type !== 'admin') return '';
+  if (!ROLE.uid) return `<div class="card"><h3>계정·보안</h3><div class="alert warn">공용 비밀번호로 들어와 있어요. 먼저 <b>관리자 계정</b>을 만들면 사람별 계정·초대 코드·접속 기록을 쓸 수 있어요.</div><button class="btn p mt" onclick="openSetup()">관리자 계정 만들기</button></div>`;
+  if (!USERS) return `<div class="card"><h3>계정·보안</h3><div class="sk" style="height:160px"></div></div>`;
+  const sec = USERS.sec, co = cohorts().map(c => String(c['기수명']));
+  return `<div class="card"><h3>계정·보안 <small>사람마다 아이디 · 역할별 권한 · 접속 기록</small></h3>
+    <div class="tw" style="box-shadow:none"><table class="htbl"><tr><th>이름</th><th>아이디</th><th>역할</th><th>담당 기수</th><th class="c">2단계</th><th>최근 로그인</th><th class="c">상태</th><th></th></tr>${USERS.users.map(u => `<tr><td><b>${esc(u.name)}</b>${u.id === ROLE.uid ? ' <span class="b blue">나</span>' : ''}</td><td>${esc(u.id)}</td><td><select onchange="userSet('${esc(u.id)}',{role:this.value})" ${u.id === ROLE.uid ? 'disabled' : ''}>${Object.keys(ROLE_LABEL).map(k => `<option value="${k}" ${k === u.role ? 'selected' : ''}>${ROLE_LABEL[k]}</option>`).join('')}</select></td><td>${u.role === 'cohort' ? `<button class="btn sm" onclick="userCo('${esc(u.id)}')">${u.cohorts.length ? esc(u.cohorts.join(', ')) : '고르기'}</button>` : '<span class="muted">전체</span>'}</td><td class="c">${u.otp ? '🔐' : '<span class="muted">-</span>'}</td><td>${esc(u.last || '-')}</td><td class="c"><span class="b ${u.on ? 'ok' : 'bad'}">${u.on ? '사용' : '정지'}</span></td><td style="white-space:nowrap">${u.id === ROLE.uid ? '' : `<button class="btn sm" onclick="userSet('${esc(u.id)}',{on:${!u.on}})">${u.on ? '정지' : '해제'}</button> <button class="btn sm" onclick="userReset('${esc(u.id)}')">비번 초기화</button> <button class="btn sm d" onclick="userDel('${esc(u.id)}')">삭제</button>`}</td></tr>`).join('')}</table></div>
+    <div class="sec">초대 코드 만들기 <span class="muted" style="font-weight:500">받은 사람이 로그인 화면 「초대 코드로 가입하기」에서 직접 아이디를 만들어요 · 한 번만 쓸 수 있어요</span></div>
+    <div class="form"><label class="fld"><span>역할</span><select id="ivRole" onchange="$('#ivCoBox').classList.toggle('hidden',this.value!=='cohort')"><option value="staff">서무 (입력·수정 가능, 계정 관리 X)</option><option value="cohort">기수 담당 (담당 기수 출석·진도만)</option><option value="viewer">보기 전용 (연락처 가림)</option><option value="admin">관리자</option></select></label>
+      <label class="fld"><span>유효 기간</span><select id="ivDays"><option value="3">3일</option><option value="7" selected>7일</option><option value="14">14일</option></select></label>
+      <label class="fld full"><span>누구에게 (메모)</span><input id="ivNote" placeholder="예: 신학서무 홍길동"></label>
+      <div class="fld full hidden" id="ivCoBox"><span>담당 기수</span><div class="chips">${co.map(n => `<label class="chip"><input type="checkbox" value="${esc(n)}" class="ivCo"> ${esc(n)}</label>`).join('')}</div></div></div>
+    <div class="row mt"><button class="btn p" onclick="inviteMake(this)">초대 코드 만들기</button><span id="ivOut"></span></div>
+    ${USERS.invites.length ? `<div class="mt"><b style="font-size:13px">아직 안 쓴 초대 코드</b>${USERS.invites.map(i => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px"><span class="b">${ROLE_LABEL[i.role]}</span><span>${esc(i.note || '')}</span><span class="muted">${esc(i.hint)}●●●●●● · ${esc(i.made)} · ${new Date(i.exp).toLocaleDateString('ko-KR')}까지</span><span class="sp"></span><button class="btn sm" onclick="inviteDel('${i.key}')">취소</button></div>`).join('')}</div>` : ''}
+    <div class="sec">보안 설정</div>
+    <div class="form"><label class="fld"><span>자동 로그아웃<em>손대지 않은 시간</em></span><select id="secIdle">${[10, 20, 30, 60, 120].map(m => `<option value="${m}" ${num(sec.idleMin) === m ? 'selected' : ''}>${m}분</option>`).join('')}</select></label>
+      <label class="row" style="font-weight:500"><input type="checkbox" id="secOtp" ${sec.otpRequired ? 'checked' : ''}> 관리자·서무는 텔레그램 2단계 인증 필수</label>
+      <label class="row" style="font-weight:500"><input type="checkbox" id="secLink" ${sec.linkLogin ? 'checked' : ''}> 기수 담당 링크(공용 비밀번호) 로그인 허용</label></div>
+    <div class="row mt" style="justify-content:flex-end"><button class="btn sm" onclick="secSave(this)">보안 설정 저장</button></div>
+    <details class="mt fold" ontoggle="if(this.open&&!AUDIT)loadAudit()"><summary><b>접속 기록</b> <span class="muted">로그인 · 실패 · 데이터 변경 (최근 200건)</span></summary><div id="auditBox" class="mt">${AUDIT ? auditHTML() : '<div class="sk" style="height:120px"></div>'}</div></details></div>`;
+}
+const auditHTML = () => `<div class="tw" style="box-shadow:none;max-height:420px;overflow:auto"><table class="htbl"><tr><th>시각</th><th>누가</th><th>동작</th><th>내용</th><th>결과</th></tr>${AUDIT.map(a => `<tr><td style="white-space:nowrap">${esc(a.at)}</td><td>${esc(a.name || a.uid || '-')}${a.uid && a.name ? ` <span class="muted">${esc(a.uid)}</span>` : ''}</td><td>${esc(a.act)}</td><td class="muted" style="font-size:12.5px">${esc(a.detail)}</td><td><span class="b ${a.result === '성공' ? 'ok' : a.result === '대기' ? 'blue' : 'bad'}">${esc(a.result)}</span></td></tr>`).join('')}</table></div>`;
+async function loadAudit() { try { AUDIT = (await api('audit', { limit: 200 })).rows; const b = $('#auditBox'); if (b) b.innerHTML = auditHTML(); } catch (e) { toast(e.message, true); } }
+async function loadUsers() { try { USERS = await api('users'); if (ROUTE.page === 'settings') render(); } catch (e) { toast(e.message, true); } }
+async function userSet(id, ch) { try { await api('userSave', Object.assign({ id }, ch)); toast('바꿨어요'); await loadUsers(); } catch (e) { toast(e.message, true); loadUsers(); } }
+async function userReset(id) { if (!(await ask('비밀번호 초기화', id + ' 계정에 임시 비밀번호를 만들까요? 그 사람의 로그인은 모두 끊겨요.', '초기화'))) return; try { const r = await api('userSave', { id, resetPw: true }); openDrawer('임시 비밀번호', `<p><b>${esc(id)}</b>님의 임시 비밀번호예요. 직접 전해 주시고, 로그인한 뒤 바로 바꾸게 해 주세요. (이 창을 닫으면 다시 볼 수 없어요)</p><div class="tg-code">${esc(r.temp)}</div>`, `<span class="sp"></span><button class="btn p" onclick="closeDrawer()">확인</button>`); loadUsers(); } catch (e) { toast(e.message, true); } }
+async function userDel(id) { if (!(await ask('계정 삭제', id + ' 계정을 지울까요? 접속 기록은 남아요.', '삭제', true))) return; try { await api('userDel', { id }); toast('지웠어요'); loadUsers(); } catch (e) { toast(e.message, true); } }
+function userCo(id) {
+  const u = USERS.users.find(x => x.id === id), co = cohorts().map(c => String(c['기수명']));
+  openDrawer(esc(u.name) + '<small>담당 기수</small>', `<div class="chips">${co.map(n => `<label class="chip"><input type="checkbox" class="ucCo" value="${esc(n)}" ${u.cohorts.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>`, `<span class="sp"></span><button class="btn" onclick="closeDrawer()">취소</button><button class="btn p" onclick="userSet('${esc(id)}',{cohorts:[...document.querySelectorAll('.ucCo:checked')].map(x=>x.value)});closeDrawer()">저장</button>`);
+}
+async function inviteMake(btn) {
+  const role = $('#ivRole').value, cs = [...document.querySelectorAll('.ivCo:checked')].map(x => x.value);
+  busy(btn, true);
+  try { const r = await api('inviteMake', { role, cohorts: cs, days: num($('#ivDays').value), note: $('#ivNote').value.trim() });
+    const msg = `[논산 신학부 운영센터] 초대 코드: ${r.code}\n${location.origin + location.pathname} 에서 「초대 코드로 가입하기」를 눌러 가입해 주세요. (${r.days}일 안에)`;
+    $('#ivOut').innerHTML = `<span class="tg-code" style="display:inline-block;margin:0 8px">${r.code}</span><button class="btn sm" onclick="navigator.clipboard.writeText(${attr(msg)}).then(()=>toast('안내 문구를 복사했어요'))">안내 문구 복사</button>`;
+    USERS = await api('users'); setTimeout(() => { if (ROUTE.page === 'settings') { const keep = $('#ivOut').innerHTML; render(); const o = $('#ivOut'); if (o) o.innerHTML = keep; } }, 50);
+  } catch (e) { toast(e.message, true); } finally { busy(btn, false); }
+}
+async function inviteDel(key) { try { await api('inviteDel', { key }); loadUsers(); } catch (e) { toast(e.message, true); } }
+async function secSave(btn) { busy(btn, true); try { const r = await api('secSave', { sec: { idleMin: num($('#secIdle').value), otpRequired: $('#secOtp').checked, linkLogin: $('#secLink').checked } }); USERS.sec = r.sec; DB.settings = Object.assign({}, DB.settings, { sec: { idleMin: r.sec.idleMin } }); toast('보안 설정을 저장했어요'); } catch (e) { toast(e.message, true); } finally { busy(btn, false); } }
+
 /* ═════════ 로그인·라우팅 ═════════ */
-function showLogin(msg) { if (LINK_C) { $('#login h1').textContent = LINK_C + ' 출석 체크'; $('#login p.muted').textContent = '담당자용 화면입니다. 이 기수의 출석과 진도를 기록하면 중앙 데이터센터에 바로 저장됩니다.'; $('#lgPw').placeholder = '담당자 비밀번호'; } $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#lgUrl').value = cfg().url; $('#lgErr').textContent = msg || ''; setTimeout(() => $('#lgPw').focus(), 50); }
-function logout(expired) {
+const RLK = 'dc_role';
+function saveRole() { try { sessionStorage.setItem(RLK, JSON.stringify(ROLE)); } catch (e) { } }
+function applyRole(r) {
+  if (!r) return;
+  if (LINK_C) { ROLE = { type: 'cohort', cohort: LINK_C, cohorts: [LINK_C], link: true }; saveRole(); return; }
+  ROLE = { type: r.type || 'admin', uid: r.uid || '', name: r.name || '', cohort: r.cohort || '', cohorts: r.cohorts || [] };
+  if (ROLE.type === 'cohort') { const keep = sessionStorage.getItem('dc_co'); if (keep && ROLE.cohorts.includes(keep)) ROLE.cohort = keep; }
+  saveRole();
+}
+const ROLE_LABEL = { admin: '관리자', staff: '서무', cohort: '기수 담당', viewer: '보기 전용' };
+function lgShow(w) { ['Main', 'Otp', 'Join'].forEach(k => $('#lg' + k).classList.toggle('hidden', k.toLowerCase() !== w)); if (w === 'join') setTimeout(() => $('#jnCode').focus(), 30); if (w === 'otp') setTimeout(() => $('#lgCode').focus(), 30); }
+function lgHelp() { $('#lgErr').innerHTML = '아이디·비밀번호는 <b>신학부장(관리자)</b>이 확인해 줄 수 있어요. 관리자가 「설정 → 계정·보안」에서 비밀번호를 초기화하면 임시 비밀번호로 들어온 뒤 바꾸면 돼요.'; $('#lgErr').style.color = 'var(--sub)'; }
+function showLogin(msg) {
+  if (LINK_C) { $('#login h1').textContent = LINK_C + ' 출석 체크'; $('#login .lg-sub').textContent = '담당자용 화면입니다. 이 기수의 출석과 진도를 기록하면 중앙 데이터센터에 바로 저장됩니다.'; $('#lgPw').placeholder = '담당자 비밀번호'; $('#lgIdBox').classList.add('hidden'); $('#lgLinks').classList.add('hidden'); }
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); lgShow('main'); $('#lgUrl').value = cfg().url; $('#lgErr').style.color = ''; $('#lgErr').textContent = msg || '';
+  setTimeout(() => (LINK_C || $('#lgId').value ? $('#lgPw') : $('#lgId')).focus(), 50);
+}
+function logout(expired, why) {
   const t = cfg().tok; if (t && !expired) fetch(cfg().url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ token: t, action: 'logout' }) }).catch(() => { });
-  [sessionStorage, localStorage].forEach(st => { st.removeItem(TKK); st.removeItem(PWK); });
-  try { localStorage.removeItem(DBK()); sessionStorage.removeItem(DBK()); } catch (e) { } dropSecKey(); DB = null;
-  showLogin(expired ? '로그인 시간이 지났어요. 비밀번호를 다시 입력해 주세요.' : '');
+  [sessionStorage, localStorage].forEach(st => { st.removeItem(TKK); st.removeItem(PWK); st.removeItem(RLK); });
+  try { localStorage.removeItem(DBK()); sessionStorage.removeItem(DBK()); } catch (e) { } dropSecKey(); DB = null; ME = null; USERS = null;
+  showLogin(why || (expired ? '로그인 시간이 지났어요. 다시 로그인해 주세요.' : ''));
 }
-/** 로그인: 비밀번호는 한 번만 보내고 기기에는 토큰만 남김 */
-async function loginWith(pw) {
-  [sessionStorage, localStorage].forEach(st => st.removeItem(TKK));
-  const j = await api('login', { key: pw });
+/** 로그인: 비밀번호는 한 번만 보내고 기기에는 토큰만 남김. 텔레그램 2단계 인증이 켜진 계정은 인증번호를 한 번 더 */
+let OTP_CH = '';
+async function loginWith(pw, uid) {
+  [sessionStorage, localStorage].forEach(st => { st.removeItem(TKK); st.removeItem(RLK); });
+  const j = await api('login', uid ? { uid, key: pw } : { key: pw });
+  if (j.otp) { OTP_CH = j.ch; return { otp: true }; }
   if (!j.token) throw new Error('서버가 아직 새 로그인 방식으로 바뀌지 않았어요. 잠시 후 다시 해 주세요.');
-  sessionStorage.setItem(TKK, j.token);
+  sessionStorage.setItem(TKK, j.token); applyRole(j.role); NEED_SETUP = !!j.needSetup;
   [sessionStorage, localStorage].forEach(st => st.removeItem(PWK));
+  return j;
 }
+let NEED_SETUP = false;
+const lgMsg = e => e.message === 'Failed to fetch' ? '서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.' : e.message;
 $('#lgBtn').onclick = async () => {
-  const url = $('#lgUrl').value.trim() || DEFAULT_API, pw = $('#lgPw').value;
+  const url = $('#lgUrl').value.trim() || DEFAULT_API, pw = $('#lgPw').value, uid = LINK_C ? '' : $('#lgId').value.trim().toLowerCase();
+  $('#lgErr').style.color = '';
+  if (!LINK_C && !uid && !pw) { $('#lgErr').textContent = '아이디와 비밀번호를 입력하세요.'; return; }
   if (!pw) { $('#lgErr').textContent = '비밀번호를 입력하세요.'; return; }
   localStorage.setItem('dc_url', url);
   busy($('#lgBtn'), true);
-  try { await loginWith(pw); $('#lgPw').value = ''; await start(); }
-  catch (e) { $('#lgErr').textContent = e.message === 'Failed to fetch' ? '서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.' : e.message; }
+  try { const r = await loginWith(pw, uid); $('#lgPw').value = ''; if (r.otp) { $('#lgCode').value = ''; $('#lgOtpErr').textContent = ''; lgShow('otp'); return; } await start(); }
+  catch (e) { $('#lgErr').textContent = lgMsg(e); }
   finally { busy($('#lgBtn'), false); }
 };
 $('#lgPw').addEventListener('keydown', e => { if (e.key === 'Enter') $('#lgBtn').click(); });
+$('#lgId').addEventListener('keydown', e => { if (e.key === 'Enter') $('#lgPw').focus(); });
+$('#lgOtpBtn').onclick = async () => {
+  const code = $('#lgCode').value.replace(/\D/g, ''); if (code.length !== 6) { $('#lgOtpErr').textContent = '6자리 숫자를 입력하세요.'; return; }
+  busy($('#lgOtpBtn'), true);
+  try { const j = await api('login', { ch: OTP_CH, code }); sessionStorage.setItem(TKK, j.token); applyRole(j.role); await start(); }
+  catch (e) { $('#lgOtpErr').textContent = lgMsg(e); if (/처음부터/.test(e.message)) setTimeout(() => lgShow('main'), 1800); }
+  finally { busy($('#lgOtpBtn'), false); }
+};
+$('#lgCode').addEventListener('input', e => { if (e.target.value.replace(/\D/g, '').length === 6) $('#lgOtpBtn').click(); });
+$('#jnBtn').onclick = async () => {
+  const v = { code: $('#jnCode').value.trim().toUpperCase(), name: $('#jnName').value.trim(), uid: $('#jnId').value.trim().toLowerCase(), key: $('#jnPw').value, consent: $('#jnOk').checked };
+  const er = m => { $('#jnErr').textContent = m; };
+  if (!v.code || !v.name || !v.uid || !v.key) return er('모든 칸을 채워 주세요.');
+  if (v.key !== $('#jnPw2').value) return er('비밀번호 확인이 맞지 않아요.');
+  if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(v.key)) return er('비밀번호는 영문과 숫자를 섞어 8자 이상으로 해 주세요.');
+  if (!v.consent) return er('개인정보 수집·이용에 동의해 주세요.');
+  localStorage.setItem('dc_url', $('#lgUrl').value.trim() || DEFAULT_API);
+  busy($('#jnBtn'), true);
+  try { await api('signup', v); toast('가입했어요. 이제 로그인해 주세요.'); $('#lgId').value = v.uid; ['jnCode', 'jnName', 'jnId', 'jnPw', 'jnPw2'].forEach(k => $('#' + k).value = ''); $('#jnOk').checked = false; lgShow('main'); setTimeout(() => $('#lgPw').focus(), 50); }
+  catch (e) { er(lgMsg(e)); } finally { busy($('#jnBtn'), false); }
+};
+/** 오래 손대지 않으면 자동 로그아웃 (기본 30분, 설정에서 바꿈) */
+let LAST_ACT = Date.now();
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => addEventListener(ev, () => { LAST_ACT = Date.now(); }, { passive: true }));
+setInterval(() => {
+  if (!authed() || !DB) return;
+  const min = num(((DB.settings || {}).sec || {}).idleMin) || 30;
+  if (Date.now() - LAST_ACT > min * 60e3) logout(false, `${min}분 동안 사용하지 않아서 안전하게 로그아웃했어요.`);
+}, 30e3);
 
 async function start() {
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   const nav = isCo() ? CO_NAV : NAV, mnav = isCo() ? CO_NAV[0][1].slice(0, 4).map(n => [n[0], n[1], n[2].replace(' 체크', '').replace(' 현황', '')]).concat([['more', 'menu', '더보기']]) : MOBILE_NAV;
-  if (isCo()) { document.querySelector('.cohortPick').innerHTML = `<label>담당 기수</label><b style="display:block;font-size:15px;padding:2px 0">${esc(ROLE.cohort)}</b>`; $('#cohortSelM').style.display = 'none'; S.cohort = ROLE.cohort; }
+  if (!window.PICK0) window.PICK0 = document.querySelector('.cohortPick').innerHTML;
+  if (!isCo()) { document.querySelector('.cohortPick').innerHTML = PICK0; $('#cohortSelM').style.display = ''; }
+  if (isCo()) { document.querySelector('.cohortPick').innerHTML = (ROLE.cohorts || []).length > 1 ? `<label>담당 기수</label><select onchange="pickMyCohort(this.value)">${ROLE.cohorts.map(c => `<option ${c === ROLE.cohort ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>` : `<label>담당 기수</label><b style="display:block;font-size:15px;padding:2px 0">${esc(ROLE.cohort)}</b>`; $('#cohortSelM').style.display = 'none'; S.cohort = ROLE.cohort; }
+  paintMe(); LAST_ACT = Date.now(); setTimeout(loadMe, 400);
   $('#nav').innerHTML = nav.map(g => `<div class="navg">${g[0]}</div>` + g[1].map(n => `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 16)}</span><span class="nt">${n[2]}${NAV_DESC[n[0]] ? `<small>${NAV_DESC[n[0]]}</small>` : ''}</span></a>`).join('')).join('');
   $('#bottombar').innerHTML = mnav.map(n => n[0] === 'more' ? `<a href="javascript:openMore()" data-p="more"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>` : `<a href="#${n[0]}" data-p="${n[0]}"><span class="ic">${icon(n[1], 22)}</span>${n[2]}</a>`).join('');
   $('#view').innerHTML = `<div class="sk" style="height:34px;width:220px;margin-bottom:22px"></div><div class="grid g-kpi">${'<div class="sk" style="height:92px"></div>'.repeat(6)}</div><div class="sk mt" style="height:120px"></div><div class="grid g-2 mt"><div class="sk" style="height:200px"></div><div class="sk" style="height:200px"></div></div>`;
@@ -1340,7 +1541,7 @@ function birthFields(s) {
 function staffList() { return `<datalist id="dlStaff">${staffNames().map(x => `<option value="${esc(x)}">`).join('')}</datalist>`; }
 function openMore() {
   const items = isCo() ? CO_NAV[0][1].slice(4) : NAV.flatMap(g => g[1]).filter(n => !MOBILE_NAV.some(m => m[0] === n[0]));
-  $('#sheet').innerHTML = '<div class="grab"></div>' + items.map(n => `<a href="#${n[0]}">${icon(n[1], 20)}${n[2]}</a>`).join('') + `<a href="javascript:manualSync()">${icon('sync', 20)}시트에서 새로 불러오기</a><a href="javascript:logout()">로그아웃</a>`;
+  $('#sheet').innerHTML = '<div class="grab"></div>' + items.map(n => `<a href="#${n[0]}">${icon(n[1], 20)}${n[2]}</a>`).join('') + `<a href="javascript:closeAll();openMe()">${icon('users', 20)}내 정보 · 비밀번호 · 2단계 인증</a><a href="javascript:manualSync()">${icon('sync', 20)}시트에서 새로 불러오기</a><a href="javascript:logout()">로그아웃</a>`;
   $('#sheet').classList.add('on'); $('#scrim').classList.add('on');
 }
 /* 작은 팝오버 (출석부 칸) */
@@ -2916,6 +3117,8 @@ async function impRun(btn) {
 let SETS = null, JOB = null;
 PAGES.settings = () => `<div class="ph"><div><h1>설정</h1><p>판정 기준 · 알림 · 자동 작업 · 휴지통</p></div></div><div id="setBody">${SETS ? settingsBody() : '<div class="sk" style="height:300px"></div>'}</div>`;
 AFTER.settings = async () => {
+  if (ROLE.type !== 'admin') document.querySelectorAll('#setBody .card h3').forEach(h => { if (/텔레그램 알림|자동 작업/.test(h.textContent)) h.closest('.card').remove(); });
+  if (ROLE.type === 'admin' && ROLE.uid && !USERS) loadUsers();
   if (SETS) return;
   try { const [a, b] = await Promise.all([api('getSettings'), api('jobStatus')]); SETS = a.settings; JOB = b; if (ROUTE.page === 'settings') render(); }
   catch (e) { toast(e.message, true); }
@@ -2924,7 +3127,7 @@ function settingsBody() {
   const S2 = SETS, T = S2.tg, act = cohorts().filter(c => c['상태'] !== '종강'), trash = DB.student.filter(s => s['보관일']);
   const num3 = (k, label, v, unit) => `<label class="fld"><span>${label}</span><div class="row" style="flex-wrap:nowrap"><input type="number" data-s="${k}" value="${esc(v)}" style="width:100%"><span class="muted">${unit}</span></div></label>`;
   const chk = (k, label) => `<label class="row" style="font-weight:500"><input type="checkbox" data-s="tg.${k}" ${T[k] ? 'checked' : ''}> ${label}</label>`;
-  return `<div class="card"><h3>종강 요건</h3><div class="setgrid">${num3('end.minDays', '최소 수업일수 (이상)', (S2.end || {}).minDays || 96, '일')}</div><p class="muted" style="margin:8px 0 0;font-size:12.5px">행정 개강일부터 센 강의 수업일 · 행사·휴강·사전 수업 제외 · 같은 날 강의가 여러 개면 하루로 셈</p></div>
+  return `${secCard()}<div class="card"><h3>종강 요건</h3><div class="setgrid">${num3('end.minDays', '최소 수업일수 (이상)', (S2.end || {}).minDays || 96, '일')}</div><p class="muted" style="margin:8px 0 0;font-size:12.5px">행정 개강일부터 센 강의 수업일 · 행사·휴강·사전 수업 제외 · 같은 날 강의가 여러 개면 하루로 셈</p></div>
   ${kpiSetCard(S2)}
   <div class="card mt"><h3>센터 등록 판정 기준</h3><div class="setgrid">${num3('reg.n', '판정할 첫 회차 수', S2.reg.n, '회')}${num3('reg.minReal', '실시간 최소', S2.reg.minReal, '회')}${num3('reg.maxMakeup', '보강 최대', S2.reg.maxMakeup, '회')}</div></div>
   <div class="card"><h3>탈락 위험 기준</h3><div class="setgrid">${num3('risk.streak', '연속 결석(이상)', S2.risk.streak, '회')}${num3('risk.recent', '최근 몇 회', S2.risk.recent, '회')}${num3('risk.rate', '최근 출석률 미만', Math.round(S2.risk.rate * 100), '%')}</div><p class="muted" style="margin-bottom:0">둘 중 하나라도 해당하면 「위험」, 최근 3회 안에 결석이 있으면 「주의」로 표시해요.</p></div>
@@ -3882,7 +4085,7 @@ PAGES.admin = () => {
   return `<div class="ph"><div><h1>종합 행정</h1><p>논산교회 신학부 핵심 지표 · 모든 숫자는 운영센터 기록에서 자동 집계</p></div></div><div class="tabs">${ADM_TABS.map(t => `<a href="#admin/${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</a>`).join('')}</div>${['todo', 'seg', 'cert', 'load'].includes(tab) ? '' : adSel()}${f()}`;
 };
 
-const BUILD = '2026-11-26e';
+const BUILD = '2026-11-26f';
 (function checkBuild() {
   fetch(location.pathname + '?b=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
     const m = t.match(/const BUILD = '([^']+)'/);
